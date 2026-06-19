@@ -435,7 +435,7 @@ def process_video(video_path, sample_rate=3):
     fps          = cap.get(cv2.CAP_PROP_FPS) or 30.0
 
     # 최대 처리 프레임 수 제한 (메모리 보호)
-    MAX_ANALYSIS_FRAMES = 300
+    MAX_ANALYSIS_FRAMES = 150
     effective_sample = max(sample_rate, total_frames // max(MAX_ANALYSIS_FRAMES, 1))
 
     frame_data       = []
@@ -449,11 +449,13 @@ def process_video(video_path, sample_rate=3):
 
     # 어노테이션 저장할 로컬 인덱스 (균등 20장)
     est_local = max(total_frames // effective_sample, 1)
-    preview_indices = set(np.linspace(0, est_local - 1, min(20, est_local), dtype=int).tolist())
+    preview_indices = set(np.linspace(0, est_local - 1, min(10, est_local), dtype=int).tolist())
+
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))  # 루프 밖에서 1회 생성
 
     with mp_pose.Pose(
         static_image_mode=False,
-        model_complexity=2,
+        model_complexity=1,
         smooth_landmarks=True,
         min_detection_confidence=0.5,
         min_tracking_confidence=0.5
@@ -470,10 +472,15 @@ def process_video(video_path, sample_rate=3):
 
             h, w = frame.shape[:2]
 
-            # CLAHE 전처리 (슬라이드 8: 조명 노이즈 극복)
+            # 해상도가 크면 먼저 축소 (처리 속도 향상)
+            if w > 854:
+                scale = 854 / w
+                frame = cv2.resize(frame, (854, int(h * scale)))
+                h, w  = frame.shape[:2]
+
+            # CLAHE 전처리
             lab = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
             l_ch, a_ch, b_ch = cv2.split(lab)
-            clahe  = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
             l_ch   = clahe.apply(l_ch)
             enhanced_rgb = cv2.cvtColor(cv2.merge([l_ch, a_ch, b_ch]), cv2.COLOR_LAB2RGB)
 
@@ -548,9 +555,9 @@ def process_video(video_path, sample_rate=3):
                         annotated = draw_skeleton_annotations(annotated, results, norm, metrics, w, h)
                     # 해상도 축소 (720p → 480p급)
                     ah, aw = annotated.shape[:2]
-                    if aw > 854:
-                        scale = 854 / aw
-                        annotated = cv2.resize(annotated, (854, int(ah * scale)))
+                    if aw > 640:
+                        scale = 640 / aw
+                        annotated = cv2.resize(annotated, (640, int(ah * scale)))
                     annotated_frames.append(cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB))
                 local_idx += 1
 
