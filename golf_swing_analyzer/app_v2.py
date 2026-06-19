@@ -8,7 +8,8 @@ import json
 import time
 from datetime import datetime
 from collections import deque
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 
 # ─── Page Config ────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -750,9 +751,12 @@ def get_llm_feedback(summary, issues, provider, api_key, model_name=None):
     prompt = build_prompt(summary, issues)
 
     if provider == "Gemini":
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel(model_name or "gemini-1.5-flash")
-        return model.generate_content(prompt).text
+        client = genai.Client(api_key=api_key)
+        response = client.models.generate_content(
+            model=model_name or "gemini-1.5-flash",
+            contents=prompt
+        )
+        return response.text
 
     elif provider == "Claude":
         import anthropic
@@ -1229,7 +1233,7 @@ def main():
                 st.warning(f"**{provider} API 키가 필요합니다.**\n\n👉 [{link}]({link}) 에서 발급 후 사이드바에 입력하세요.")
             else:
                 if st.button(f"🧠 {provider} AI 코칭 피드백 생성", use_container_width=True):
-                    with st.spinner(f"{provider} AI가 7단계 페이즈 데이터를 분석 중..."):
+                    with st.spinner(f"{provider} AI가 분석 중... (10~30초 소요)"):
                         try:
                             feedback = get_llm_feedback(
                                 st.session_state.summary,
@@ -1237,8 +1241,17 @@ def main():
                                 provider, api_key, model_name
                             )
                             st.session_state.ai_feedback = feedback
+                            st.success("✅ 피드백 생성 완료!")
                         except Exception as e:
-                            st.error(f"오류: {e}")
+                            err = str(e)
+                            if "API_KEY" in err or "api_key" in err.lower():
+                                st.error("❌ API 키가 올바르지 않습니다. 사이드바에서 다시 확인해주세요.")
+                            elif "quota" in err.lower() or "limit" in err.lower():
+                                st.error("❌ API 사용량 한도 초과입니다. 잠시 후 다시 시도해주세요.")
+                            elif "connect" in err.lower() or "timeout" in err.lower():
+                                st.error("❌ 네트워크 연결 오류입니다. 인터넷 연결을 확인해주세요.")
+                            else:
+                                st.error(f"❌ 오류 발생: {err[:200]}")
 
             if "ai_feedback" in st.session_state:
                 st.markdown(f"""
