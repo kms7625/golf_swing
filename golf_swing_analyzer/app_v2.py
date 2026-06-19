@@ -220,77 +220,120 @@ PHASES = ["어드레스", "백스윙", "백스윙 톱", "다운스윙", "임팩�
 
 class SwingPhaseDetector:
     """
-    슬라이드 6: 손목 관절의 y축 좌표 변화율과 속도 벡터로 7단계 자동 세그먼테이션
-    - 손목 y좌표 최고점 → 백스윙 톱
-    - 하강 속도 최대 → 임팩트
+    손목 y좌표 시계열 분석으로 7단계 자동 세그먼테이션
+    핵심 원리:
+    - 어드레스: 초반 안정 구간 (손목 움직임 최소)
+    - 백스윙 톱: 손목 y좌표 전체 최솟값 (가장 높이 올라간 지점)
+    - 임팩트: 백스윙 톱 이후 손목이 어드레스 높이로 복귀하는 시점
+    - 각 경계를 frame_phases 배열로 저장해 O(1) 조회
     """
     def __init__(self):
-        self.wrist_y_history = []  # 손목 y 좌표 시계열
-        self.frame_indices   = []
+        self.wrist_y_history = []
+        self.frame_phases    = []   # 프레임별 페이즈 직접 저장
         self.phase_boundaries = {}
 
-    def update(self, frame_idx, left_wrist_y, right_wrist_y):
-        avg_y = (left_wrist_y + right_wrist_y) / 2
-        self.wrist_y_history.append(avg_y)
-        self.frame_indices.append(frame_idx)
+    def update(self, frame_idx, left_wrist_y, right_wrist_y,
+               hip_center_x=None, shoulder_rot=None, wrist_x=None):
+        self.wrist_y_history.append((left_wrist_y + right_wrist_y) / 2)
+        # 추가 신호 저장
+        if not hasattr(self, "hip_x_history"):
+            self.hip_x_history      = []
+            self.shoulder_rot_hist  = []
+            self.wrist_x_history    = []
+        self.hip_x_history.append(hip_center_x if hip_center_x is not None else 0.0)
+        self.shoulder_rot_hist.append(shoulder_rot if shoulder_rot is not None else 0.0)
+        self.wrist_x_history.append(wrist_x if wrist_x is not None else 0.0)
+
+    def _smooth(self, arr, k=5):
+        """이동평균 스무딩"""
+        arr = np.array(arr, dtype=float)
+        n = len(arr)
+        k = min(k, n // 2 * 2 + 1) if n > 2 else 1
+        if k < 2: return arr
+        return np.convolve(arr, np.ones(k) / k, mode="same")
 
     def detect_all_phases(self):
-        """전체 시계열 분석으로 7단계 경계 탐지"""
-        if len(self.wrist_y_history) < 10:
+        """
+        손목 y 시계열 구조만으로 7단계 경계 확정
+        ───────────────────────────────────────────
+          top_idx    : 손목 y 최솟값 = 백스윙 톱 (손목이 가장 높은 지점)
+          impact_idx : top 이후 손목 y가 어드레스 y로 처음 복귀하는 지점
+          follow_idx : 임팩트 이후 손목 y 두 번째 최솟값 = 팔로우스루 정점
+        """
+        wy = np.array(self.wrist_y_history, dtype=float)
+        n  = len(wy)
+        if n < 8:
+            self.frame_phases = ["어드레스"] * n
             return {}
 
-        y = np.array(self.wrist_y_history)
-        n = len(y)
+        wy_s = self._smooth(wy, k=5)
+        wy_v = np.gradient(wy_s)
 
-        # 속도 벡터 (y 변화율)
-        velocity = np.gradient(y)
+        # ── 1. 어드레스 끝 ───────────────────────────────────────────────
+        base_std = np.std(wy_v[:max(3, n // 6)]) + 1e-8
+        addr_end = max(2, int(n * 0.05))
+        for i in range(addr_end, int(n * 0.35)):
+            if abs(wy_v[i]) > base_std * 2.0:
+                addr_end = max(2, i - 1)
+                break
 
-        # 어드레스: 첫 10% (손목이 안정적인 구간)
-        addr_end = max(1, int(n * 0.12))
+        # ── 2. 백스윙 톱 ─────────────────────────────────────────────────
+        # 어드레스 끝 ~ 전체 65% 구간에서 손목 y 최솟값 (= 손목이 가장 높은 지점)
+        s       = addr_end + 1
+        e       = min(n - 2, int(n * 0.65))
+        top_idx = s + int(np.argmin(wy_s[s:e]))
+        top_idx = max(s, top_idx)
+        top_width = max(1, int(n * 0.04))
 
-        # 백스윙 톱: y 최솟값 (정규화 좌표에서 위로 올라가면 y 감소)
-        search_start = addr_end
-        search_end   = min(n - 1, int(n * 0.65))
-        top_idx      = search_start + int(np.argmin(y[search_start:search_end]))
+        # ── 3. 임팩트 ────────────────────────────────────────────────────
+        # 백스윙 톱 이후 손목 y가 어드레스 평균 y에 처음 복귀하는 프레임
+        # 탐색: top_idx+1 ~ 전체 85% 구간
+        y_addr    = float(np.mean(wy_s[:addr_end + 1]))
+        imp_start = top_idx + 1
+        imp_end   = min(n - 2, int(n * 0.85))
+        seg       = wy_s[imp_start:imp_end]
+        dist      = np.abs(seg - y_addr)
+        impact_idx = imp_start + int(np.argmin(dist))
+        impact_idx = max(imp_start, min(impact_idx, imp_end))
+        impact_width = max(1, int(n * 0.03))
 
-        # 임팩트: 톱 이후 하강 속도 최대 구간
-        if top_idx + 2 < n:
-            vel_after_top = velocity[top_idx:]
-            impact_offset = int(np.argmax(vel_after_top))
-            impact_idx    = min(top_idx + impact_offset, n - 1)
+        # ── 4. 팔로우스루 정점 ──────────────────────────────────────────
+        # 임팩트 이후 손목이 다시 올라가는 두 번째 최솟값
+        fol_start  = impact_idx + impact_width + 1
+        fol_end    = min(n - 1, fol_start + max(3, (n - fol_start) * 3 // 4))
+        if fol_end > fol_start:
+            follow_idx = fol_start + int(np.argmin(wy_s[fol_start:fol_end]))
         else:
-            impact_idx = min(top_idx + 2, n - 1)
+            follow_idx = min(fol_start + max(2, int(n * 0.08)), n - 2)
+        follow_idx = max(fol_start, follow_idx)
 
-        # 팔로우스루: 임팩트 이후 20%
-        follow_idx = min(impact_idx + max(1, int((n - impact_idx) * 0.4)), n - 1)
-
-        boundaries = {
-            "어드레스":   (0,           addr_end),
-            "백스윙":     (addr_end,    top_idx),
-            "백스윙 톱":  (top_idx,     top_idx + max(1, int(n * 0.04))),
-            "다운스윙":   (top_idx,     impact_idx),
-            "임팩트":     (impact_idx,  min(impact_idx + max(1, int(n * 0.04)), n-1)),
-            "팔로우스루": (impact_idx,  follow_idx),
-            "피니시":     (follow_idx,  n - 1),
+        # ── 5. 경계 딕셔너리 ─────────────────────────────────────────────
+        self.phase_boundaries = {
+            "어드레스":   (0,                           addr_end),
+            "백스윙":     (addr_end,                   top_idx),
+            "백스윙 톱":  (top_idx,                    top_idx + top_width),
+            "다운스윙":   (top_idx + top_width,        impact_idx),
+            "임팩트":     (impact_idx,                 impact_idx + impact_width),
+            "팔로우스루": (impact_idx + impact_width,  follow_idx),
+            "피니시":     (follow_idx,                 n - 1),
         }
-        self.phase_boundaries = boundaries
-        return boundaries
+
+        # ── 6. frame_phases 배열 채우기 ──────────────────────────────────
+        self.frame_phases = ["피니시"] * n
+        for ph in reversed(["어드레스","백스윙","백스윙 톱",
+                             "다운스윙","임팩트","팔로우스루","피니시"]):
+            lo, hi = self.phase_boundaries[ph]
+            for i in range(max(0, lo), min(n, hi + 1)):
+                self.frame_phases[i] = ph
+
+        return self.phase_boundaries
 
     def get_phase_for_frame(self, local_idx):
-        """프레임 인덱스에 해당하는 페이즈 반환"""
-        if not self.phase_boundaries:
+        """frame_phases 배열 직접 조회 (경계 계산 결과 100% 반영)"""
+        if not self.frame_phases:
             return "어드레스"
-
-        n = len(self.wrist_y_history)
-        progress = local_idx / max(n - 1, 1)
-
-        if progress < 0.12:   return "어드레스"
-        elif local_idx <= self.phase_boundaries.get("백스윙 톱", (0, n//3))[0]:
-            return "백스윙"
-        elif progress < 0.55: return "백스윙 톱" if abs(progress - 0.5) < 0.05 else "다운스윙"
-        elif progress < 0.68: return "임팩트"
-        elif progress < 0.85: return "팔로우스루"
-        else:                  return "피니시"
+        idx = max(0, min(local_idx, len(self.frame_phases) - 1))
+        return self.frame_phases[idx]
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -500,7 +543,18 @@ def process_video(video_path, sample_rate=3):
                     # 손목 y좌표 (정규화 공간)
                     lw_y = norm[15]["pos"][1]
                     rw_y = norm[16]["pos"][1]
-                    phase_detector.update(local_idx, lw_y, rw_y)
+                    lw_x = norm[15]["pos"][0]
+                    rw_x = norm[16]["pos"][0]
+                    # 골반 중심 x (하체선행 감지용)
+                    hip_cx = float((norm[23]["pos"][0] + norm[24]["pos"][0]) / 2)
+                    # 어깨 회전각
+                    sh_rot = calc_shoulder_rotation(norm)
+                    phase_detector.update(
+                        local_idx, lw_y, rw_y,
+                        hip_center_x=hip_cx,
+                        shoulder_rot=sh_rot,
+                        wrist_x=(lw_x + rw_x) / 2
+                    )
 
                     raw = {
                         "frame":              frame_idx,
@@ -1116,14 +1170,34 @@ def main():
                 if frames:
                     st.divider()
                     st.markdown('<div class="section-title">🎬 스윙 궤적 분석 프레임</div>', unsafe_allow_html=True)
-                    n   = len(frames)
-                    idxs = [0, n//5, 2*n//5, 3*n//5, 4*n//5, n-1]
-                    idxs = list(dict.fromkeys([min(i, n-1) for i in idxs]))[:6]
-                    labels = ["어드레스", "백스윙", "백스윙 톱", "다운스윙", "임팩트", "피니시"]
-                    cols = st.columns(len(idxs))
-                    for col, fi, lb in zip(cols, idxs, labels):
+
+                    # 7단계 페이즈별 대표 프레임 추출
+                    fd       = st.session_state.frame_data
+                    phase_order = ["어드레스","백스윙","백스윙 톱","다운스윙","임팩트","팔로우스루","피니시"]
+                    phase_frame_map = {}  # phase → annotated frame index
+
+                    # frame_data의 local_idx와 annotated_frames 매핑
+                    # annotated_frames는 preview_indices에 해당하는 프레임만 저장됨
+                    # frame_data에서 페이즈별 중간 프레임의 local_idx를 찾아 가장 가까운 annotated 선택
+                    local_indices = [f["local_idx"] for f in fd]
+                    n_ann = len(frames)
+
+                    for ph in phase_order:
+                        ph_frames = [f for f in fd if f.get("phase") == ph]
+                        if not ph_frames:
+                            continue
+                        # 페이즈 중간 프레임의 local_idx
+                        mid_local = ph_frames[len(ph_frames)//2]["local_idx"]
+                        # annotated_frames는 균등 간격으로 저장됐으므로 비율로 매핑
+                        total_local = max(local_indices[-1], 1)
+                        ann_idx = min(int(mid_local / total_local * n_ann), n_ann - 1)
+                        phase_frame_map[ph] = ann_idx
+
+                    detected_phases = [ph for ph in phase_order if ph in phase_frame_map]
+                    cols = st.columns(len(detected_phases))
+                    for col, ph in zip(cols, detected_phases):
                         with col:
-                            st.image(frames[fi], caption=lb, use_container_width=True)
+                            st.image(frames[phase_frame_map[ph]], caption=ph, use_container_width=True)
 
             # 임시 파일은 세션 종료 시 자동 정리됨
 
