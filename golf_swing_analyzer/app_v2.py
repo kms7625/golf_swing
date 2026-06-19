@@ -753,7 +753,7 @@ def get_llm_feedback(summary, issues, provider, api_key, model_name=None):
     if provider == "Gemini":
         client = genai.Client(api_key=api_key)
         response = client.models.generate_content(
-            model=model_name or "gemini-1.5-flash",
+            model=model_name or "gemini-2.0-flash",
             contents=prompt
         )
         return response.text
@@ -822,7 +822,7 @@ def render_sidebar():
         )
 
         model_options = {
-            "Gemini": ["gemini-1.5-flash", "gemini-1.5-pro"],
+            "Gemini": ["gemini-2.0-flash", "gemini-1.5-pro"],
             "Claude": ["claude-3-5-sonnet-20241022", "claude-3-haiku-20240307"],
             "GPT":    ["gpt-4o", "gpt-4o-mini"],
         }
