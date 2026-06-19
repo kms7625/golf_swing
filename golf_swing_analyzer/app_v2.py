@@ -430,18 +430,26 @@ def get_thumbnail_frames(video_path, n=10):
 
 
 def process_video(video_path, sample_rate=3):
-    cap         = cv2.VideoCapture(video_path)
+    cap          = cv2.VideoCapture(video_path)
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     fps          = cap.get(cv2.CAP_PROP_FPS) or 30.0
 
+    # 최대 처리 프레임 수 제한 (메모리 보호)
+    MAX_ANALYSIS_FRAMES = 300
+    effective_sample = max(sample_rate, total_frames // max(MAX_ANALYSIS_FRAMES, 1))
+
     frame_data       = []
-    annotated_frames = []
-    trajectory_pts   = []   # 손목 궤적 (왼손목 기준)
+    annotated_frames = []   # 최대 20장만 저장
+    trajectory_pts   = []
     phase_detector   = SwingPhaseDetector()
     ma_filter        = MovingAverageFilter(window=5)
     prev_metrics     = {}
     frame_idx        = 0
-    local_idx        = 0    # 샘플링 후 인덱스
+    local_idx        = 0
+
+    # 어노테이션 저장할 로컬 인덱스 (균등 20장)
+    est_local = max(total_frames // effective_sample, 1)
+    preview_indices = set(np.linspace(0, est_local - 1, min(20, est_local), dtype=int).tolist())
 
     with mp_pose.Pose(
         static_image_mode=False,
@@ -456,7 +464,7 @@ def process_video(video_path, sample_rate=3):
             if not ret:
                 break
 
-            if frame_idx % sample_rate != 0:
+            if frame_idx % effective_sample != 0:
                 frame_idx += 1
                 continue
 
@@ -532,13 +540,18 @@ def process_video(video_path, sample_rate=3):
                         interp["local_idx"] = local_idx
                         frame_data.append(interp)
 
-                # 어노테이션 그리기
-                annotated = frame.copy()
-                if visible:
-                    draw_swing_trajectory(annotated, trajectory_pts, metrics.get("phase", ""))
-                    annotated = draw_skeleton_annotations(annotated, results, norm, metrics, w, h)
-
-                annotated_frames.append(cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB))
+                # 어노테이션: 균등 20장만 저장 (메모리 절약)
+                if local_idx in preview_indices:
+                    annotated = frame.copy()
+                    if visible:
+                        draw_swing_trajectory(annotated, trajectory_pts, metrics.get("phase", ""))
+                        annotated = draw_skeleton_annotations(annotated, results, norm, metrics, w, h)
+                    # 해상도 축소 (720p → 480p급)
+                    ah, aw = annotated.shape[:2]
+                    if aw > 854:
+                        scale = 854 / aw
+                        annotated = cv2.resize(annotated, (854, int(ah * scale)))
+                    annotated_frames.append(cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB))
                 local_idx += 1
 
             frame_idx += 1
