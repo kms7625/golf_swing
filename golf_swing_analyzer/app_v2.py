@@ -1,4 +1,4 @@
-Aimport streamlit as st
+import streamlit as st
 import cv2
 import mediapipe as mp
 import numpy as np
@@ -358,8 +358,76 @@ def draw_skeleton_annotations(frame, results, norm, metrics, w, h):
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# SECTION 6: 영상 처리 메인 파이프라인
+# SECTION 6: 영상 편집 + 처리 메인 파이프라인
 # ═══════════════════════════════════════════════════════════════════════════════
+
+def get_video_info(video_path):
+    """영상 기본 정보 반환"""
+    cap = cv2.VideoCapture(video_path)
+    fps          = cap.get(cv2.CAP_PROP_FPS) or 30.0
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    duration     = total_frames / fps
+    width        = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height       = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    cap.release()
+    return {"fps": fps, "total_frames": total_frames,
+            "duration": duration, "width": width, "height": height}
+
+
+def trim_video(video_path, start_sec, end_sec):
+    """
+    영상 구간 트리밍 — start_sec ~ end_sec 구간만 추출하여 임시 파일로 저장
+    """
+    cap = cv2.VideoCapture(video_path)
+    fps    = cap.get(cv2.CAP_PROP_FPS) or 30.0
+    w      = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    h      = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+    start_frame = int(start_sec * fps)
+    end_frame   = int(end_sec   * fps)
+
+    # 임시 출력 파일
+    tmp_out = tempfile.NamedTemporaryFile(delete=False, suffix='.mp4')
+    tmp_out.close()
+
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    out    = cv2.VideoWriter(tmp_out.name, fourcc, fps, (w, h))
+
+    cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
+    frame_idx = start_frame
+    while cap.isOpened() and frame_idx <= end_frame:
+        ret, frame = cap.read()
+        if not ret:
+            break
+        out.write(frame)
+        frame_idx += 1
+
+    cap.release()
+    out.release()
+    return tmp_out.name
+
+
+def get_thumbnail_frames(video_path, n=10):
+    """미리보기용 썸네일 프레임 추출"""
+    cap          = cv2.VideoCapture(video_path)
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    fps          = cap.get(cv2.CAP_PROP_FPS) or 30.0
+    thumbs       = []
+
+    indices = np.linspace(0, total_frames - 1, n, dtype=int)
+    for fi in indices:
+        cap.set(cv2.CAP_PROP_POS_FRAMES, fi)
+        ret, frame = cap.read()
+        if ret:
+            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            # 썸네일 크기 축소
+            h, w = frame_rgb.shape[:2]
+            scale = 160 / w
+            small = cv2.resize(frame_rgb, (160, int(h * scale)))
+            thumbs.append((fi / fps, small))
+    cap.release()
+    return thumbs
+
 
 def process_video(video_path, sample_rate=3):
     cap         = cv2.VideoCapture(video_path)
@@ -808,28 +876,127 @@ def main():
             st.info("💡 드라이버·아이언·퍼팅 모두 분석 가능\n\n정면 또는 측면 촬영 권장")
 
         if uploaded:
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as tmp:
-                tmp.write(uploaded.read())
-                tmp_path = tmp.name
+            # 업로드 파일 임시 저장
+            if "tmp_original" not in st.session_state or \
+               st.session_state.get("uploaded_name") != uploaded.name:
+                with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as tmp:
+                    tmp.write(uploaded.read())
+                    st.session_state.tmp_original  = tmp.name
+                    st.session_state.uploaded_name = uploaded.name
+                    st.session_state.pop("trim_path", None)   # 새 파일이면 트림 초기화
 
+            tmp_path  = st.session_state.tmp_original
+            info      = get_video_info(tmp_path)
+            duration  = info["duration"]
+
+            # ── 영상 미리보기 ──────────────────────────────────────────────
             col_vid, col_ctrl = st.columns([3, 2])
             with col_vid:
-                st.video(tmp_path)
+                preview_path = st.session_state.get("trim_path", tmp_path)
+                st.video(preview_path)
             with col_ctrl:
-                st.markdown('<div class="section-title">분석 준비</div>', unsafe_allow_html=True)
+                st.markdown('<div class="section-title">영상 정보</div>', unsafe_allow_html=True)
                 st.markdown(f"""
                 <div class="feedback-box good">
                 ✅ 파일: <b>{uploaded.name}</b><br>
                 ✅ 크기: <b>{uploaded.size/1024/1024:.1f} MB</b><br>
-                ✅ 샘플링: 매 <b>{sample_rate}</b>프레임
+                ✅ 길이: <b>{duration:.1f}초</b> ({info['total_frames']}프레임)<br>
+                ✅ 해상도: <b>{info['width']}×{info['height']}</b>
                 </div>
                 """, unsafe_allow_html=True)
+
+            # ── ✂️ 구간 편집 UI ────────────────────────────────────────────
+            st.divider()
+            st.markdown('<div class="section-title">✂️ 분석 구간 선택</div>', unsafe_allow_html=True)
+            st.caption("긴 영상에서 스윙 구간만 선택하여 분석 정확도를 높이세요")
+
+            col_sl, col_btn = st.columns([3, 1])
+            with col_sl:
+                start_sec, end_sec = st.slider(
+                    "구간 선택 (초)",
+                    min_value=0.0,
+                    max_value=float(round(duration, 1)),
+                    value=(0.0, float(round(min(duration, 30.0), 1))),
+                    step=0.1,
+                    format="%.1f초",
+                    help="드래그로 시작점과 끝점을 조절하세요"
+                )
+            with col_btn:
+                st.markdown("<br>", unsafe_allow_html=True)
+                trim_btn = st.button("✂️ 구간 적용", use_container_width=True)
+
+            # 선택 구간 정보 표시
+            sel_duration = end_sec - start_sec
+            c1, c2, c3 = st.columns(3)
+            with c1:
+                st.markdown(f"""
+                <div class="metric-card">
+                  <div class="metric-label">시작점</div>
+                  <div class="metric-value">{start_sec:.1f}<span class="metric-unit"> 초</span></div>
+                </div>""", unsafe_allow_html=True)
+            with c2:
+                st.markdown(f"""
+                <div class="metric-card">
+                  <div class="metric-label">끝점</div>
+                  <div class="metric-value">{end_sec:.1f}<span class="metric-unit"> 초</span></div>
+                </div>""", unsafe_allow_html=True)
+            with c3:
+                col_status = "good" if 3 <= sel_duration <= 30 else "warn"
+                st.markdown(f"""
+                <div class="metric-card">
+                  <div class="metric-label">선택 길이</div>
+                  <div class="metric-value metric-status-{col_status}">{sel_duration:.1f}<span class="metric-unit"> 초</span></div>
+                </div>""", unsafe_allow_html=True)
+
+            # 썸네일 스트립 (구간 미리보기)
+            with st.expander("🎞️ 프레임 미리보기"):
+                thumbs = get_thumbnail_frames(tmp_path, n=8)
+                cols   = st.columns(8)
+                for col, (t, img) in zip(cols, thumbs):
+                    with col:
+                        marker = "🟡" if start_sec <= t <= end_sec else "⚫"
+                        st.image(img, caption=f"{marker}{t:.1f}s", use_container_width=True)
+
+            # 트리밍 실행
+            if trim_btn:
+                if sel_duration < 1.0:
+                    st.error("구간이 너무 짧습니다. 최소 1초 이상 선택하세요.")
+                else:
+                    with st.spinner(f"✂️ {start_sec:.1f}초 ~ {end_sec:.1f}초 구간 추출 중..."):
+                        trim_path = trim_video(tmp_path, start_sec, end_sec)
+                        st.session_state.trim_path = trim_path
+                    st.success(f"✅ 구간 적용 완료! ({sel_duration:.1f}초) — 위 영상 미리보기가 업데이트됩니다.")
+                    st.rerun()
+
+            # 분석 대상 경로 결정
+            analyze_path = st.session_state.get("trim_path", tmp_path)
+            is_trimmed   = "trim_path" in st.session_state
+
+            st.divider()
+            col_info, col_go = st.columns([3, 1])
+            with col_info:
+                if is_trimmed:
+                    trim_info = get_video_info(analyze_path)
+                    st.markdown(f"""
+                    <div class="feedback-box good">
+                    ✂️ <b>트리밍된 구간으로 분석</b> — {trim_info['duration']:.1f}초 · {trim_info['total_frames']}프레임<br>
+                    샘플링: 매 <b>{sample_rate}</b>프레임
+                    </div>
+                    """, unsafe_allow_html=True)
+                else:
+                    st.markdown(f"""
+                    <div class="feedback-box warning">
+                    📹 <b>전체 영상으로 분석</b> — {duration:.1f}초<br>
+                    구간을 선택하면 더 정확한 분석이 가능합니다.
+                    </div>
+                    """, unsafe_allow_html=True)
+            with col_go:
                 analyze_btn = st.button("🔍 스윙 분석 시작", use_container_width=True)
 
             if analyze_btn:
                 prog = st.progress(0, "🦴 관절 포인트 추출 중...")
                 frame_data, annotated_frames, traj_pts, fps, phase_det = \
-                    process_video(tmp_path, sample_rate)
+                    process_video(analyze_path, sample_rate)
                 prog.progress(70, "📐 각도 계산 & 페이즈 세그먼테이션...")
                 summary = compute_summary(frame_data)
                 prog.progress(90, "🏅 스코어 산정...")
@@ -906,9 +1073,7 @@ def main():
                         with col:
                             st.image(frames[fi], caption=lb, use_container_width=True)
 
-            if 'tmp_path' in dir() and os.path.exists(tmp_path):
-                try: os.unlink(tmp_path)
-                except: pass
+            # 임시 파일은 세션 종료 시 자동 정리됨
 
     # ── TAB 2: 7단계 페이즈 (슬라이드 6) ──────────────────────────────────
     with tab2:
