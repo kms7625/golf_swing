@@ -934,48 +934,76 @@ def main():
             st.markdown('<div class="section-title">✂️ 분석 구간 선택</div>', unsafe_allow_html=True)
             st.caption("긴 영상에서 스윙 구간만 선택하여 분석 정확도를 높이세요")
 
-            col_sl, col_btn = st.columns([3, 1])
-            with col_sl:
-                start_sec, end_sec = st.slider(
-                    "구간 선택 (초)",
-                    min_value=0.0,
-                    max_value=float(round(duration, 1)),
-                    value=(0.0, float(round(min(duration, 30.0), 1))),
-                    step=0.1,
-                    format="%.1f초",
-                    help="드래그로 시작점과 끝점을 조절하세요"
-                )
-            with col_btn:
-                st.markdown("<br>", unsafe_allow_html=True)
-                trim_btn = st.button("✂️ 구간 적용", use_container_width=True)
-
-            # 선택 구간 정보 표시
+            # 슬라이더
+            start_sec, end_sec = st.slider(
+                "구간 선택 (초)",
+                min_value=0.0,
+                max_value=float(round(duration, 1)),
+                value=(0.0, float(round(min(duration, 30.0), 1))),
+                step=0.1,
+                format="%.1f초",
+                help="슬라이더를 움직이면 아래에 해당 프레임이 바로 표시됩니다"
+            )
             sel_duration = end_sec - start_sec
-            c1, c2, c3 = st.columns(3)
-            with c1:
-                st.markdown(f"""
-                <div class="metric-card">
-                  <div class="metric-label">시작점</div>
-                  <div class="metric-value">{start_sec:.1f}<span class="metric-unit"> 초</span></div>
-                </div>""", unsafe_allow_html=True)
-            with c2:
-                st.markdown(f"""
-                <div class="metric-card">
-                  <div class="metric-label">끝점</div>
-                  <div class="metric-value">{end_sec:.1f}<span class="metric-unit"> 초</span></div>
-                </div>""", unsafe_allow_html=True)
-            with c3:
+
+            # ── 실시간 프레임 미리보기 ──────────────────────────────────────
+            col_start, col_mid, col_end = st.columns([2, 1, 2])
+
+            def get_frame_at(video_path, sec):
+                """특정 시간의 프레임 캡처"""
+                cap = cv2.VideoCapture(video_path)
+                fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
+                cap.set(cv2.CAP_PROP_POS_FRAMES, int(sec * fps))
+                ret, frame = cap.read()
+                cap.release()
+                if ret:
+                    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                    h, w = frame_rgb.shape[:2]
+                    if w > 480:
+                        scale = 480 / w
+                        frame_rgb = cv2.resize(frame_rgb, (480, int(h * scale)))
+                    return frame_rgb
+                return None
+
+            with col_start:
+                st.markdown("""<div style='text-align:center; color:#f4c430; font-weight:700;
+                    font-size:0.9rem; margin-bottom:0.4rem'>▶ 시작 프레임</div>""",
+                    unsafe_allow_html=True)
+                start_frame = get_frame_at(tmp_path, start_sec)
+                if start_frame is not None:
+                    st.image(start_frame, caption=f"⏱ {start_sec:.1f}초", use_container_width=True)
+
+            with col_mid:
                 col_status = "good" if 3 <= sel_duration <= 30 else "warn"
                 st.markdown(f"""
-                <div class="metric-card">
-                  <div class="metric-label">선택 길이</div>
-                  <div class="metric-value metric-status-{col_status}">{sel_duration:.1f}<span class="metric-unit"> 초</span></div>
-                </div>""", unsafe_allow_html=True)
+                <div style='display:flex; flex-direction:column; align-items:center;
+                     justify-content:center; height:100%; padding-top:2rem; gap:0.8rem'>
+                  <div class="metric-card" style="width:100%">
+                    <div class="metric-label">선택 길이</div>
+                    <div class="metric-value metric-status-{col_status}">{sel_duration:.1f}<span class="metric-unit">초</span></div>
+                  </div>
+                  <div class="metric-card" style="width:100%">
+                    <div class="metric-label">프레임 수</div>
+                    <div class="metric-value" style="font-size:1.4rem">{int(sel_duration * info["fps"])}<span class="metric-unit">f</span></div>
+                  </div>
+                </div>
+                """, unsafe_allow_html=True)
 
-            # 썸네일 스트립 (구간 미리보기)
-            with st.expander("🎞️ 프레임 미리보기"):
-                thumbs = get_thumbnail_frames(tmp_path, n=8)
-                cols   = st.columns(8)
+            with col_end:
+                st.markdown("""<div style='text-align:center; color:#69f0ae; font-weight:700;
+                    font-size:0.9rem; margin-bottom:0.4rem'>⏹ 끝 프레임</div>""",
+                    unsafe_allow_html=True)
+                end_frame = get_frame_at(tmp_path, max(0, end_sec - 0.1))
+                if end_frame is not None:
+                    st.image(end_frame, caption=f"⏱ {end_sec:.1f}초", use_container_width=True)
+
+            # 구간 적용 버튼
+            trim_btn = st.button("✂️ 이 구간으로 분석하기", use_container_width=True)
+
+            # 썸네일 스트립
+            with st.expander("🎞️ 전체 프레임 스트립 보기"):
+                thumbs = get_thumbnail_frames(tmp_path, n=10)
+                cols   = st.columns(10)
                 for col, (t, img) in zip(cols, thumbs):
                     with col:
                         marker = "🟡" if start_sec <= t <= end_sec else "⚫"
