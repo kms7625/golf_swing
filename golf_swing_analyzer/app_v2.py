@@ -1,0 +1,1110 @@
+Aimport streamlit as st
+import cv2
+import mediapipe as mp
+import numpy as np
+import tempfile
+import os
+import json
+import time
+from datetime import datetime
+from collections import deque
+import google.generativeai as genai
+
+# ─── Page Config ────────────────────────────────────────────────────────────
+st.set_page_config(
+    page_title="AI 골프 스윙 분석기",
+    page_icon="⛳",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# ─── Custom CSS ─────────────────────────────────────────────────────────────
+st.markdown("""
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Space+Grotesk:wght@400;600;700&display=swap');
+
+  html, body, [class*="css"] { font-family: 'Noto Sans KR', sans-serif; }
+
+  .stApp { background: linear-gradient(135deg, #0f1f17 0%, #1a3a2a 100%); color: #e8f5e9; }
+
+  .hero-header {
+    text-align: center; padding: 2.5rem 1rem 1.5rem;
+    border-bottom: 1px solid #2d6a4f44; margin-bottom: 2rem;
+  }
+  .hero-title {
+    font-family: 'Space Grotesk', sans-serif; font-size: 2.8rem;
+    font-weight: 700; color: #f4c430; letter-spacing: -0.5px; margin: 0;
+  }
+  .hero-sub { font-size: 1rem; color: #a5d6a7; margin-top: 0.5rem; font-weight: 300; }
+
+  .metric-card {
+    background: #1e3d2e; border: 1px solid #2d6a4f; border-radius: 12px;
+    padding: 1.2rem 1rem; text-align: center; transition: border-color 0.2s;
+  }
+  .metric-card:hover { border-color: #f4c430; }
+  .metric-label { font-size: 0.75rem; color: #a5d6a7; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 0.3rem; }
+  .metric-value { font-family: 'Space Grotesk', sans-serif; font-size: 2rem; font-weight: 700; color: #f4c430; line-height: 1; }
+  .metric-unit { font-size: 0.8rem; color: #81c784; }
+  .metric-status-good { color: #69f0ae !important; }
+  .metric-status-warn { color: #ffcc02 !important; }
+  .metric-status-bad  { color: #ff5252 !important; }
+
+  .score-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.5rem; }
+  .score-ring {
+    width: 140px; height: 140px; border-radius: 50%; border: 8px solid #2d6a4f;
+    display: flex; align-items: center; justify-content: center; background: #0f1f17;
+  }
+  .score-number { font-family: 'Space Grotesk', sans-serif; font-size: 3rem; font-weight: 700; color: #f4c430; }
+
+  .section-title {
+    font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem; font-weight: 600;
+    color: #b7e4c7; border-left: 3px solid #f4c430; padding-left: 0.8rem;
+    margin: 1.5rem 0 1rem; letter-spacing: 0.3px;
+  }
+
+  .feedback-box {
+    background: #162b1f; border: 1px solid #2d6a4f; border-radius: 10px;
+    padding: 1.4rem; margin: 0.8rem 0; line-height: 1.7; color: #c8e6c9; font-size: 0.95rem;
+  }
+  .feedback-box.critical { border-left: 4px solid #ff5252; }
+  .feedback-box.warning  { border-left: 4px solid #ffcc02; }
+  .feedback-box.good     { border-left: 4px solid #69f0ae; }
+
+  .phase-chip {
+    display: inline-block; background: #2d6a4f; color: #b7e4c7;
+    padding: 0.25rem 0.8rem; border-radius: 20px; font-size: 0.78rem;
+    font-weight: 600; letter-spacing: 0.5px; margin: 0.2rem;
+  }
+  .phase-chip.active { background: #f4c430; color: #0f1f17; }
+
+  .stat-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 0.5rem 0; }
+
+  .stProgress > div > div { background-color: #f4c430 !important; }
+
+  [data-testid="stSidebar"] { background: #162b1f !important; border-right: 1px solid #2d6a4f; }
+  [data-testid="stSidebar"] .stMarkdown p { color: #a5d6a7; }
+
+  .stButton button {
+    background: linear-gradient(135deg, #2d6a4f, #40916c) !important;
+    color: white !important; border: none !important; border-radius: 8px !important;
+    font-weight: 600 !important; transition: all 0.2s !important;
+  }
+  .stButton button:hover {
+    background: linear-gradient(135deg, #40916c, #52b788) !important;
+    transform: translateY(-1px); box-shadow: 0 4px 12px #2d6a4f88 !important;
+  }
+
+  [data-testid="stFileUploader"] { border: 2px dashed #2d6a4f !important; border-radius: 12px !important; background: #162b1f !important; }
+
+  hr { border-color: #2d6a4f44 !important; }
+
+  .stTabs [data-baseweb="tab-list"] { background: #1e3d2e; border-radius: 8px; }
+  .stTabs [data-baseweb="tab"] { color: #a5d6a7 !important; }
+  .stTabs [aria-selected="true"] { color: #f4c430 !important; background: #2d6a4f; border-radius: 6px; }
+
+  .streamlit-expanderHeader { color: #b7e4c7 !important; background: #1e3d2e !important; }
+</style>
+""", unsafe_allow_html=True)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SECTION 1: MediaPipe 초기화
+# ═══════════════════════════════════════════════════════════════════════════════
+mp_pose = mp.solutions.pose
+mp_drawing = mp.solutions.drawing_utils
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SECTION 2: 수학적 엔진 (슬라이드 5 기반)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def normalize_landmarks(landmarks, w, h):
+    """
+    슬라이드 5: 양 어깨 너비를 기준으로 모든 좌표 정규화
+    - 어깨 중심점을 원점으로
+    - 어깨 너비를 1.0 단위로 스케일링
+    → 카메라 거리·해상도와 무관한 절대 각도 비교 가능
+    """
+    l_sh = np.array([landmarks[11].x * w, landmarks[11].y * h])
+    r_sh = np.array([landmarks[12].x * w, landmarks[12].y * h])
+    shoulder_center = (l_sh + r_sh) / 2
+    shoulder_width  = np.linalg.norm(l_sh - r_sh) + 1e-8
+
+    normalized = {}
+    for idx, lm in enumerate(landmarks):
+        px = np.array([lm.x * w, lm.y * h])
+        normalized[idx] = {
+            "pos": (px - shoulder_center) / shoulder_width,
+            "z":   lm.z,
+            "vis": lm.visibility
+        }
+    return normalized, shoulder_width
+
+
+def angle_from_three_points(a, b, c):
+    """슬라이드 5: 두 벡터의 내적 + 코사인 제2법칙으로 관절각 계산"""
+    ba = np.array(a) - np.array(b)
+    bc = np.array(c) - np.array(b)
+    cosine = np.dot(ba, bc) / (np.linalg.norm(ba) * np.linalg.norm(bc) + 1e-8)
+    return round(np.degrees(np.arccos(np.clip(cosine, -1.0, 1.0))), 1)
+
+
+def calc_spine_angle(norm):
+    """척추각: 어깨 중심 → 골반 중심이 수직축과 이루는 각도"""
+    sh_c  = (norm[11]["pos"] + norm[12]["pos"]) / 2
+    hip_c = (norm[23]["pos"] + norm[24]["pos"]) / 2
+    dy = hip_c[1] - sh_c[1]
+    dx = hip_c[0] - sh_c[0]
+    return round(np.degrees(np.arctan2(abs(dx), abs(dy) + 1e-8)), 1)
+
+
+def calc_shoulder_rotation(norm):
+    """어깨 라인 기울기 → 회전각"""
+    l = norm[11]["pos"]; r = norm[12]["pos"]
+    return round(np.degrees(np.arctan2(abs(r[1] - l[1]), abs(r[0] - l[0]) + 1e-8)), 1)
+
+
+def calc_hip_rotation(norm):
+    """골반 라인 기울기 → 회전각"""
+    l = norm[23]["pos"]; r = norm[24]["pos"]
+    return round(np.degrees(np.arctan2(abs(r[1] - l[1]), abs(r[0] - l[0]) + 1e-8)), 1)
+
+
+def calc_knee_angle(norm, side):
+    hip_i, knee_i, ankle_i = (23, 25, 27) if side == 'left' else (24, 26, 28)
+    return angle_from_three_points(
+        norm[hip_i]["pos"], norm[knee_i]["pos"], norm[ankle_i]["pos"]
+    )
+
+
+def calc_elbow_angle(norm, side):
+    sh_i, el_i, wr_i = (11, 13, 15) if side == 'left' else (12, 14, 16)
+    return angle_from_three_points(
+        norm[sh_i]["pos"], norm[el_i]["pos"], norm[wr_i]["pos"]
+    )
+
+
+def visibility_ok(norm, idx, thr=0.5):
+    return norm[idx]["vis"] > thr
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SECTION 3: 이동 평균 필터 (슬라이드 8 기반)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class MovingAverageFilter:
+    """슬라이드 8: 이동 평균 필터로 흔들림 보정"""
+    def __init__(self, window=5):
+        self.window = window
+        self.buffers = {}
+
+    def smooth(self, key, value):
+        if key not in self.buffers:
+            self.buffers[key] = deque(maxlen=self.window)
+        self.buffers[key].append(value)
+        return round(float(np.mean(self.buffers[key])), 1)
+
+    def interpolate(self, key, prev_value):
+        """슬라이드 8: 신뢰도 하락 시 이전 프레임 기반 선형 보간"""
+        if key not in self.buffers or len(self.buffers[key]) == 0:
+            return prev_value
+        return round(float(np.mean(list(self.buffers[key])[-3:])), 1)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SECTION 4: 7단계 스윙 페이즈 감지 (슬라이드 6 기반)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+PHASES = ["어드레스", "백스윙", "백스윙 톱", "다운스윙", "임팩트", "팔로우스루", "피니시"]
+
+class SwingPhaseDetector:
+    """
+    슬라이드 6: 손목 관절의 y축 좌표 변화율과 속도 벡터로 7단계 자동 세그먼테이션
+    - 손목 y좌표 최고점 → 백스윙 톱
+    - 하강 속도 최대 → 임팩트
+    """
+    def __init__(self):
+        self.wrist_y_history = []  # 손목 y 좌표 시계열
+        self.frame_indices   = []
+        self.phase_boundaries = {}
+
+    def update(self, frame_idx, left_wrist_y, right_wrist_y):
+        avg_y = (left_wrist_y + right_wrist_y) / 2
+        self.wrist_y_history.append(avg_y)
+        self.frame_indices.append(frame_idx)
+
+    def detect_all_phases(self):
+        """전체 시계열 분석으로 7단계 경계 탐지"""
+        if len(self.wrist_y_history) < 10:
+            return {}
+
+        y = np.array(self.wrist_y_history)
+        n = len(y)
+
+        # 속도 벡터 (y 변화율)
+        velocity = np.gradient(y)
+
+        # 어드레스: 첫 10% (손목이 안정적인 구간)
+        addr_end = max(1, int(n * 0.12))
+
+        # 백스윙 톱: y 최솟값 (정규화 좌표에서 위로 올라가면 y 감소)
+        search_start = addr_end
+        search_end   = min(n - 1, int(n * 0.65))
+        top_idx      = search_start + int(np.argmin(y[search_start:search_end]))
+
+        # 임팩트: 톱 이후 하강 속도 최대 구간
+        if top_idx + 2 < n:
+            vel_after_top = velocity[top_idx:]
+            impact_offset = int(np.argmax(vel_after_top))
+            impact_idx    = min(top_idx + impact_offset, n - 1)
+        else:
+            impact_idx = min(top_idx + 2, n - 1)
+
+        # 팔로우스루: 임팩트 이후 20%
+        follow_idx = min(impact_idx + max(1, int((n - impact_idx) * 0.4)), n - 1)
+
+        boundaries = {
+            "어드레스":   (0,           addr_end),
+            "백스윙":     (addr_end,    top_idx),
+            "백스윙 톱":  (top_idx,     top_idx + max(1, int(n * 0.04))),
+            "다운스윙":   (top_idx,     impact_idx),
+            "임팩트":     (impact_idx,  min(impact_idx + max(1, int(n * 0.04)), n-1)),
+            "팔로우스루": (impact_idx,  follow_idx),
+            "피니시":     (follow_idx,  n - 1),
+        }
+        self.phase_boundaries = boundaries
+        return boundaries
+
+    def get_phase_for_frame(self, local_idx):
+        """프레임 인덱스에 해당하는 페이즈 반환"""
+        if not self.phase_boundaries:
+            return "어드레스"
+
+        n = len(self.wrist_y_history)
+        progress = local_idx / max(n - 1, 1)
+
+        if progress < 0.12:   return "어드레스"
+        elif local_idx <= self.phase_boundaries.get("백스윙 톱", (0, n//3))[0]:
+            return "백스윙"
+        elif progress < 0.55: return "백스윙 톱" if abs(progress - 0.5) < 0.05 else "다운스윙"
+        elif progress < 0.68: return "임팩트"
+        elif progress < 0.85: return "팔로우스루"
+        else:                  return "피니시"
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SECTION 5: 스윙 궤적 드로잉 (슬라이드 7 핵심 기능 ②)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+PHASE_COLORS = {
+    "어드레스":   (150, 200, 150),
+    "백스윙":     (100, 180, 255),
+    "백스윙 톱":  (255, 220,  50),
+    "다운스윙":   (255, 140,  50),
+    "임팩트":     (255,  60,  60),
+    "팔로우스루": (180, 100, 255),
+    "피니시":     (80,  220, 180),
+}
+
+def draw_swing_trajectory(frame, trajectory_points, current_phase):
+    """슬라이드 7: 스윙 궤적 자동 드로잉 (손목 경로 + 페이즈별 색상)"""
+    overlay = frame.copy()
+    if len(trajectory_points) < 2:
+        return frame
+
+    for i in range(1, len(trajectory_points)):
+        pt1 = trajectory_points[i - 1]
+        pt2 = trajectory_points[i]
+        phase = pt2.get("phase", "어드레스")
+        color = PHASE_COLORS.get(phase, (200, 200, 200))
+        if pt1["pos"] is not None and pt2["pos"] is not None:
+            cv2.line(overlay,
+                     (int(pt1["pos"][0]), int(pt1["pos"][1])),
+                     (int(pt2["pos"][0]), int(pt2["pos"][1])),
+                     color, 3, cv2.LINE_AA)
+            cv2.circle(overlay,
+                       (int(pt2["pos"][0]), int(pt2["pos"][1])),
+                       4, color, -1)
+
+    return cv2.addWeighted(overlay, 0.85, frame, 0.15, 0)
+
+
+def draw_skeleton_annotations(frame, results, norm, metrics, w, h):
+    """포즈 스켈레톤 + 척추선 + 페이즈 텍스트 오버레이"""
+    mp_drawing.draw_landmarks(
+        frame, results.pose_landmarks, mp_pose.POSE_CONNECTIONS,
+        landmark_drawing_spec=mp_drawing.DrawingSpec(
+            color=(180, 220, 100), thickness=3, circle_radius=4),
+        connection_drawing_spec=mp_drawing.DrawingSpec(
+            color=(60, 160, 80), thickness=2)
+    )
+
+    # 척추선 (어깨 중심 → 골반 중심)
+    lms = results.pose_landmarks.landmark
+    sh_cx  = int((lms[11].x + lms[12].x) / 2 * w)
+    sh_cy  = int((lms[11].y + lms[12].y) / 2 * h)
+    hip_cx = int((lms[23].x + lms[24].x) / 2 * w)
+    hip_cy = int((lms[23].y + lms[24].y) / 2 * h)
+    cv2.line(frame, (sh_cx, sh_cy), (hip_cx, hip_cy), (244, 196, 48), 3)
+
+    # 페이즈 + 척추각 HUD
+    phase = metrics.get("phase", "")
+    spine = metrics.get("spine_angle", 0)
+    cv2.rectangle(frame, (8, 8), (260, 52), (15, 50, 30), -1)
+    cv2.putText(frame, f"{phase}  |  척추각 {spine}°",
+                (14, 36), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (244, 196, 48), 2)
+
+    return frame
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SECTION 6: 영상 처리 메인 파이프라인
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def process_video(video_path, sample_rate=3):
+    cap         = cv2.VideoCapture(video_path)
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    fps          = cap.get(cv2.CAP_PROP_FPS) or 30.0
+
+    frame_data       = []
+    annotated_frames = []
+    trajectory_pts   = []   # 손목 궤적 (왼손목 기준)
+    phase_detector   = SwingPhaseDetector()
+    ma_filter        = MovingAverageFilter(window=5)
+    prev_metrics     = {}
+    frame_idx        = 0
+    local_idx        = 0    # 샘플링 후 인덱스
+
+    with mp_pose.Pose(
+        static_image_mode=False,
+        model_complexity=2,
+        smooth_landmarks=True,
+        min_detection_confidence=0.5,
+        min_tracking_confidence=0.5
+    ) as pose:
+
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                break
+
+            if frame_idx % sample_rate != 0:
+                frame_idx += 1
+                continue
+
+            h, w = frame.shape[:2]
+
+            # CLAHE 전처리 (슬라이드 8: 조명 노이즈 극복)
+            lab = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
+            l_ch, a_ch, b_ch = cv2.split(lab)
+            clahe  = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+            l_ch   = clahe.apply(l_ch)
+            enhanced_rgb = cv2.cvtColor(cv2.merge([l_ch, a_ch, b_ch]), cv2.COLOR_LAB2RGB)
+
+            results = pose.process(enhanced_rgb)
+
+            if results.pose_landmarks:
+                lms = results.pose_landmarks.landmark
+
+                # 슬라이드 5: 어깨 너비 기준 정규화
+                norm, shoulder_width = normalize_landmarks(lms, w, h)
+
+                key_joints = [11, 12, 23, 24, 25, 26]
+                visible    = all(visibility_ok(norm, idx) for idx in key_joints)
+
+                if visible:
+                    # 손목 y좌표 (정규화 공간)
+                    lw_y = norm[15]["pos"][1]
+                    rw_y = norm[16]["pos"][1]
+                    phase_detector.update(local_idx, lw_y, rw_y)
+
+                    raw = {
+                        "frame":              frame_idx,
+                        "local_idx":          local_idx,
+                        "time":               round(frame_idx / fps, 2),
+                        "spine_angle":        calc_spine_angle(norm),
+                        "shoulder_rotation":  calc_shoulder_rotation(norm),
+                        "hip_rotation":       calc_hip_rotation(norm),
+                        "left_knee":          calc_knee_angle(norm, 'left'),
+                        "right_knee":         calc_knee_angle(norm, 'right'),
+                        "left_elbow":         calc_elbow_angle(norm, 'left'),
+                        "right_elbow":        calc_elbow_angle(norm, 'right'),
+                        "shoulder_width_px":  round(shoulder_width, 1),
+                    }
+
+                    # 슬라이드 8: 이동 평균 필터 적용
+                    smoothed_keys = [
+                        "spine_angle", "shoulder_rotation", "hip_rotation",
+                        "left_knee",   "right_knee", "left_elbow", "right_elbow"
+                    ]
+                    metrics = raw.copy()
+                    for key in smoothed_keys:
+                        metrics[key] = ma_filter.smooth(key, raw[key])
+
+                    # 페이즈는 나중에 후처리로 채움 (일단 임시)
+                    metrics["phase"] = "분석중"
+                    prev_metrics     = metrics.copy()
+                    frame_data.append(metrics)
+
+                    # 손목 궤적 포인트 수집 (원본 픽셀 좌표)
+                    lw_px = (int(lms[15].x * w), int(lms[15].y * h))
+                    trajectory_pts.append({
+                        "pos":       lw_px,
+                        "local_idx": local_idx,
+                        "phase":     "분석중"
+                    })
+
+                else:
+                    # 슬라이드 8: 신뢰도 하락 → 이전 프레임 보간
+                    if prev_metrics:
+                        interp = prev_metrics.copy()
+                        interp["frame"]     = frame_idx
+                        interp["time"]      = round(frame_idx / fps, 2)
+                        interp["phase"]     = "보간"
+                        interp["local_idx"] = local_idx
+                        frame_data.append(interp)
+
+                # 어노테이션 그리기
+                annotated = frame.copy()
+                if visible:
+                    draw_swing_trajectory(annotated, trajectory_pts, metrics.get("phase", ""))
+                    annotated = draw_skeleton_annotations(annotated, results, norm, metrics, w, h)
+
+                annotated_frames.append(cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB))
+                local_idx += 1
+
+            frame_idx += 1
+
+    cap.release()
+
+    # ── 슬라이드 6: 전체 시계열로 7단계 페이즈 후처리 ──────────────────────
+    phase_detector.detect_all_phases()
+    for i, fd in enumerate(frame_data):
+        li = fd["local_idx"]
+        fd["phase"] = phase_detector.get_phase_for_frame(li)
+    for i, tp in enumerate(trajectory_pts):
+        li = tp["local_idx"]
+        tp["phase"] = phase_detector.get_phase_for_frame(li)
+
+    return frame_data, annotated_frames, trajectory_pts, fps, phase_detector
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SECTION 7: 지표 요약 및 스코어링
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def compute_summary(frame_data):
+    if not frame_data:
+        return {}
+
+    def avg(k): return round(np.mean([f[k] for f in frame_data if k in f]), 1)
+    def mx(k):  return round(np.max ([f[k] for f in frame_data if k in f]), 1)
+    def mn(k):  return round(np.min ([f[k] for f in frame_data if k in f]), 1)
+
+    spine_vals  = [f["spine_angle"] for f in frame_data]
+    spine_delta = round(max(spine_vals) - min(spine_vals), 1)
+
+    # 페이즈별 집계
+    phase_groups = {}
+    for f in frame_data:
+        ph = f.get("phase", "")
+        phase_groups.setdefault(ph, []).append(f)
+
+    # 각 페이즈 핵심 지표
+    phase_stats = {}
+    for ph, frames in phase_groups.items():
+        if frames:
+            phase_stats[ph] = {
+                "spine_angle":  round(np.mean([f["spine_angle"] for f in frames]), 1),
+                "shoulder_rot": round(np.mean([f["shoulder_rotation"] for f in frames]), 1),
+                "hip_rot":      round(np.mean([f["hip_rotation"] for f in frames]), 1),
+                "count":        len(frames)
+            }
+
+    return {
+        "total_frames":          len(frame_data),
+        "spine_angle_avg":       avg("spine_angle"),
+        "spine_angle_delta":     spine_delta,
+        "spine_angle_min":       mn("spine_angle"),
+        "spine_angle_max":       mx("spine_angle"),
+        "shoulder_rotation_avg": avg("shoulder_rotation"),
+        "shoulder_rotation_max": mx("shoulder_rotation"),
+        "hip_rotation_avg":      avg("hip_rotation"),
+        "hip_rotation_max":      mx("hip_rotation"),
+        "x_factor":              round(mx("shoulder_rotation") - mx("hip_rotation"), 1),
+        "left_knee_avg":         avg("left_knee"),
+        "right_knee_avg":        avg("right_knee"),
+        "left_elbow_avg":        avg("left_elbow"),
+        "right_elbow_avg":       avg("right_elbow"),
+        "phases_detected":       list(phase_groups.keys()),
+        "phase_stats":           phase_stats,
+    }
+
+
+def compute_score(summary):
+    score  = 100
+    issues = []
+
+    # 1. 척추각 안정성
+    delta = summary.get("spine_angle_delta", 0)
+    if delta > 10:
+        score -= 25
+        issues.append(("critical", f"척추각 변화량 {delta}° — 헤드업·스웨이 위험. 임팩트까지 척추각을 고정하세요."))
+    elif delta > 5:
+        score -= 12
+        issues.append(("warning", f"척추각 변화량 {delta}° — 약간의 상체 흔들림. ±5° 이내 유지를 목표로 하세요."))
+    else:
+        issues.append(("good", f"척추각 안정 ({delta}°) — 견고한 회전축 유지 ✓"))
+
+    # 2. X-Factor (슬라이드 5: 몸통 꼬임)
+    xf = summary.get("x_factor", 0)
+    if xf < 20:
+        score -= 15
+        issues.append(("warning", f"X-Factor {xf}° — 어깨-골반 꼬임 부족. 백스윙 시 어깨를 더 회전하세요."))
+    elif xf > 60:
+        score -= 8
+        issues.append(("warning", f"X-Factor {xf}° — 오버스윙 가능성. 80° 이하로 제한하세요."))
+    else:
+        issues.append(("good", f"X-Factor {xf}° — 적절한 몸통 꼬임 ✓"))
+
+    # 3. 무릎 굴곡
+    lk = summary.get("left_knee_avg", 180)
+    rk = summary.get("right_knee_avg", 180)
+    if lk > 165 or rk > 165:
+        score -= 10
+        issues.append(("warning", f"무릎 굴곡 부족 (좌 {lk}° / 우 {rk}°) — 지면 반력 활용이 제한됩니다."))
+    else:
+        issues.append(("good", f"무릎 굴곡 적절 (좌 {lk}° / 우 {rk}°) ✓"))
+
+    # 4. 왼팔 직선성
+    le = summary.get("left_elbow_avg", 180)
+    if le < 140:
+        score -= 10
+        issues.append(("warning", f"왼팔 굽힘 과다 ({le}°) — 백스윙 아크 손실. 왼팔을 펴는 연습이 필요합니다."))
+    else:
+        issues.append(("good", f"왼팔 직선성 양호 ({le}°) ✓"))
+
+    # 5. 어깨 회전
+    sh_max = summary.get("shoulder_rotation_max", 0)
+    if sh_max < 60:
+        score -= 8
+        issues.append(("warning", f"어깨 최대 회전 {sh_max}° — 백스윙 부족으로 비거리 손실 가능성."))
+    else:
+        issues.append(("good", f"어깨 회전 충분 ({sh_max}°) ✓"))
+
+    return max(0, min(100, score)), issues
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SECTION 8: LLM 피드백 (슬라이드 9: 투어 프로 페르소나 + 구조화 JSON)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def build_prompt(summary, issues):
+    """슬라이드 9: 구조화된 편차 데이터(JSON) + 투어 프로 코치 페르소나"""
+    issue_text = "\n".join([f"- [{lvl.upper()}] {msg}" for lvl, msg in issues])
+
+    # 페이즈별 통계 JSON
+    phase_json = json.dumps(summary.get("phase_stats", {}), ensure_ascii=False, indent=2)
+
+    return f"""당신은 20년 경력의 투어 프로 출신 골프 코치입니다.
+원인과 결과를 항상 함께 설명하며, 수치 데이터에 기반한 구체적인 교정 방법을 제시합니다.
+
+## 구조화된 스윙 분석 데이터 (JSON)
+```json
+{{
+  "총_분석_프레임": {summary['total_frames']},
+  "척추각": {{
+    "평균": {summary['spine_angle_avg']}°,
+    "변화량_delta": {summary['spine_angle_delta']}°,
+    "최소": {summary['spine_angle_min']}°,
+    "최대": {summary['spine_angle_max']}°
+  }},
+  "회전_분석": {{
+    "어깨_최대_회전": {summary['shoulder_rotation_max']}°,
+    "골반_최대_회전": {summary['hip_rotation_max']}°,
+    "X_Factor_꼬임": {summary['x_factor']}°
+  }},
+  "관절_평균": {{
+    "왼쪽_무릎": {summary['left_knee_avg']}°,
+    "오른쪽_무릎": {summary['right_knee_avg']}°,
+    "왼팔_팔꿈치": {summary['left_elbow_avg']}°,
+    "오른팔_팔꿈치": {summary['right_elbow_avg']}°
+  }},
+  "7단계_페이즈별_데이터": {phase_json}
+}}
+```
+
+## AI 자동 진단 이슈
+{issue_text}
+
+위 데이터를 기반으로 정확히 아래 형식으로 코칭 리포트를 작성하세요:
+
+### 🏌️ 종합 스윙 평가
+(전반적인 강점과 가장 시급한 개선점을 2~3문장으로)
+
+### ⚠️ 핵심 교정 포인트 (원인 → 결과 → 해결책)
+**[1번 포인트]**: (원인) ~ 때문에, (결과) ~ 현상이 발생합니다. (해결) ~을 실천하세요.
+**[2번 포인트]**: ...
+**[3번 포인트]**: ...
+
+### 💪 맞춤형 연습 드릴
+**드릴 1**: (이름) — (구체적 방법과 횟수)
+**드릴 2**: (이름) — (구체적 방법과 횟수)
+
+### 🎯 다음 라운드 전 ONE THING
+(가장 우선순위가 높은 단 하나의 집중 과제를 굵게 강조)
+
+한국어로, 친절하지만 프로답게 작성해주세요."""
+
+
+def get_llm_feedback(summary, issues, provider, api_key, model_name=None):
+    """슬라이드 9: LLM 피드백 생성 (Gemini / Claude / GPT 선택)"""
+    prompt = build_prompt(summary, issues)
+
+    if provider == "Gemini":
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel(model_name or "gemini-1.5-flash")
+        return model.generate_content(prompt).text
+
+    elif provider == "Claude":
+        import anthropic
+        client = anthropic.Anthropic(api_key=api_key)
+        msg = client.messages.create(
+            model=model_name or "claude-3-5-sonnet-20241022",
+            max_tokens=1500,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        return msg.content[0].text
+
+    elif provider == "GPT":
+        from openai import OpenAI
+        client = OpenAI(api_key=api_key)
+        resp = client.chat.completions.create(
+            model=model_name or "gpt-4o",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=1500
+        )
+        return resp.choices[0].message.content
+
+    return "지원하지 않는 LLM 공급자입니다."
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SECTION 9: UI 컴포넌트
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def render_hero():
+    st.markdown("""
+    <div class="hero-header">
+      <div class="hero-title">⛳ AI 골프 스윙 분석기</div>
+      <div class="hero-sub">MediaPipe 어깨폭 정규화 · 7단계 자동 세그먼테이션 · 투어 프로 LLM 코칭</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+def render_metric_card(label, value, unit="", status=""):
+    sc = f"metric-status-{status}" if status else ""
+    st.markdown(f"""
+    <div class="metric-card">
+      <div class="metric-label">{label}</div>
+      <div class="metric-value {sc}">{value}<span class="metric-unit"> {unit}</span></div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+def get_status(val, good_lo, good_hi, warn_lo=None, warn_hi=None):
+    if good_lo <= val <= good_hi:   return "good"
+    if warn_lo is not None and warn_lo <= val <= warn_hi: return "warn"
+    return "bad"
+
+
+def render_sidebar():
+    with st.sidebar:
+        st.markdown("### ⚙️ 설정")
+        st.divider()
+
+        provider = st.selectbox(
+            "🤖 LLM 공급자",
+            ["Gemini", "Claude", "GPT"],
+            help="Gemini: 무료 / Claude·GPT: 유료 API"
+        )
+
+        model_options = {
+            "Gemini": ["gemini-1.5-flash", "gemini-1.5-pro"],
+            "Claude": ["claude-3-5-sonnet-20241022", "claude-3-haiku-20240307"],
+            "GPT":    ["gpt-4o", "gpt-4o-mini"],
+        }
+        model_name = st.selectbox("모델 선택", model_options[provider])
+
+        api_key = st.text_input(
+            f"🔑 {provider} API 키",
+            type="password",
+            placeholder="API 키를 입력하세요",
+            help={
+                "Gemini": "aistudio.google.com → 무료 발급",
+                "Claude": "console.anthropic.com",
+                "GPT":    "platform.openai.com",
+            }[provider]
+        )
+
+        st.divider()
+        st.markdown("**📊 분석 옵션**")
+        sample_rate = st.slider("프레임 샘플 간격", 1, 10, 3,
+                                 help="낮을수록 정밀하지만 처리 시간 증가")
+
+        st.divider()
+        st.markdown("""
+        <div style='color:#a5d6a7; font-size:0.8rem; line-height:1.8'>
+        <b style='color:#b7e4c7'>📐 세미프로 기준치</b><br>
+        • 척추각 변화: <b style='color:#69f0ae'>±5° 이내</b><br>
+        • X-Factor: <b style='color:#69f0ae'>35° ~ 55°</b><br>
+        • 무릎 굴곡: <b style='color:#69f0ae'>130° ~ 155°</b><br>
+        • 왼팔 직선성: <b style='color:#69f0ae'>150°+</b><br>
+        • 어깨 회전: <b style='color:#69f0ae'>80°+</b>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.divider()
+        st.markdown("""
+        <div style='color:#81c784; font-size:0.78rem'>
+        💡 <b>최적 촬영 조건</b><br>
+        • 정면(Face-on) 또는 측면(DTL)<br>
+        • 골퍼가 화면 중앙에 위치<br>
+        • 밝은 조명 / 단색 배경<br>
+        • 720p 이상 · 5~30초 분량
+        </div>
+        """, unsafe_allow_html=True)
+
+    return provider, model_name, api_key, sample_rate
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SECTION 10: 메인 앱
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def main():
+    render_hero()
+    provider, model_name, api_key, sample_rate = render_sidebar()
+
+    tab1, tab2, tab3, tab4 = st.tabs([
+        "📹 영상 분석",
+        "🔄 7단계 페이즈",
+        "📊 상세 데이터",
+        "🤖 AI 코칭 리포트"
+    ])
+
+    # ── TAB 1: 영상 업로드 & 분석 ──────────────────────────────────────────
+    with tab1:
+        st.markdown('<div class="section-title">골프 스윙 영상 업로드</div>', unsafe_allow_html=True)
+
+        col_up, col_tip = st.columns([2, 1])
+        with col_up:
+            uploaded = st.file_uploader(
+                "MP4, MOV, AVI 파일을 드롭하거나 클릭하여 선택",
+                type=["mp4", "mov", "avi", "m4v"],
+                label_visibility="collapsed"
+            )
+        with col_tip:
+            st.info("💡 드라이버·아이언·퍼팅 모두 분석 가능\n\n정면 또는 측면 촬영 권장")
+
+        if uploaded:
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as tmp:
+                tmp.write(uploaded.read())
+                tmp_path = tmp.name
+
+            col_vid, col_ctrl = st.columns([3, 2])
+            with col_vid:
+                st.video(tmp_path)
+            with col_ctrl:
+                st.markdown('<div class="section-title">분석 준비</div>', unsafe_allow_html=True)
+                st.markdown(f"""
+                <div class="feedback-box good">
+                ✅ 파일: <b>{uploaded.name}</b><br>
+                ✅ 크기: <b>{uploaded.size/1024/1024:.1f} MB</b><br>
+                ✅ 샘플링: 매 <b>{sample_rate}</b>프레임
+                </div>
+                """, unsafe_allow_html=True)
+                analyze_btn = st.button("🔍 스윙 분석 시작", use_container_width=True)
+
+            if analyze_btn:
+                prog = st.progress(0, "🦴 관절 포인트 추출 중...")
+                frame_data, annotated_frames, traj_pts, fps, phase_det = \
+                    process_video(tmp_path, sample_rate)
+                prog.progress(70, "📐 각도 계산 & 페이즈 세그먼테이션...")
+                summary = compute_summary(frame_data)
+                prog.progress(90, "🏅 스코어 산정...")
+                score, issues = compute_score(summary)
+                prog.progress(100, "✅ 완료!")
+                time.sleep(0.3); prog.empty()
+
+                st.session_state.update({
+                    "frame_data":        frame_data,
+                    "annotated_frames":  annotated_frames,
+                    "trajectory_pts":    traj_pts,
+                    "summary":           summary,
+                    "score":             score,
+                    "issues":            issues,
+                    "fps":               fps,
+                    "phase_det":         phase_det,
+                })
+
+            if "summary" in st.session_state:
+                summary = st.session_state.summary
+                score   = st.session_state.score
+                issues  = st.session_state.issues
+
+                st.divider()
+                st.markdown('<div class="section-title">📊 분석 결과 요약</div>', unsafe_allow_html=True)
+
+                col_sc, c1, c2, c3, c4, c5 = st.columns([1.4, 1, 1, 1, 1, 1])
+                with col_sc:
+                    color = "#69f0ae" if score >= 80 else "#ffcc02" if score >= 60 else "#ff5252"
+                    grade = "S" if score >= 95 else "A" if score >= 85 else "B" if score >= 75 else "C" if score >= 60 else "D"
+                    st.markdown(f"""
+                    <div class="score-container">
+                      <div class="score-ring" style="border-color:{color}">
+                        <span class="score-number" style="color:{color}">{score}</span>
+                      </div>
+                      <div style="margin-top:0.7rem;font-family:'Space Grotesk';font-size:1rem;color:#b7e4c7">
+                        스윙 점수 &nbsp;<span style="color:{color};font-weight:700">{grade}등급</span>
+                      </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                with c1:
+                    s = get_status(summary['spine_angle_delta'], 0, 5, 5, 10)
+                    render_metric_card("척추각 변화", summary['spine_angle_delta'], "°", s)
+                with c2:
+                    s = get_status(summary['x_factor'], 35, 55, 20, 60)
+                    render_metric_card("X-Factor", summary['x_factor'], "°", s)
+                with c3:
+                    render_metric_card("어깨 회전", summary['shoulder_rotation_max'], "°")
+                with c4:
+                    render_metric_card("골반 회전", summary['hip_rotation_max'], "°")
+                with c5:
+                    ph_cnt = len(summary['phases_detected'])
+                    s = "good" if ph_cnt >= 5 else "warn"
+                    render_metric_card("감지 페이즈", ph_cnt, "/7", s)
+
+                st.divider()
+                st.markdown('<div class="section-title">🔍 항목별 진단</div>', unsafe_allow_html=True)
+                for level, msg in issues:
+                    icon = "🔴" if level == "critical" else "🟡" if level == "warning" else "🟢"
+                    st.markdown(f'<div class="feedback-box {level}">{icon} {msg}</div>', unsafe_allow_html=True)
+
+                # 어노테이션 프레임 샘플 (슬라이드 7: 궤적 드로잉 포함)
+                frames = st.session_state.get("annotated_frames", [])
+                if frames:
+                    st.divider()
+                    st.markdown('<div class="section-title">🎬 스윙 궤적 분석 프레임</div>', unsafe_allow_html=True)
+                    n   = len(frames)
+                    idxs = [0, n//5, 2*n//5, 3*n//5, 4*n//5, n-1]
+                    idxs = list(dict.fromkeys([min(i, n-1) for i in idxs]))[:6]
+                    labels = ["어드레스", "백스윙", "백스윙 톱", "다운스윙", "임팩트", "피니시"]
+                    cols = st.columns(len(idxs))
+                    for col, fi, lb in zip(cols, idxs, labels):
+                        with col:
+                            st.image(frames[fi], caption=lb, use_container_width=True)
+
+            if 'tmp_path' in dir() and os.path.exists(tmp_path):
+                try: os.unlink(tmp_path)
+                except: pass
+
+    # ── TAB 2: 7단계 페이즈 (슬라이드 6) ──────────────────────────────────
+    with tab2:
+        if "summary" not in st.session_state:
+            st.info("📹 먼저 영상을 업로드하고 분석을 실행해주세요.")
+        else:
+            summary = st.session_state.summary
+            phase_stats = summary.get("phase_stats", {})
+
+            st.markdown('<div class="section-title">🔄 7단계 스윙 자동 세그먼테이션</div>', unsafe_allow_html=True)
+            st.caption("손목 y좌표 변화율 · 속도 벡터 기반 자동 분할 (슬라이드 6 알고리즘)")
+
+            # 페이즈 타임라인
+            phase_order = ["어드레스", "백스윙", "백스윙 톱", "다운스윙", "임팩트", "팔로우스루", "피니시"]
+            detected    = summary.get("phases_detected", [])
+
+            chips_html = ""
+            for ph in phase_order:
+                cls = "phase-chip active" if ph in detected else "phase-chip"
+                cnt = phase_stats.get(ph, {}).get("count", 0)
+                chips_html += f'<span class="{cls}">{ph} ({cnt}f)</span> '
+            st.markdown(f'<div class="stat-row">{chips_html}</div>', unsafe_allow_html=True)
+
+            st.divider()
+
+            # 페이즈별 핵심 지표 카드
+            phase_display = [ph for ph in phase_order if ph in phase_stats]
+            if phase_display:
+                cols = st.columns(min(len(phase_display), 4))
+                for i, ph in enumerate(phase_display):
+                    ps = phase_stats[ph]
+                    col = cols[i % 4]
+                    with col:
+                        spine_color = "#69f0ae" if abs(ps['spine_angle'] - summary['spine_angle_avg']) < 3 else "#ffcc02"
+                        st.markdown(f"""
+                        <div class="metric-card" style="margin-bottom:0.8rem">
+                          <div class="metric-label">{ph}</div>
+                          <div style="font-size:0.82rem; color:#a5d6a7; margin-top:0.4rem; line-height:1.8">
+                            척추각 <b style="color:{spine_color}">{ps['spine_angle']}°</b><br>
+                            어깨 회전 <b style="color:#81d4fa">{ps['shoulder_rot']}°</b><br>
+                            골반 회전 <b style="color:#ce93d8">{ps['hip_rot']}°</b>
+                          </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+
+            # 손목 y좌표 시계열 (페이즈 경계 시각화)
+            st.divider()
+            st.markdown('<div class="section-title">손목 궤적 시계열 (페이즈 감지 기반)</div>', unsafe_allow_html=True)
+
+            import pandas as pd
+            fd = st.session_state.frame_data
+            df = pd.DataFrame(fd)
+            if "local_idx" in df.columns and len(df) > 0:
+                st.line_chart(
+                    df[["time", "spine_angle", "shoulder_rotation", "hip_rotation"]]
+                      .set_index("time"),
+                    color=["#f4c430", "#81d4fa", "#ce93d8"]
+                )
+
+            # 페이즈별 상세 분석 expander
+            st.divider()
+            for ph in phase_order:
+                if ph not in phase_stats:
+                    continue
+                ps = phase_stats[ph]
+                with st.expander(f"📌 {ph} 상세"):
+                    cc1, cc2, cc3 = st.columns(3)
+                    with cc1:
+                        st.metric("척추각 평균", f"{ps['spine_angle']}°")
+                    with cc2:
+                        st.metric("어깨 회전", f"{ps['shoulder_rot']}°")
+                    with cc3:
+                        st.metric("골반 회전", f"{ps['hip_rot']}°")
+
+    # ── TAB 3: 상세 데이터 ─────────────────────────────────────────────────
+    with tab3:
+        if "frame_data" not in st.session_state:
+            st.info("📹 먼저 영상을 업로드하고 분석을 실행해주세요.")
+        else:
+            import pandas as pd
+            df = pd.DataFrame(st.session_state.frame_data)
+
+            st.markdown('<div class="section-title">관절 각도 시계열 차트</div>', unsafe_allow_html=True)
+
+            ca, cb = st.columns(2)
+            with ca:
+                st.markdown("**척추각 (Spine Angle)**")
+                st.line_chart(df[["time", "spine_angle"]].set_index("time"), color=["#f4c430"])
+                st.markdown("**무릎 굴곡**")
+                st.line_chart(df[["time", "left_knee", "right_knee"]].set_index("time"),
+                              color=["#69f0ae", "#40916c"])
+            with cb:
+                st.markdown("**어깨 / 골반 회전 (X-Factor 꼬임)**")
+                st.line_chart(df[["time", "shoulder_rotation", "hip_rotation"]].set_index("time"),
+                              color=["#81d4fa", "#ce93d8"])
+                st.markdown("**팔꿈치 각도**")
+                st.line_chart(df[["time", "left_elbow", "right_elbow"]].set_index("time"),
+                              color=["#ffab91", "#ff7043"])
+
+            st.divider()
+            st.markdown('<div class="section-title">페이즈별 평균값 테이블</div>', unsafe_allow_html=True)
+            if "phase" in df.columns:
+                tbl = df.groupby("phase")[
+                    ["spine_angle", "shoulder_rotation", "hip_rotation", "left_knee", "right_knee", "left_elbow"]
+                ].mean().round(1)
+                st.dataframe(tbl, use_container_width=True)
+
+            st.divider()
+            with st.expander("📄 원시 프레임 데이터"):
+                st.dataframe(df, use_container_width=True, height=300)
+                csv = df.to_csv(index=False).encode("utf-8-sig")
+                st.download_button(
+                    "⬇️ CSV 다운로드",
+                    csv,
+                    f"swing_data_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
+                    "text/csv"
+                )
+
+    # ── TAB 4: AI 코칭 리포트 (슬라이드 9) ────────────────────────────────
+    with tab4:
+        if "summary" not in st.session_state:
+            st.info("📹 먼저 영상을 업로드하고 분석을 실행해주세요.")
+        else:
+            st.markdown(f'<div class="section-title">🤖 {provider} AI 코칭 리포트</div>', unsafe_allow_html=True)
+            st.caption("슬라이드 9 알고리즘: 투어 프로 페르소나 + 구조화 JSON 데이터 → 원인-결과-해결책 피드백")
+
+            if not api_key:
+                link = {
+                    "Gemini": "https://aistudio.google.com/app/apikey",
+                    "Claude": "https://console.anthropic.com",
+                    "GPT":    "https://platform.openai.com/api-keys",
+                }[provider]
+                st.warning(f"**{provider} API 키가 필요합니다.**\n\n👉 [{link}]({link}) 에서 발급 후 사이드바에 입력하세요.")
+            else:
+                if st.button(f"🧠 {provider} AI 코칭 피드백 생성", use_container_width=True):
+                    with st.spinner(f"{provider} AI가 7단계 페이즈 데이터를 분석 중..."):
+                        try:
+                            feedback = get_llm_feedback(
+                                st.session_state.summary,
+                                st.session_state.issues,
+                                provider, api_key, model_name
+                            )
+                            st.session_state.ai_feedback = feedback
+                        except Exception as e:
+                            st.error(f"오류: {e}")
+
+            if "ai_feedback" in st.session_state:
+                st.markdown(f"""
+                <div class="feedback-box" style="font-size:0.96rem;line-height:2;white-space:pre-wrap">
+                {st.session_state.ai_feedback}
+                </div>
+                """, unsafe_allow_html=True)
+
+                col_dl1, col_dl2 = st.columns(2)
+                with col_dl1:
+                    st.download_button(
+                        "⬇️ 코칭 리포트 저장 (.txt)",
+                        st.session_state.ai_feedback,
+                        f"coaching_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
+                        "text/plain"
+                    )
+                with col_dl2:
+                    # JSON 요약 다운로드
+                    json_data = json.dumps({
+                        "summary": st.session_state.summary,
+                        "score":   st.session_state.score,
+                        "issues":  st.session_state.issues,
+                        "feedback": st.session_state.ai_feedback,
+                    }, ensure_ascii=False, indent=2)
+                    st.download_button(
+                        "⬇️ 분석 데이터 저장 (.json)",
+                        json_data,
+                        f"swing_analysis_{datetime.now().strftime('%Y%m%d_%H%M')}.json",
+                        "application/json"
+                    )
+
+            # API 없어도 볼 수 있는 수치 요약
+            st.divider()
+            with st.expander("📋 수치 요약 (API 없이 확인)"):
+                s  = st.session_state.summary
+                sc = st.session_state.score
+                st.markdown(f"""
+**종합 점수: {sc}점**
+
+| 항목 | 측정값 | 기준 | 판정 |
+|------|--------|------|------|
+| 척추각 변화량 | {s['spine_angle_delta']}° | ≤ 5° | {'✅' if s['spine_angle_delta'] <= 5 else '⚠️' if s['spine_angle_delta'] <= 10 else '❌'} |
+| X-Factor (꼬임) | {s['x_factor']}° | 35°~55° | {'✅' if 35 <= s['x_factor'] <= 55 else '⚠️'} |
+| 어깨 최대 회전 | {s['shoulder_rotation_max']}° | 80°+ | {'✅' if s['shoulder_rotation_max'] >= 80 else '⚠️'} |
+| 골반 최대 회전 | {s['hip_rotation_max']}° | — | — |
+| 왼쪽 무릎 평균 | {s['left_knee_avg']}° | 130°~155° | {'✅' if 130 <= s['left_knee_avg'] <= 155 else '⚠️'} |
+| 오른쪽 무릎 평균 | {s['right_knee_avg']}° | 130°~155° | {'✅' if 130 <= s['right_knee_avg'] <= 155 else '⚠️'} |
+| 왼팔 평균 각도 | {s['left_elbow_avg']}° | ≥ 150° | {'✅' if s['left_elbow_avg'] >= 150 else '⚠️'} |
+| 감지된 페이즈 수 | {len(s['phases_detected'])} / 7 | 5+ | {'✅' if len(s['phases_detected']) >= 5 else '⚠️'} |
+                """)
+
+
+if __name__ == "__main__":
+    main()
