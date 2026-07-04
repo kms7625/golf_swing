@@ -79,7 +79,7 @@ sidebar.py, tab_analysis/phases/data/coaching/learning.py)로 분리. `app_v2.py
 - API 응답: 대표 프레임 7장 + frame_data JSON + score/issues — annotated_frames 전량 반환 금지
 - `web/` 핵심 플로우: 업로드 → 트리밍(자동 감지 초기값 + **수동 슬라이더**, HTML5 video currentTime 바인딩으로 서버 왕복 없는 미리보기) → 분석 → 결과(점수·메트릭·7단계 그리드·차트) → AI 코칭(사용자 키 입력)
 - **한/영 토글(i18n)**: 문자열 딕셔너리 방식. 서버 응답의 한국어 페이즈명("어드레스" 등)은 코드 키(address/backswing/...)로 매핑하는 테이블을 프론트에 두고 표시만 번역 — 서버 응답 포맷은 불변(코어 무변경 원칙)
-- **완전 새 디자인**: 기존 다크그린 테마에 앵커링하지 않음. 디자인 시안 2개 제시 → 사용자 선택 게이트 필수. 단 7페이즈 색상은 서버가 그리는 대표 프레임 오버레이(analyzer/drawing.py PHASE_COLORS)와 일치해야 함 — 기본은 기존 7색 계승, 새 팔레트로 가려면 drawing.py 색값 동기 변경을 golf-code-change 경유로(색값만, 로직 무변경)
+- **완전 새 디자인 — ✅ 확정 (2026-07-05): 시안 B "모션 랩"**. 짙은 그래파이트 배경(`#14181d`/`#1c222a`/`#262e38`) + 코퍼 액센트(`#dd8b57`, 골프=초록의 클리셰를 피함) + 틸 보조색(`#5fb8b0`) + 스틸 회색 텍스트(`#8ca0ac`). 타이포: 디스플레이 "Bahnschrift"(테크니컬 고딕), 데이터/라벨은 전부 모노스페이스("Cascadia Code"/Consolas) + uppercase 트래킹 — 계측 장비 판독값 느낌. 레이아웃은 라운드 카드 대신 코너 브래킷(뷰파인더 느낌) HUD 패널, 손목Y 궤적은 파형(waveform) 스크러버. 단일 다크 테마로 의도적 커밋(라이트 모드 없음 — PPTX 온디바이스 비전과 어울리는 "계측실" 세계관 일관성 유지). 7페이즈 대표 프레임은 서버가 그리는 오버레이(analyzer/drawing.py PHASE_COLORS)를 그대로 쓰고, 프론트 UI 텍스트(phase 라벨 등)만 코퍼/틸 톤으로 표시 — drawing.py 색값 변경 없음
 - 샘플 프리로드: 테스트 영상 3종 분석 결과를 정적 JSON 번들 — 방문자가 키·서버 없이 결과 열람
 - 동일성 검증 게이트: 3종 영상을 새 API로 돌려 Streamlit reference와 frame_data/score 대조 (golf-analysis-quality)
 
