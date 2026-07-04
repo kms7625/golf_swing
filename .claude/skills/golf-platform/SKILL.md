@@ -72,8 +72,19 @@ sidebar.py, tab_analysis/phases/data/coaching/learning.py)로 분리. `app_v2.py
 
 **기각한 대안**: 1안 서버 중심(실시간이 PPTX 온디바이스 비전과 충돌 — 포트폴리오 핵심 가치 훼손), 2안 완전 온디바이스(코어 전체 JS 재구현·재검증 + CLAHE 부재 리스크가 1인·JS 무경험 조건에 과대)
 
-### 3단계: 신규 웹 프론트엔드 구축
-- golf-ui-ux 관할로 위임 — 기존 Streamlit UX의 검증된 동선(업로드→트리밍→분석→7단계 결과→AI 코칭) 유지 여부 명시
+### 3단계: 신규 웹 프론트엔드 구축 — 범위 확정 (2026-07-05, 사용자 합의)
+
+**포함**:
+- `server/` FastAPI 3개 엔드포인트: `POST /analyze`(영상→분석 결과), `POST /detect-phases`(손목Y 시계열→7단계 경계, 5단계 실시간 대비 선구현), `POST /coaching`(LLM 리포트 프록시)
+- API 응답: 대표 프레임 7장 + frame_data JSON + score/issues — annotated_frames 전량 반환 금지
+- `web/` 핵심 플로우: 업로드 → 트리밍(자동 감지 초기값 + **수동 슬라이더**, HTML5 video currentTime 바인딩으로 서버 왕복 없는 미리보기) → 분석 → 결과(점수·메트릭·7단계 그리드·차트) → AI 코칭(사용자 키 입력)
+- **한/영 토글(i18n)**: 문자열 딕셔너리 방식. 서버 응답의 한국어 페이즈명("어드레스" 등)은 코드 키(address/backswing/...)로 매핑하는 테이블을 프론트에 두고 표시만 번역 — 서버 응답 포맷은 불변(코어 무변경 원칙)
+- **완전 새 디자인**: 기존 다크그린 테마에 앵커링하지 않음. 디자인 시안 2개 제시 → 사용자 선택 게이트 필수. 단 7페이즈 색상은 서버가 그리는 대표 프레임 오버레이(analyzer/drawing.py PHASE_COLORS)와 일치해야 함 — 기본은 기존 7색 계승, 새 팔레트로 가려면 drawing.py 색값 동기 변경을 golf-code-change 경유로(색값만, 로직 무변경)
+- 샘플 프리로드: 테스트 영상 3종 분석 결과를 정적 JSON 번들 — 방문자가 키·서버 없이 결과 열람
+- 동일성 검증 게이트: 3종 영상을 새 API로 돌려 Streamlit reference와 frame_data/score 대조 (golf-analysis-quality)
+
+**제외**: Tab5 기준 학습(Streamlit reference에 유지), Tab3 CSV/원시 테이블(후순위)
+**완료 기준**: ① 로컬 전체 플로우 동작 ② 3종 동일성 검증 통과 ③ 샘플 프리로드 동작. **배포는 별도 게이트**(무료 티어 콜드스타트/타임아웃 확인 필요)
 - 기존 Streamlit 앱은 삭제하지 않고 reference implementation으로 유지
 
 ### 4단계: 모바일 앱 확장
