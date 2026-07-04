@@ -2,6 +2,7 @@ import type { AnalyzeResponse } from "../lib/types";
 import { PHASE_ORDER_KO } from "../lib/types";
 import { getStatus } from "../lib/status";
 import { useI18n } from "../lib/i18n";
+import { translateIssueMessage } from "../lib/issueMessages";
 import { Waveform } from "./Waveform";
 import { CoachingPanel } from "./CoachingPanel";
 import styles from "./ResultScreen.module.css";
@@ -21,7 +22,7 @@ function grade(score: number): string {
 }
 
 export function ResultScreen({ result, isSample, onBack }: Props) {
-  const { t, phaseLabel } = useI18n();
+  const { t, lang, phaseLabel } = useI18n();
   const { score, issues, summary, rep_frames, wrist_y_history, phase_boundaries } = result;
 
   const spineStatus = getStatus(summary.spine_angle_delta, 0, 5, 5, 10);
@@ -75,7 +76,7 @@ export function ResultScreen({ result, isSample, onBack }: Props) {
         {issues.map((issue, i) => (
           <div key={i} className={`${styles.issue} ${styles[issue.level]}`}>
             <div className="tag">{issue.level}</div>
-            <div className="txt">{issue.message}</div>
+            <div className="txt">{translateIssueMessage(lang, issue.message)}</div>
           </div>
         ))}
       </div>
