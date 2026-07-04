@@ -54,10 +54,23 @@ sidebar.py, tab_analysis/phases/data/coaching/learning.py)로 분리. `app_v2.py
 - Streamlit 앱이 새 import 구조로 정상 기동 확인 완료
 - **추가로 완료(같은 날)**: 남은 UI(Section 9~10, 885줄)를 `golf_swing_analyzer/ui/` 패키지로 재분리 — CSS/사이드바/5개 탭을 모듈당 파일로, `app_v2.py`는 배선만 남아 53줄. Streamlit AppTest로 5개 탭 무예외 렌더링 확인. 이동으로 무효화된 golf-ui-ux·golf-code-change·golf-coach-llm·golf-analysis-quality의 줄번호 참조 전부 갱신
 
-### 2단계: 프론트엔드 아키텍처 결정
-- 웹 프레임워크 선택 (SPA vs SSR, 분석 코어와의 통신 방식: REST API vs 코어 로직 JS 포팅)
-- 이 결정 시 golf-realtime의 온디바이스 vs 서버 처리 트레이드오프 표를 함께 검토 — 실시간 지원 여부가 프레임워크 선택에 영향
-- 결정 사항을 CLAUDE.md 또는 프로젝트 문서에 기록 (golf-session-retro 위임)
+### 2단계: 프론트엔드 아키텍처 결정 — ✅ 결정 완료 (2026-07-05)
+
+**전제 확인(사용자 답변)**: 배포 형태 = 취업/데모 포트폴리오, JS 경험 = 거의 없음(Python 주력).
+
+**확정 아키텍처 — 하이브리드(3안)**:
+1. **웹 프레임워크**: React + Vite + TypeScript SPA — SEO/SSR 불필요한 도구형 앱, Next.js 과잉. 정적 배포(Vercel/GitHub Pages 무료)
+2. **코어 연결**: `server/`(FastAPI, 얇게)가 `analyzer/`를 직접 import — 코어 무포팅·무재검증. 배포는 무료/저가 티어(Render, Fly.io, HF Spaces Docker 등)
+3. **실시간**: 온디바이스 MediaPipe Tasks JS(라이브 스켈레톤·관절각) + **스윙 종료 후 손목 Y 시계열(float 배열)만 서버 전송해 검증된 Python `detect_all_phases()` 실행** (golf-realtime 방향 A). JS 포팅 범위는 `geometry.py` 하나로 제한(순수 수학 ~70줄, 테스트 영상 3종으로 Python 대조 검증)
+4. **모바일(4단계)**: Capacitor로 웹앱 래핑 — 네이티브 재작성 없음
+5. **리포 구조**: `server/` + `web/` 신설, `golf_swing_analyzer/`(Streamlit)는 reference implementation으로 유지
+
+**설계 유의점(3단계에서 반영)**:
+- annotated_frames 전량 API 반환 금지 — 대표 프레임 7장 + frame_data JSON만 반환, 차트는 프론트 렌더
+- 실시간 경로엔 CLAHE 없음 — 저조도 정확도 별도 확인 항목
+- LLM 키는 현행(사용자 직접 입력, 클라이언트 보관) 유지 + 포트폴리오 방문자용으로 샘플 분석 결과 프리로드(키·서버 없이도 데모 가능하게)
+
+**기각한 대안**: 1안 서버 중심(실시간이 PPTX 온디바이스 비전과 충돌 — 포트폴리오 핵심 가치 훼손), 2안 완전 온디바이스(코어 전체 JS 재구현·재검증 + CLAHE 부재 리스크가 1인·JS 무경험 조건에 과대)
 
 ### 3단계: 신규 웹 프론트엔드 구축
 - golf-ui-ux 관할로 위임 — 기존 Streamlit UX의 검증된 동선(업로드→트리밍→분석→7단계 결과→AI 코칭) 유지 여부 명시
