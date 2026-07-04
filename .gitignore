@@ -3,3 +3,6 @@ __pycache__/
 .venv/
 venv/
 *.egg-info/
+
+# PyCharm IDE 로컬 설정 (머신별 SDK 경로 등 프로젝트 공용 가치 없음)
+.idea/
