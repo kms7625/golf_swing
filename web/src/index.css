@@ -1,0 +1,82 @@
+/* ============================================================
+   AI 골프 스윙 분석기 — "모션 랩" 디자인 시스템
+   그래파이트 배경 + 코퍼/틸 액센트 + 모노스페이스 데이터 타이포.
+   단일 다크 테마로 의도적 커밋 (golf-platform 2단계 아키텍처 결정 참조).
+   ============================================================ */
+
+:root {
+  --graphite: #14181d;
+  --graphite-2: #1c222a;
+  --graphite-3: #262e38;
+  --steel: #8ca0ac;
+  --copper: #dd8b57;
+  --teal: #5fb8b0;
+  --alert: #e2574c;
+  --ok: #6bbf8a;
+  --text: #dfe4e8;
+
+  --font-display: "Bahnschrift", "Segoe UI", sans-serif;
+  --font-mono: "Cascadia Code", "SF Mono", Consolas, monospace;
+
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  background: var(--graphite);
+  color: var(--text);
+  font-family: var(--font-display);
+}
+
+h1,
+h2,
+h3,
+p {
+  text-wrap: balance;
+  margin: 0;
+}
+
+button,
+input,
+select {
+  font-family: inherit;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+.tracked {
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}

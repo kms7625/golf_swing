@@ -1,0 +1,84 @@
+.wrap {
+  background: var(--graphite-2);
+  border: 1px solid var(--graphite-3);
+  padding: 26px;
+}
+
+.wrap h3 {
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--copper);
+  margin-bottom: 18px;
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr 2fr auto;
+  gap: 12px;
+  margin-bottom: 16px;
+  align-items: end;
+}
+
+.field label {
+  display: block;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--steel);
+  margin-bottom: 6px;
+}
+
+.field select,
+.field input {
+  width: 100%;
+  background: var(--graphite);
+  border: 1px solid var(--graphite-3);
+  color: var(--text);
+  padding: 10px 12px;
+  font-size: 13px;
+}
+
+.generateBtn {
+  background: var(--copper);
+  color: var(--graphite);
+  border: none;
+  padding: 11px 20px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.generateBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.status {
+  font-size: 13px;
+  color: var(--teal);
+  margin-bottom: 12px;
+}
+.error {
+  font-size: 13px;
+  color: var(--alert);
+  margin-bottom: 12px;
+}
+
+.report {
+  background: var(--graphite);
+  border: 1px solid var(--graphite-3);
+  padding: 20px;
+  font-size: 14px;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  color: #e6ebee;
+}
+
+@media (max-width: 860px) {
+  .controls {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,236 @@
+.wrap {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 40px 40px 100px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.sectionTitle {
+  font-size: 11.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--copper);
+  font-weight: 700;
+}
+
+.sampleBadge {
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--graphite);
+  background: var(--teal);
+  padding: 4px 10px;
+  font-weight: 700;
+}
+
+.backLink {
+  background: none;
+  border: 1px solid var(--graphite-3);
+  color: var(--steel);
+  font-size: 12px;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+.backLink:hover {
+  border-color: var(--copper);
+  color: var(--copper);
+}
+
+.resultGrid {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+
+.panel {
+  background: var(--graphite-2);
+  border: 1px solid var(--graphite-3);
+  position: relative;
+  padding: 22px;
+}
+
+.bracket {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--copper);
+}
+.bracket.tl {
+  top: 8px;
+  left: 8px;
+  border-right: none;
+  border-bottom: none;
+}
+.bracket.br {
+  bottom: 8px;
+  right: 8px;
+  border-left: none;
+  border-top: none;
+}
+
+.scorePanel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.scorePanel .label {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--steel);
+  margin-bottom: 12px;
+}
+.scorePanel .num {
+  font-size: 60px;
+  font-weight: 700;
+  color: var(--copper);
+  line-height: 1;
+}
+.scorePanel .grade {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--steel);
+}
+
+.statStrip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.statTile {
+  background: var(--graphite-2);
+  border: 1px solid var(--graphite-3);
+  padding: 16px;
+}
+.statTile .k {
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--steel);
+  margin-bottom: 8px;
+}
+.statTile .v {
+  font-size: 24px;
+  font-weight: 700;
+}
+.statTile .v.ok {
+  color: var(--ok);
+}
+.statTile .v.warn {
+  color: var(--copper);
+}
+.statTile .v.crit {
+  color: var(--alert);
+}
+
+.issues {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 36px;
+}
+.issue {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  background: var(--graphite-2);
+  border: 1px solid var(--graphite-3);
+}
+.issue .tag {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.issue.critical .tag {
+  color: var(--alert);
+  border-right: 1px solid var(--alert);
+}
+.issue.warning .tag {
+  color: var(--copper);
+  border-right: 1px solid var(--copper);
+}
+.issue.good .tag {
+  color: var(--ok);
+  border-right: 1px solid var(--ok);
+}
+.issue .txt {
+  padding: 12px 16px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: #cfd6db;
+}
+
+.chartWrap {
+  margin-bottom: 36px;
+}
+.chartWrap h3 {
+  font-size: 11.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--copper);
+  margin-bottom: 10px;
+}
+.chartPanel {
+  background: var(--graphite-2);
+  border: 1px solid var(--graphite-3);
+  padding: 10px;
+}
+
+.phaseRow {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+}
+
+.phaseCell {
+  background: var(--graphite-2);
+  border: 1px solid var(--graphite-3);
+}
+
+.phaseThumb {
+  aspect-ratio: 4 / 3;
+  background: linear-gradient(160deg, #0d1216, var(--graphite-3));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.phaseThumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.phaseCell .cap {
+  padding: 8px 6px;
+  text-align: center;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--teal);
+  border-top: 1px solid var(--copper);
+}
+
+@media (max-width: 860px) {
+  .resultGrid {
+    grid-template-columns: 1fr;
+  }
+  .statStrip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .phaseRow {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}

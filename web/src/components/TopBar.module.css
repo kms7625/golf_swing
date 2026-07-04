@@ -1,0 +1,66 @@
+.bar {
+  background: var(--graphite-2);
+  padding: 14px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--graphite-3);
+}
+
+.brand {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.brand .accent {
+  color: var(--copper);
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+}
+
+.nav {
+  display: flex;
+  gap: 26px;
+  font-size: 12px;
+  color: var(--steel);
+}
+
+.nav a {
+  color: var(--steel);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.nav a:hover {
+  color: var(--copper);
+}
+
+.langToggle {
+  display: flex;
+  border: 1px solid var(--graphite-3);
+}
+
+.langToggle button {
+  background: transparent;
+  border: none;
+  color: var(--steel);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.langToggle button.active {
+  background: var(--copper);
+  color: var(--graphite);
+}

@@ -1,0 +1,47 @@
+.analyzing {
+  max-width: 600px;
+  margin: 140px auto;
+  text-align: center;
+  padding: 0 20px;
+}
+
+.analyzing h2 {
+  font-size: 22px;
+  margin-bottom: 12px;
+}
+
+.analyzing p {
+  color: var(--steel);
+  font-size: 14px;
+  margin-bottom: 30px;
+}
+
+.spinner {
+  width: 44px;
+  height: 44px;
+  margin: 0 auto;
+  border: 3px solid var(--graphite-3);
+  border-top-color: var(--copper);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.errorBanner {
+  max-width: 1160px;
+  margin: 20px auto 0;
+  padding: 0 40px;
+}
+
+.errorBanner div {
+  background: rgba(226, 87, 76, 0.12);
+  border: 1px solid var(--alert);
+  color: var(--alert);
+  padding: 14px 18px;
+  font-size: 13px;
+}
