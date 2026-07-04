@@ -18,6 +18,7 @@ Section 0~8에서 분리됨)는 실제 버그를 겪으며 얻은 불변식의 �
 - `compute_score()`의 동적 임계값은 `ref_db`에 해당 지표 샘플이 **2개 이상**일 때만 적용되고, 그 전에는 하드코딩 기본값으로 폴백한다 (scoring.py L.79-85) — 현재 `reference_db.json`은 비어 있어 사실상 전부 기본값 경로다
 - `annotated_frames`와 `frame_data`는 1:1 인덱스로 같은 `if results.pose_landmarks:` 블록에서 append된다 — 둘 중 하나만 건드리면 인덱스가 어긋난다 (pipeline.py L.253-351)
 - CLAUDE.md의 섹션 줄번호는 `app_v2.py`가 아직 단일 파일이던 시절 기준이라 이제는 아예 무효다 (분석 코어가 `analyzer/` 패키지로 이동, `app_v2.py`는 1986줄→885줄로 축소) — **줄번호 근거는 항상 실제 파일을 읽어 확인**, CLAUDE.md나 다른 golf-* 스킬에 적힌 옛 줄번호를 그대로 믿지 말 것
+- **2026-07-05부터 `server/main.py`(FastAPI)도 `analyzer/`를 직접 import한다** — Streamlit(`ui/`)뿐 아니라 웹(`server/`+`web/`)도 같은 코어를 공유하므로, 이 체크리스트는 이제 두 프론트엔드 모두에 적용된다. 코어를 변경하면 golf-analysis-quality 회귀 검증에 더해 `web/public/samples/*.json` 재생성도 필요 (golf-ui-ux B5)
 
 ---
 
@@ -62,9 +63,10 @@ Section 0~8에서 분리됨)는 실제 버그를 겪으며 얻은 불변식의 �
   - 근거: analyzer/pipeline.py L.253-351 (두 리스트가 같은 블록에서 함께 append됨, `preview_indices`는 사실상 전체 인덱스)
   - 인덱스가 어긋나면 UI의 "7단계 대표 프레임" 표시(ui/tab_analysis.py L.238-269 부근, 2026-07-04 UI 분리로 app_v2.py에서 이동)가 엉뚱한 프레임을 보여줌
 
-### A8. 임팩트/다운스윙 대표 프레임 선택 로직 (app_v2.py UI 코드 안에 있지만 분석 불변식)
+### A8. 임팩트/다운스윙 대표 프레임 선택 로직 (UI/서버 코드 안에 있지만 분석 불변식)
 - [ ] 임팩트=첫 프레임, 다운스윙=85% 지점, 나머지=중간 프레임 선택 규칙을 건드리는가?
   - 근거: ui/tab_analysis.py L.262(임팩트=첫 프레임), L.264(다운스윙=85%), L.266(나머지=중간) — 물리적으로 UI 코드 안에 있지만 CLAUDE.md가 "Representative Frame Selection" 알고리즘으로 문서화한 로직 — analyzer/ 패키지로 옮기지 않고 UI 쪽에 의도적으로 남아있음
+  - **2026-07-05 web/ 추가로 복제 지점이 3곳으로 늘어남**: `ui/tab_analysis.py`(Streamlit), `server/serialization.py`의 `extract_representative_frames()`(웹 API), CLAUDE.md 문서. 규칙을 바꾸려면 **세 곳 모두** 동시 수정 — 하나만 고치면 Streamlit과 웹의 대표 프레임이 서로 달라진다
   - 임팩트는 순간적 접촉이라 중간 프레임을 쓰면 이미 지나간 순간을 보여줌
 
 ### A9. Adaptive 샘플링 임계값

@@ -4,20 +4,65 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Running the App
 
+Two frontends share the same analysis core (`golf_swing_analyzer/analyzer/`):
+
+**Streamlit (reference implementation)** — the original app, kept as the regression baseline:
 ```bash
 pip install -r golf_swing_analyzer/requirements.txt
 streamlit run golf_swing_analyzer/app_v2.py
 ```
 
-The app requires a Gemini/Claude/GPT API key entered in the sidebar at runtime (not stored in code). Gemini is the default and has a free tier.
+**React web app + FastAPI backend (the app being actively developed)**:
+```bash
+# terminal 1 — API server (imports analyzer/ directly, same core as Streamlit)
+pip install -r server/requirements.txt
+cd server && uvicorn main:app --port 8010
+
+# terminal 2 — frontend
+cd web && npm install && npm run dev   # http://localhost:5173
+```
+
+Both frontends require a Gemini/Claude/GPT API key entered by the user at runtime (not stored anywhere). Gemini is the default and has a free tier.
 
 ## Architecture
 
-**Updated 2026-07-04**: the app was originally a single ~1986-line file. It has since been split
-into two packages under `golf_swing_analyzer/`, with `app_v2.py` reduced to a ~53-line wiring
-script (`st.set_page_config()` → `inject_css()` → `main()`, which calls the sidebar and tab
-renderers below). Algorithm logic was moved verbatim (no behavior change) — see the golf-code-change
-skill (`.claude/skills/golf-code-change/SKILL.md`) for the invariants this split had to preserve.
+**Updated 2026-07-04/05**: the app was originally a single ~1986-line file. It went through
+three splits, in order:
+1. `golf_swing_analyzer/app_v2.py` Section 0~8 (analysis core) → `golf_swing_analyzer/analyzer/` package
+2. Remaining UI (Section 9~10, 885 lines) → `golf_swing_analyzer/ui/` package (Streamlit only), `app_v2.py` reduced to ~53 lines of wiring
+3. New `server/` (FastAPI) + `web/` (React+Vite+TS) added — a second frontend that calls the *same* `analyzer/` package, per the "코어 보존 + 껍데기 교체" plan (see `.claude/skills/golf-platform/SKILL.md`)
+
+Algorithm logic was moved verbatim at every step (no behavior change) — see the golf-code-change
+skill (`.claude/skills/golf-code-change/SKILL.md`) for the invariants each split had to preserve.
+The Streamlit app (`golf_swing_analyzer/`) is kept indefinitely as the reference implementation /
+regression baseline — new work happens in `server/` + `web/`.
+
+### `server/` package — FastAPI backend for the web frontend
+
+| File | Role |
+|---|---|
+| `main.py` | 4 endpoints: `POST /analyze`, `POST /auto-window`, `POST /detect-phases` (pre-built for future real-time use), `POST /coaching` |
+| `serialization.py` | numpy→JSON conversion, representative-frame extraction (byte-identical duplicate of `ui/tab_analysis.py`'s logic — see golf-code-change A8), base64 JPEG encoding |
+
+The server imports `analyzer/` directly (adds `golf_swing_analyzer/` to `sys.path`) — no core logic
+lives in `server/`. It never returns `annotated_frames` in full (only 7 representative frames as
+base64) to keep API payloads small.
+
+### `web/` package — React + Vite + TypeScript frontend ("모션 랩" design)
+
+| Path | Role |
+|---|---|
+| `src/index.css` | Design tokens (graphite/copper/teal palette) — single dark theme, deliberate |
+| `src/lib/api.ts` | Fetch wrappers for the 4 server endpoints |
+| `src/lib/types.ts` | API response types, `PHASE_KEY_MAP`, `PHASE_COLORS` (mirrors `analyzer/drawing.py`) |
+| `src/lib/i18n.tsx` | KO/EN string dictionary + phase-name translation table — server responses stay Korean, only display is translated |
+| `src/lib/status.ts` | Port of `ui/components.py`'s `get_status()` — same thresholds |
+| `src/components/` | `TopBar`, `Hero`, `UploadTrim` (upload + auto/manual trim), `ResultScreen`, `Waveform` (recharts), `CoachingPanel` |
+| `public/samples/*.json` | Pre-computed `/analyze` responses for the 3 test videos — lets visitors view a full result screen with no server call and no API key |
+
+`web/` intentionally does not replicate Streamlit Tab 5 (reference-DB batch learning) or Tab 3's
+CSV export — those stay Streamlit-only. See `.claude/skills/golf-platform/SKILL.md` stage 3 for
+the full scope decision.
 
 ### `analyzer/` package — analysis core (preserved, do not rewrite)
 

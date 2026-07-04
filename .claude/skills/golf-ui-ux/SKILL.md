@@ -1,6 +1,6 @@
 ---
 name: golf-ui-ux
-description: 골프 스윙 분석 앱의 화면(현재 Streamlit UI, 향후 신규 웹/앱 프론트엔드)을 작업할 때 사용한다. "UI 바꿔줘", "화면 이상해", "디자인 손봐줘", "탭 구조 바꿔줘", "이 화면 보기 불편해", "사이드바 수정해줘" 같은 말이 나오면 트리거한다. 분석 수치 로직(정규화·각도·페이즈 감지)은 golf-code-change 관할, 플랫폼/프레임워크 선택 자체(Streamlit 유지 여부, React/모바일 프레임워크 결정)는 golf-platform 관할 — 이 스킬은 그 결정이 내려진 뒤의 UI 구현·수정만 다룬다.
+description: 골프 스윙 분석 앱의 화면(Streamlit `ui/` 패키지, React `web/` 프론트엔드)을 작업할 때 사용한다. "UI 바꿔줘", "화면 이상해", "디자인 손봐줘", "탭 구조 바꿔줘", "이 화면 보기 불편해", "사이드바 수정해줘", "웹 화면 고쳐줘", "번역 이상해" 같은 말이 나오면 트리거한다. 분석 수치 로직(정규화·각도·페이즈 감지)은 golf-code-change 관할, 플랫폼/프레임워크 선택 자체(Streamlit 유지 여부, React/모바일 프레임워크 결정)는 golf-platform 관할 — 이 스킬은 그 결정이 내려진 뒤의 UI 구현·수정만 다룬다.
 ---
 
 # 골프 앱 UI/UX 작업 규칙
@@ -60,22 +60,56 @@ components.py(카드/상태 헬퍼), sidebar.py, tab_analysis/phases/data/coachi
 
 ---
 
-## B. 새 프론트엔드(웹/앱) 설계 시 확인 사항
+## B. `web/` React 프론트엔드 작업 시 확인 사항 (golf-platform 3단계, 2026-07-05 구축)
 
-golf-platform에서 프레임워크가 확정된 뒤 적용:
+구조: `src/index.css`(그래파이트+코퍼+틸 디자인 토큰, 단일 다크 테마 — golf-platform
+2단계에서 확정한 "모션 랩" 시안), `src/lib/`(api.ts, types.ts, i18n.tsx, status.ts),
+`src/components/`(TopBar, Hero, UploadTrim, ResultScreen, Waveform, CoachingPanel).
+백엔드는 `server/`(FastAPI, `analyzer/` 직접 import) — 엔드포인트: `/analyze`,
+`/auto-window`, `/detect-phases`(5단계 실시간 대비 선구현), `/coaching`.
 
-- [ ] 온디바이스 30fps 목표(PPTX 비전)를 만족하려면 무거운 서버 왕복을 최소화하는 구조인가
-- [ ] 기존 Streamlit UX의 검증된 사용자 동선(업로드 → 구간 트리밍 미리보기 → 분석 → 7단계 결과 → AI 코칭)을 신규 UI에서도 유지하는가, 의도적으로 바꾸는가 명확히 구분
-- [ ] 한글 HUD, 페이즈별 색상 코드(`PHASE_COLORS`, analyzer/drawing.py L.6-15) 등 기존에 확정된 시각 언어를 재사용할지 새로 디자인할지 결정하고 명시
+### B1. 서버 응답 포맷 불변 원칙
+- [ ] API 응답 필드명이나 페이즈명("어드레스" 등 한국어)을 프론트 편의로 바꾸려 하는가?
+  - 서버 응답은 항상 한국어 원본 그대로 — 표시 번역은 오직 `src/lib/i18n.tsx`의
+    `PHASE_KEY_MAP_INTERNAL`/`phaseLabel()` 경유. 서버·프론트 양쪽을 동시에 바꾸면
+    `server/serialization.py`와 `web/src/lib/types.ts`의 `PHASE_KEY_MAP`이 어긋난다
+
+### B2. 대표 프레임 선택 로직 — 3중 복제 지점
+- [ ] 임팩트=첫 프레임/다운스윙=85%/나머지=중간 규칙(golf-code-change A8)을 손대려 하는가?
+  - 이 로직은 이제 **세 곳**에 복제돼 있다: `ui/tab_analysis.py`(Streamlit), `server/serialization.py`
+    `extract_representative_frames()`(웹 API가 실제로 쓰는 곳), CLAUDE.md 문서. 하나만 고치면
+    Streamlit과 웹의 대표 프레임이 달라진다 — 세 곳 모두 golf-code-change 경유로 동시 수정
+
+### B3. i18n 문자열 하드코딩 금지
+- [ ] 새 UI 문자열을 컴포넌트에 직접 쓰려 하는가(`<p>분석 중...</p>` 같은 하드코딩)?
+  - 반드시 `src/lib/i18n.tsx`의 `STRINGS` 딕셔너리에 키를 추가하고 `useI18n().t()`로 참조 —
+    한쪽 언어만 추가하고 다른 언어를 빠뜨리면 토글 시 원문 노출됨
+  - 페이즈명은 `t()`가 아니라 `phaseLabel(koPhaseName)`으로 — 서버가 주는 한국어 원본을 입력받아 변환
+
+### B4. 임계값 로직은 `status.ts`로 단일화
+- [ ] 메트릭 색상 판정(good/warn/crit)을 컴포넌트 안에 직접 if문으로 새로 쓰려 하는가?
+  - `src/lib/status.ts`의 `getStatus()`가 `ui/components.py`의 `get_status()`와 동일 로직으로
+    이식돼 있음 — 재구현하지 말고 재사용. Streamlit A4에서 지적한 "네 곳 불일치" 문제를
+    웹에서 또 만들지 않도록 주의 (현재 웹은 스코어 패널 1곳만 이 로직을 씀 — 늘어나면 위험)
+
+### B5. 샘플 프리로드 동기화
+- [ ] `analyzer/` 코어나 `server/` 응답 포맷을 바꿨는가?
+  - `web/public/samples/*.json`은 변경 전 API 응답의 스냅샷이다 — 포맷이 바뀌면 프론트가
+    깨지거나 낡은 필드를 표시한다. 코어/서버 변경 후에는 서버를 띄우고 샘플을 재생성할 것
+    (스크립트 전례: 세 영상에 `/auto-window` → `/analyze` 순으로 호출해 저장)
+
+### B6. Tab5/CSV 등 의도적 미구현 범위
+- [ ] Streamlit Tab5(기준 학습 DB 축적), Tab3 CSV 다운로드를 웹에도 만들려 하는가?
+  - golf-platform 3단계에서 의도적으로 범위 제외 — 필요해지면 먼저 golf-platform에 재확인
 
 ---
 
 ## 출력 형식
 
 ```
-[작업 대상] Streamlit / 신규 프론트엔드
-[체크리스트 확인] A1~A5 또는 B 항목 중 해당 사항
-[발견된 불일치] 있으면 명시 (예: 사이드바 안내치 vs 실제 판정 기준)
+[작업 대상] Streamlit ui/ / 웹 web+server
+[체크리스트 확인] A1~A5 또는 B1~B6 항목 중 해당 사항
+[발견된 불일치] 있으면 명시 (예: 사이드바 안내치 vs 실제 판정 기준, 3중 복제 로직 불일치)
 [변경 내용]
 [다음 액션]
 ```
