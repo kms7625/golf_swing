@@ -13,21 +13,38 @@ The app requires a Gemini/Claude/GPT API key entered in the sidebar at runtime (
 
 ## Architecture
 
-The entire application is a **single file**: `golf_swing_analyzer/app_v2.py` (~1300 lines). There is no separate module structure. Sections are clearly delimited with `# SECTION N:` comments.
+**Updated 2026-07-04**: the app was originally a single ~1986-line file. It has since been split
+into two packages under `golf_swing_analyzer/`, with `app_v2.py` reduced to a ~53-line wiring
+script (`st.set_page_config()` → `inject_css()` → `main()`, which calls the sidebar and tab
+renderers below). Algorithm logic was moved verbatim (no behavior change) — see the golf-code-change
+skill (`.claude/skills/golf-code-change/SKILL.md`) for the invariants this split had to preserve.
 
-### Section map
+### `analyzer/` package — analysis core (preserved, do not rewrite)
 
-| Section | Lines | Role |
-|---------|-------|------|
-| 1 | ~114 | MediaPipe init (global `mp_pose`, `mp_drawing`) |
-| 2 | ~120–190 | Math engine — landmark normalization, joint angle calculation |
-| 3 | ~196–213 | `MovingAverageFilter` — per-key deque-based smoothing |
-| 4 | ~218–389 | `SwingPhaseDetector` — 7-phase segmentation algorithm |
-| 5 | ~390–483 | Drawing utilities — trajectory overlay + HUD rendering |
-| 6 | ~488–731 | `process_video()` — main analysis pipeline |
-| 7 | ~738–827 | `compute_summary()` / `compute_score()` — metrics aggregation |
-| 8 | ~831–924 | LLM feedback — `build_prompt()` + `get_llm_feedback()` |
-| 9 | ~929–end | Streamlit UI — sidebar, tabs, session state |
+| Module | Role |
+|---|---|
+| `mp_setup.py` | MediaPipe init (`mp_pose`, `mp_drawing`) |
+| `reference_db.py` | Pro/amateur reference DB (load/save/update, mean±std stats) |
+| `geometry.py` | Landmark normalization, joint angle calculation |
+| `smoothing.py` | `MovingAverageFilter` — per-key deque-based smoothing |
+| `phase_detector.py` | `SwingPhaseDetector` — 7-phase segmentation algorithm |
+| `drawing.py` | Trajectory overlay + Korean HUD rendering |
+| `pipeline.py` | `process_video()` and video utilities (trim, thumbnails, auto swing-window detection) |
+| `scoring.py` | `compute_summary()` / `compute_score()` — metrics aggregation |
+| `coach_llm.py` | `build_prompt()` + `get_llm_feedback()` — LLM coaching report |
+
+### `ui/` package — Streamlit UI (candidate for replacement per the "코어 보존 + 껍데기 교체" plan)
+
+| Module | Role |
+|---|---|
+| `styles.py` | CSS injection (`inject_css()`) + `render_hero()` |
+| `components.py` | `render_metric_card()`, `get_status()` |
+| `sidebar.py` | `render_sidebar()` — LLM provider/model, API key, sample rate |
+| `tab_analysis.py` | Tab 1 — upload, trim, analyze, results, representative frames |
+| `tab_phases.py` | Tab 2 — 7-phase breakdown, wrist-Y diagnostic chart |
+| `tab_data.py` | Tab 3 — raw time-series charts, CSV export |
+| `tab_coaching.py` | Tab 4 — AI coaching report generation/display |
+| `tab_learning.py` | Tab 5 — batch video upload into the reference DB |
 
 ### 7-Phase Swing Detection (`SwingPhaseDetector`)
 
@@ -59,21 +76,29 @@ This is the most complex part of the codebase. It runs **post-hoc** after all fr
 5. Back-fill: each `frame_data` entry gets its phase via `get_phase_for_frame(local_idx)`
 6. Returns `(frame_data, annotated_frames, trajectory_pts, fps, phase_detector, effective_sample)`
 
-`annotated_frames` and `frame_data` are 1:1 indexed (both append in the same `if results.pose_landmarks:` block).
+`annotated_frames` and `frame_data` are 1:1 indexed (both append in the same `if results.pose_landmarks:` block, in `analyzer/pipeline.py`).
 
-### Korean HUD Rendering
+### Korean HUD Rendering (`analyzer/drawing.py`)
 
 `cv2.putText()` cannot render Korean. The HUD uses PIL (`Pillow`) with Malgun Gothic font (`C:/Windows/Fonts/malgun.ttf`). Font is cached in a module-level `_hud_font` global. Falls back to ASCII if font file not found.
 
-### Representative Frame Selection
+### Representative Frame Selection (`ui/tab_analysis.py`)
 
-For displaying the 7-phase grid in the UI, each phase picks one frame from `annotated_frames`:
+For displaying the 7-phase grid in the UI, each phase picks one frame from `annotated_frames`.
+This selection logic lives in the UI layer (not `analyzer/`) but is treated as an analysis
+invariant — see golf-code-change A8:
 - **임팩트 (impact)**: uses the **first** frame of the phase (index 0 of matching entries) — impact is instantaneous
+- **다운스윙 (downswing)**: uses the frame at the 85% point (skips the initial plateau, shows the actual drop)
 - All other phases: uses the **middle** frame
 
-### LLM Integration
+### LLM Integration (`analyzer/coach_llm.py`)
 
-`get_llm_feedback()` supports Gemini (`google.genai`), Claude (`anthropic`), GPT (`openai`). All three are imported lazily (only when selected). The prompt (`build_prompt()`) sends structured JSON of per-phase statistics and AI-flagged issues.
+`get_llm_feedback()` supports Gemini (`google.genai`), Claude (`anthropic`), GPT (`openai`).
+**Note**: Claude and GPT SDKs are imported lazily (only when selected), but Gemini's
+`google.genai` is imported eagerly at module top — this is an inconsistency in the current
+code, not a design choice; don't assume all three behave the same way when reasoning about
+import cost or startup errors. The prompt (`build_prompt()`) sends structured JSON of
+per-phase statistics and AI-flagged issues.
 
 ## Key Data Structures
 
@@ -92,11 +117,11 @@ For displaying the 7-phase grid in the UI, each phase picks one frame from `anno
 }
 ```
 
-**Streamlit session state keys**: `tmp_original`, `trim_path`, `frame_data`, `annotated_frames`, `trajectory_pts`, `fps`, `phase_detector`, `effective_sample`, `summary`, `score`, `issues`, `uploaded_name`
+**Streamlit session state keys** (set in `ui/tab_analysis.py`): `tmp_original`, `trim_path`, `frame_data`, `annotated_frames`, `trajectory_pts`, `fps`, `phase_det`, `eff_sample`, `summary`, `score`, `issues`, `uploaded_name`, `ref_db`, `ai_feedback`
 
 ## Landmark Normalization
 
-All joint angles use **shoulder-width normalized coordinates** (Section 2):
+All joint angles use **shoulder-width normalized coordinates** (`analyzer/geometry.py`):
 - Origin = shoulder center
 - Scale = shoulder width = 1.0 unit
 - This makes angles camera-distance and resolution independent

@@ -13,12 +13,14 @@ description: 골프 스윙 분석 프로젝트의 되돌리기 어려운 구조 
 직접 판단하거나 코드를 고치지 않는다 — **확정된 방향**(아래)을 전제로 각 결정을
 단계별로 게이트하고, 실행은 다른 스킬에 위임하는 것이 유일한 책임이다.
 
-**현재 위치: 1단계 완료 (2026-07-04)** — `app_v2.py`(1986줄)의 Section 0~8이
-`golf_swing_analyzer/analyzer/` 패키지(mp_setup.py, reference_db.py, geometry.py,
-smoothing.py, phase_detector.py, drawing.py, pipeline.py, scoring.py, coach_llm.py)로
-분리됐고, `app_v2.py`는 885줄로 축소돼 UI(Section 9~10)만 남았다. 일반.mp4·프로2.mp4
-회귀 검증 통과, 프로.mp4는 미검증. **다른 golf-* 스킬의 옛 줄번호 인용은 이 분리
-이후 전부 갱신됨 — 아직 참조가 `app_v2.py`의 옛 줄번호를 가리키고 있다면 낡은 것이다.**
+**현재 위치: 1단계 완료 (2026-07-04)** — 원래 `app_v2.py`(1986줄)를 두 차례에 걸쳐 분리:
+① Section 0~8(분석 코어)을 `golf_swing_analyzer/analyzer/` 패키지(mp_setup.py, reference_db.py,
+geometry.py, smoothing.py, phase_detector.py, drawing.py, pipeline.py, scoring.py, coach_llm.py)로,
+② 남은 UI(Section 9~10, 885줄)를 다시 `golf_swing_analyzer/ui/` 패키지(styles.py, components.py,
+sidebar.py, tab_analysis/phases/data/coaching/learning.py)로 분리. `app_v2.py`는 배선만 남아 53줄.
+테스트 영상 3종(일반/프로/프로2.mp4) 전체 회귀 검증 통과, UI 분리는 Streamlit AppTest로
+5개 탭 무예외 렌더링 확인. **다른 golf-* 스킬의 줄번호 인용은 두 분리 모두 반영해 갱신됨 —
+아직 참조가 `app_v2.py`의 옛 줄번호(900 이상)를 가리키고 있다면 낡은 것이다.**
 
 ## 확정된 방향 — "코어 보존 + 껍데기 교체" (2026-07-04 결정)
 
@@ -50,6 +52,7 @@ smoothing.py, phase_detector.py, drawing.py, pipeline.py, scoring.py, coach_llm.
 - golf-code-change 체크리스트 A1~A9 통과 확인 완료 (인덱스 매핑, argmax 방식, 원시좌표 구분 등 그대로 보존)
 - golf-analysis-quality로 테스트 영상 3종(일반/프로2/프로.mp4) 전체 회귀 검증 통과 (frame_data/annotated_frames/trajectory_pts 인덱스 정합 유지, 7단계 전부 감지)
 - Streamlit 앱이 새 import 구조로 정상 기동 확인 완료
+- **추가로 완료(같은 날)**: 남은 UI(Section 9~10, 885줄)를 `golf_swing_analyzer/ui/` 패키지로 재분리 — CSS/사이드바/5개 탭을 모듈당 파일로, `app_v2.py`는 배선만 남아 53줄. Streamlit AppTest로 5개 탭 무예외 렌더링 확인. 이동으로 무효화된 golf-ui-ux·golf-code-change·golf-coach-llm·golf-analysis-quality의 줄번호 참조 전부 갱신
 
 ### 2단계: 프론트엔드 아키텍처 결정
 - 웹 프레임워크 선택 (SPA vs SSR, 분석 코어와의 통신 방식: REST API vs 코어 로직 JS 포팅)

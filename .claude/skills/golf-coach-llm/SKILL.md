@@ -35,11 +35,11 @@ description: 골프 스윙 AI 코칭 리포트(LLM 프롬프트 구조, 페르�
 ### A3. 공급자별 기본 모델
 - [ ] Gemini/Claude/GPT 전환 시 기본 모델명이 최신인지 확인
   - 근거: analyzer/coach_llm.py L.115 (`model_name or "gemini-2.0-flash"`), L.124 (`"claude-3-5-sonnet-20241022"`), L.134 (`"gpt-4o"`)
-  - 사이드바 모델 선택지(app_v2.py L.154-158)도 동일 목록과 동기화돼 있는지 확인 — 하드코딩된 모델명이 두 곳(coach_llm.py 기본값, app_v2.py 사이드바 selectbox)에 중복돼 있어 한쪽만 갱신하면 불일치 발생
+  - 사이드바 모델 선택지(ui/sidebar.py L.15-19, 2026-07-04 UI 분리로 app_v2.py에서 이동)도 동일 목록과 동기화돼 있는지 확인 — 하드코딩된 모델명이 두 곳(analyzer/coach_llm.py 기본값, ui/sidebar.py selectbox)에 중복돼 있어 한쪽만 갱신하면 불일치 발생
   - Claude 모델을 다룰 때는 claude-api 참조 스킬로 최신 모델 ID를 재확인할 것 — 이 프로젝트 코드의 하드코딩 값을 그대로 믿지 않는다
 
 ### A4. 에러 메시지 매핑
-- [ ] `get_llm_feedback()` 호출 실패 시 UI의 에러 분기(app_v2.py L.697-701: API_KEY/quota/connect 키워드 매칭)가 새 공급자 도입 시에도 커버되는가
+- [ ] `get_llm_feedback()` 호출 실패 시 UI의 에러 분기(ui/tab_coaching.py L.37-42: API_KEY/quota/connect 키워드 매칭)가 새 공급자 도입 시에도 커버되는가
   - 문자열 키워드 매칭 방식이라 공급자별 실제 예외 메시지 포맷이 다르면 "알 수 없는 오류"로 뭉뚱그려질 수 있음
 
 ### A5. 페르소나 일관성
@@ -50,7 +50,7 @@ description: 골프 스윙 AI 코칭 리포트(LLM 프롬프트 구조, 페르�
 ## B. 새 공급자 추가 시
 
 - `get_llm_feedback()`의 `elif provider == "..."` 분기(analyzer/coach_llm.py L.108-140) 패턴을 따른다 — lazy import 유지(Claude/GPT SDK는 선택됐을 때만 import — Gemini(`google.genai`)는 예외적으로 모듈 상단에서 항상 import됨, CLAUDE.md "LLM Integration" 서술과 다르니 새 공급자 추가 시 이 불일치를 그대로 답습할지 확인)
-- 사이드바 `model_options` 딕셔너리(app_v2.py L.154-158)에 모델 목록 추가 필수 — 빠뜨리면 UI 선택지와 실제 지원 공급자가 불일치
+- 사이드바 `model_options` 딕셔너리(ui/sidebar.py L.15-19)에 모델 목록 추가 필수 — 빠뜨리면 UI 선택지와 실제 지원 공급자가 불일치
 
 ---
 

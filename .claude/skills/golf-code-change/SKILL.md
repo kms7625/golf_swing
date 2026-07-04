@@ -60,11 +60,11 @@ Section 0~8에서 분리됨)는 실제 버그를 겪으며 얻은 불변식의 �
 ### A7. frame_data ↔ annotated_frames 1:1 대응
 - [ ] `process_video()`의 `if results.pose_landmarks:` 블록 내부에서 `frame_data.append()`와 `annotated_frames.append()` 중 하나만 조건부로 바꾸려 하는가?
   - 근거: analyzer/pipeline.py L.253-351 (두 리스트가 같은 블록에서 함께 append됨, `preview_indices`는 사실상 전체 인덱스)
-  - 인덱스가 어긋나면 UI의 "7단계 대표 프레임" 표시(app_v2.py L.454-486)가 엉뚱한 프레임을 보여줌
+  - 인덱스가 어긋나면 UI의 "7단계 대표 프레임" 표시(ui/tab_analysis.py L.238-269 부근, 2026-07-04 UI 분리로 app_v2.py에서 이동)가 엉뚱한 프레임을 보여줌
 
 ### A8. 임팩트/다운스윙 대표 프레임 선택 로직 (app_v2.py UI 코드 안에 있지만 분석 불변식)
 - [ ] 임팩트=첫 프레임, 다운스윙=85% 지점, 나머지=중간 프레임 선택 규칙을 건드리는가?
-  - 근거: app_v2.py L.469-480 (물리적으로 UI 코드 안에 있지만 CLAUDE.md가 "Representative Frame Selection" 알고리즘으로 문서화한 로직 — analyzer/ 패키지로 옮기지 않고 UI 쪽에 의도적으로 남아있음)
+  - 근거: ui/tab_analysis.py L.262(임팩트=첫 프레임), L.264(다운스윙=85%), L.266(나머지=중간) — 물리적으로 UI 코드 안에 있지만 CLAUDE.md가 "Representative Frame Selection" 알고리즘으로 문서화한 로직 — analyzer/ 패키지로 옮기지 않고 UI 쪽에 의도적으로 남아있음
   - 임팩트는 순간적 접촉이라 중간 프레임을 쓰면 이미 지나간 순간을 보여줌
 
 ### A9. Adaptive 샘플링 임계값

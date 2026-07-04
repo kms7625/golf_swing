@@ -7,12 +7,14 @@ description: 골프 스윙 분석 앱의 화면(현재 Streamlit UI, 향후 신�
 
 ## 현재 상태와 한계
 
-현재 UI는 Streamlit 단일 파일(`app_v2.py`, 2026-07-04 golf-platform 1단계로 분석
-코어가 `analyzer/` 패키지로 분리된 뒤 1986줄→885줄로 축소됨) — 사용자가 이 UI에
-불만족해 개편을 요청한 상태다. "코어 보존 + 껍데기 교체" 방향(CLAUDE.md 및 프로젝트
-메모리 `golf-coaching-revamp-plan` 참조)에 따라 이 UI는 최종적으로 새 프론트엔드로
-교체될 예정이지만, 교체 전까지는 이 스킬이 현재 Streamlit UI의 정합성을 관장한다.
-줄번호는 모듈 분리로 전부 바뀌었으니 항상 실제 파일을 확인할 것.
+현재 UI는 Streamlit + `golf_swing_analyzer/ui/` 패키지(2026-07-04 golf-platform
+1단계로 분석 코어가 `analyzer/`로, 이어서 UI가 `ui/` 패키지로 분리됨 —
+`app_v2.py`는 배선만 남아 53줄) — 사용자가 이 UI에 불만족해 개편을 요청한 상태다.
+"코어 보존 + 껍데기 교체" 방향(CLAUDE.md 및 프로젝트 메모리 `golf-coaching-revamp-plan`
+참조)에 따라 이 UI는 최종적으로 새 프론트엔드로 교체될 예정이지만, 교체 전까지는
+이 스킬이 현재 `ui/` 패키지의 정합성을 관장한다. `ui/` 구조: styles.py(CSS+hero),
+components.py(카드/상태 헬퍼), sidebar.py, tab_analysis/phases/data/coaching/learning.py
+(탭별 1:1 대응). 줄번호는 모듈 분리로 전부 바뀌었으니 항상 실제 파일을 확인할 것.
 
 플랫폼 결정(Streamlit 폐기 시점, 신규 프레임워크 선택)이 내려지지 않은 상태에서
 대규모 UI 재작성을 먼저 시작하지 않는다 — 되돌리기 어려운 구조 결정은 golf-platform 선행.
@@ -30,31 +32,31 @@ description: 골프 스윙 분석 앱의 화면(현재 Streamlit UI, 향후 신�
 ### A2. 세션 상태 키 정합성
 - [ ] 새 UI 요소가 기존 세션 상태 키와 충돌하거나 누락시키는가?
   - 근거: CLAUDE.md "Streamlit 세션 상태 키" 목록 — `tmp_original`, `trim_path`, `frame_data`,
-    `annotated_frames`, `trajectory_pts`, `fps`, `phase_detector`(코드상 실제 키는 `phase_det`, app_v2.py L.403),
-    `effective_sample`(코드상 실제 키는 `eff_sample`, app_v2.py L.404), `summary`, `score`, `issues`, `uploaded_name`
+    `annotated_frames`, `trajectory_pts`, `fps`, `phase_detector`(코드상 실제 키는 `phase_det`, ui/tab_analysis.py L.183-191 `session_state.update` 블록),
+    `effective_sample`(코드상 실제 키는 `eff_sample`), `summary`, `score`, `issues`, `uploaded_name`
   - **주의**: CLAUDE.md 문서의 키 이름과 실제 코드의 키 이름이 일부 다르다(`phase_detector`→`phase_det`,
-    `effective_sample`→`eff_sample`) — 새 코드 작성 시 반드시 실제 코드(app_v2.py L.395-405)를 확인할 것
+    `effective_sample`→`eff_sample`) — 새 코드 작성 시 반드시 실제 코드(ui/tab_analysis.py L.183-191)를 확인할 것
 - [ ] 새 파일 업로드 시 `trim_path` 초기화를 빠뜨리지 않는가?
-  - 근거: app_v2.py L.246 — 파일명이 바뀌면 `st.session_state.pop("trim_path", None)` 필수, 안 하면 이전 파일의 트리밍 구간이 새 파일에 잘못 적용됨
+  - 근거: ui/tab_analysis.py L.34 — 파일명이 바뀌면 `st.session_state.pop("trim_path", None)` 필수, 안 하면 이전 파일의 트리밍 구간이 새 파일에 잘못 적용됨
 
 ### A3. 대표 프레임 선택 로직은 UI 코드 안에 있지만 분석 불변식
-- [ ] Tab1의 7단계 대표 프레임 렌더링(app_v2.py L.465-486)을 UI 개선 명목으로 건드리는가?
-  - 임팩트=첫 프레임, 다운스윙=85%지점, 나머지=중간 프레임 규칙은 golf-code-change A8 관할 —
+- [ ] Tab1의 7단계 대표 프레임 렌더링(ui/tab_analysis.py L.238-269 부근)을 UI 개선 명목으로 건드리는가?
+  - 임팩트=첫 프레임, 다운스윙=85%지점, 나머지=중간 프레임 규칙(L.262 임팩트, L.264 다운스윙, L.266 나머지)은 golf-code-change A8 관할 —
     UI 레이아웃(카드 배치, 스타일)은 이 스킬이 다루되, 프레임 **선택 로직**은 손대기 전 golf-code-change 확인
 
 ### A4. 임계값 기준이 코드 안에서 네 곳으로 흩어져 서로 다름
 - [ ] 임계값 관련 UI(사이드바 안내, 메트릭 카드 색상, 수치 요약 표) 중 하나만 고치려 하는가?
   - 같은 X-Factor에 대해 코드 안에 **서로 다른 기준 네 곳**이 존재한다 — 하나만 고치면 나머지 세 곳과 계속 어긋난다:
-    1. 사이드바 "세미프로 기준치" 안내 텍스트 — X-Factor 35~55° (app_v2.py L.180-186)
-    2. Tab1 메트릭 카드 good/warn 판정 — `get_status(x_factor, 35, 55, 20, 60)` (app_v2.py L.434)
-    3. Tab4 수치 요약 표의 ✅/⚠️ 판정 — `35 <= x_factor <= 55` (app_v2.py L.747)
+    1. 사이드바 "세미프로 기준치" 안내 텍스트 — X-Factor 35~55° (ui/sidebar.py L.41)
+    2. Tab1 메트릭 카드 good/warn 판정 — `get_status(x_factor, 35, 55, 20, 60)` (ui/tab_analysis.py L.222)
+    3. Tab4 수치 요약 표의 ✅/⚠️ 판정 — `35 <= x_factor <= 55` (ui/tab_coaching.py L.87)
     4. `compute_score()`의 실제 점수 산정 임계값 — 기본값 20~80° (analyzer/scoring.py L.110, ref_db 있으면 동적)
   - 결과적으로 같은 스윙이 메트릭 카드·요약 표에서는 경고(⚠️)로 보이는데 실제 점수는 감점 없이 통과할 수 있음
   - 척추각·무릎·팔꿈치·어깨회전도 동일한 다중 소스 패턴이 있는지 함께 확인할 것 (analyzer/scoring.py L.65-162 vs 사이드바/카드/표)
   - UI 쪽 표시만 고치면 판정 로직과 계속 어긋난다 — 네 곳을 하나의 기준(가급적 `compute_score()`가 쓰는 실제 임계값)으로 통일할지, 각 표시 위치의 역할을 다르게 유지할지 사용자에게 확인
 
 ### A5. 탭 간 의존성
-- [ ] Tab2~5는 모두 `"summary" not in st.session_state` 또는 `"frame_data" not in st.session_state`일 때 안내 메시지로 조기 반환한다 (app_v2.py L.512, 626, 670) — 새 탭 추가 시 동일 가드 패턴 유지
+- [ ] Tab2~5는 모두 `"summary" not in st.session_state` 또는 `"frame_data" not in st.session_state`일 때 안내 메시지로 조기 반환한다 (ui/tab_phases.py L.5, ui/tab_data.py L.7, ui/tab_coaching.py L.10) — 새 탭 추가 시 동일 가드 패턴 유지
 
 ---
 
