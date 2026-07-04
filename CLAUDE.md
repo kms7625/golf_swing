@@ -2,6 +2,13 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+This repo has a project-specific skillset in `.claude/skills/golf-*` (golf-code-change, golf-ui-ux,
+golf-realtime, golf-platform, golf-coach-llm, golf-analysis-quality, golf-session-retro,
+golf-prompt-engineer) that encodes the invariants, checklists, and cross-file duplication traps
+referenced throughout this document — check there before non-trivial changes to `analyzer/`, `ui/`,
+or `web/`+`server/`. `golf_swing_analyzer/skills/kis-*` is an unrelated reference skillset copied in
+from another project — ignore it when working on this codebase.
+
 ## Running the App
 
 Two frontends share the same analysis core (`golf_swing_analyzer/analyzer/`):
@@ -23,6 +30,16 @@ cd web && npm install && npm run dev   # http://localhost:5173
 ```
 
 Both frontends require a Gemini/Claude/GPT API key entered by the user at runtime (not stored anywhere). Gemini is the default and has a free tier.
+
+**Build/lint (`web/`)**: `npm run build` (`tsc -b && vite build`), `npm run lint` (oxlint), `npm run preview`.
+
+`golf_swing_analyzer/requirements.txt` used to pin the old `google-generativeai` package while
+`analyzer/coach_llm.py` imports the newer `from google import genai` (`google-genai` package) — fixed
+2026-07-05. If a fresh install of the Streamlit app fails on the Gemini import, check this file matches
+`server/requirements.txt`'s `google-genai` entry.
+There is no automated test suite (Python or TS) in this repo — regression checking is manual, via the
+golf-analysis-quality skill and the 3 videos in `golf_swing_analyzer/video/` (일반.mp4/프로.mp4/프로2.mp4),
+comparing `analyzer/` output before/after a change.
 
 ## Architecture
 
@@ -57,6 +74,7 @@ base64) to keep API payloads small.
 | `src/lib/types.ts` | API response types, `PHASE_KEY_MAP`, `PHASE_COLORS` (mirrors `analyzer/drawing.py`) |
 | `src/lib/i18n.tsx` | KO/EN string dictionary + phase-name translation table — server responses stay Korean, only display is translated |
 | `src/lib/status.ts` | Port of `ui/components.py`'s `get_status()` — same thresholds |
+| `src/lib/issueMessages.ts` | Regex-based KO→EN translation for `compute_score()`'s diagnostic messages (12 fixed templates) — server messages stay Korean (same principle as phase names), untranslatable text falls back to the Korean original rather than breaking |
 | `src/components/` | `TopBar`, `Hero`, `UploadTrim` (upload + auto/manual trim), `ResultScreen`, `Waveform` (recharts), `CoachingPanel` |
 | `public/samples/*.json` | Pre-computed `/analyze` responses for the 3 test videos — lets visitors view a full result screen with no server call and no API key |
 
