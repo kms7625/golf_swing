@@ -85,12 +85,38 @@ base64) to keep API payloads small.
 | `src/lib/i18n.tsx` | KO/EN string dictionary + phase-name translation table — server responses stay Korean, only display is translated |
 | `src/lib/status.ts` | Port of `ui/components.py`'s `get_status()` — same thresholds |
 | `src/lib/issueMessages.ts` | Regex-based KO→EN translation for `compute_score()`'s diagnostic messages (12 fixed templates) — server messages stay Korean (same principle as phase names), untranslatable text falls back to the Korean original rather than breaking |
-| `src/components/` | `TopBar`, `Hero`, `UploadTrim` (upload + auto/manual trim), `ResultScreen`, `Waveform` (recharts), `CoachingPanel` |
+| `src/components/` | `TopBar`, `Hero`, `UploadTrim` (upload + auto/manual trim), `ResultScreen`, `Waveform` (recharts), `CoachingPanel`, `LiveCapture` (live webcam) |
 | `public/samples/*.json` | Pre-computed `/analyze` responses for the 3 test videos — lets visitors view a full result screen with no server call and no API key |
 
 `web/` intentionally does not replicate Streamlit Tab 5 (reference-DB batch learning) or Tab 3's
 CSV export — those stay Streamlit-only. See `.claude/skills/golf-platform/SKILL.md` stage 3 for
 the full scope decision.
+
+### Live webcam analysis (`LiveCapture.tsx`, added 2026-07-05)
+
+Real-time mode per `.claude/skills/golf-realtime/SKILL.md` direction A (post-hoc-on-stop, not a
+sliding-window rewrite of `detect_all_phases()`): on-device pose live, server-side phase detection
+only after the user stops.
+
+- `src/lib/geometry.ts` — JS port of `analyzer/geometry.py`'s 8 functions (normalization, cosine-rule
+  angles). Verified numerically identical to the Python source with synthetic landmark input before
+  merging (see the golf-realtime skill) — re-verify the same way if this file is ever touched
+- On-device pose comes from `@mediapipe/tasks-vision` (`PoseLandmarker`, `pose_landmarker_lite`,
+  loaded from the jsdelivr/`storage.googleapis.com` CDN at runtime — requires internet access even
+  though inference itself runs on-device, and is a separate model from Python's `mediapipe` package)
+- Every frame: skeleton drawn on a `<canvas>` overlaid on the `<video>`; live angle HUD only once all
+  of `KEY_JOINTS` (`geometry.ts`) are visible, mirroring `analyzer/pipeline.py`'s same gate
+- **Canvas must mirror the video's `object-fit: cover`** — the canvas draws in native camera-pixel
+  space (`video.videoWidth`/`videoHeight`), so if only the `<video>` has `object-fit: cover` and the
+  canvas doesn't, the skeleton overlay drifts out of alignment whenever the camera's aspect ratio
+  isn't exactly the panel's 4:3 (silent visual bug, no console error)
+- On "촬영 종료": the raw wrist-Y buffer (same `(left+right)/2` pixel-y convention as
+  `SwingPhaseDetector.update`) is sent to the *existing* `/detect-phases` endpoint — nothing new on
+  the server side. The `Waveform` component (built for the uploaded-video result screen) is reused
+  as-is; its props already happen to match `/detect-phases`'s response shape
+- No score/issues/coaching for live sessions — only the phase-segmented wrist-Y waveform. A full
+  `compute_score()`-equivalent result would require porting `analyzer/scoring.py` too, which is out
+  of scope for this stage
 
 ### `web/android/` — Capacitor Android wrapper (dev-only, added 2026-07-05)
 

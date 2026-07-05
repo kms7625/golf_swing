@@ -32,6 +32,15 @@ export async function analyze(
   return handle<AnalyzeResponse>(res);
 }
 
+export async function detectPhases(wristY: number[]): Promise<Record<string, [number, number]>> {
+  const res = await fetch(`${API_BASE}/detect-phases`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ wrist_y: wristY }),
+  });
+  return handle<Record<string, [number, number]>>(res);
+}
+
 export async function coaching(params: {
   summary: AnalyzeResponse["summary"];
   issues: AnalyzeResponse["issues"];

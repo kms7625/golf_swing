@@ -3,12 +3,13 @@ import { TopBar } from "./components/TopBar";
 import { Hero } from "./components/Hero";
 import { UploadTrim } from "./components/UploadTrim";
 import { ResultScreen } from "./components/ResultScreen";
+import { LiveCapture } from "./components/LiveCapture";
 import { analyze } from "./lib/api";
 import { useI18n } from "./lib/i18n";
 import type { AnalyzeResponse } from "./lib/types";
 import styles from "./App.module.css";
 
-type Stage = "landing" | "trim" | "analyzing" | "result";
+type Stage = "landing" | "trim" | "analyzing" | "result" | "live";
 
 function App() {
   const { t } = useI18n();
@@ -51,7 +52,7 @@ function App() {
 
   return (
     <>
-      <TopBar onBrandClick={goLanding} />
+      <TopBar onBrandClick={goLanding} onLiveClick={() => setStage("live")} />
 
       {error && (
         <div className={styles.errorBanner}>
@@ -72,6 +73,8 @@ function App() {
       )}
 
       {stage === "result" && result && <ResultScreen result={result} isSample={isSample} onBack={goLanding} />}
+
+      {stage === "live" && <LiveCapture onBack={goLanding} />}
     </>
   );
 }

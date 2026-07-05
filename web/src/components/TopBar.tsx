@@ -3,9 +3,10 @@ import styles from "./TopBar.module.css";
 
 interface Props {
   onBrandClick: () => void;
+  onLiveClick: () => void;
 }
 
-export function TopBar({ onBrandClick }: Props) {
+export function TopBar({ onBrandClick, onLiveClick }: Props) {
   const { t, lang, setLang } = useI18n();
 
   return (
@@ -17,6 +18,7 @@ export function TopBar({ onBrandClick }: Props) {
         <nav className={styles.nav}>
           <a>{t("nav_analyze")}</a>
           <a>{t("nav_sample")}</a>
+          <a onClick={onLiveClick}>{t("nav_live")}</a>
         </nav>
         <div className={styles.langToggle}>
           <button className={lang === "ko" ? styles.active : ""} onClick={() => setLang("ko")}>
