@@ -13,7 +13,8 @@ description: 골프 스윙 분석 프로젝트의 되돌리기 어려운 구조 
 직접 판단하거나 코드를 고치지 않는다 — **확정된 방향**(아래)을 전제로 각 결정을
 단계별로 게이트하고, 실행은 다른 스킬에 위임하는 것이 유일한 책임이다.
 
-**현재 위치: 1단계 완료 (2026-07-04)** — 원래 `app_v2.py`(1986줄)를 두 차례에 걸쳐 분리:
+**현재 위치: 5단계까지 전부 완료 (2026-07-05)** — 0~5단계 상세는 아래 "단계" 절 참고.
+1단계 이력: 원래 `app_v2.py`(1986줄)를 두 차례에 걸쳐 분리:
 ① Section 0~8(분석 코어)을 `golf_swing_analyzer/analyzer/` 패키지(mp_setup.py, reference_db.py,
 geometry.py, smoothing.py, phase_detector.py, drawing.py, pipeline.py, scoring.py, coach_llm.py)로,
 ② 남은 UI(Section 9~10, 885줄)를 다시 `golf_swing_analyzer/ui/` 패키지(styles.py, components.py,
@@ -98,13 +99,37 @@ sidebar.py, tab_analysis/phases/data/coaching/learning.py)로 분리. `app_v2.py
 **완료 기준**: ① 로컬 전체 플로우 동작 ② 3종 동일성 검증 통과 ③ 샘플 프리로드 동작. **배포는 별도 게이트**(무료 티어 콜드스타트/타임아웃 확인 필요)
 - 기존 Streamlit 앱은 삭제하지 않고 reference implementation으로 유지
 
-### 4단계: 모바일 앱 확장
-- 웹 프론트엔드 안정화 후 착수 (2단계 결정에 따라 네이티브 vs 웹뷰 래핑 vs 크로스플랫폼 선택)
-- 실시간 카메라 기능은 이 단계에서 golf-realtime 설계를 반영
+### 4단계: 모바일 앱 확장 — ✅ 완료 (2026-07-05)
 
-### 5단계: 실시간 기능 통합
-- golf-realtime에서 설계한 방향(A: 배치 후처리 / B: 슬라이딩 윈도우)을 웹/앱에 통합
-- 신규 알고리즘(방향 B 선택 시)은 golf-code-change + golf-analysis-quality 순서로 검증 후 병합
+`web/`을 Capacitor로 감싸 Android 앱(`web/android/`) 추가 — 네이티브 재작성 없음(2단계 결정대로).
+iOS는 Windows 환경(Xcode 불가)이라 이번 범위에서 제외. 실제 에뮬레이터(Android Studio, SDK 확인)에
+디버그 APK 빌드·설치·실행까지 완료하고, 업로드→구간감지→분석→코칭 리포트 호출까지 손으로 직접
+눌러 전체 플로우 검증.
+
+**핵심 이슈와 해결**: Capacitor 앱은 기본 `https://localhost`에서 로드되는데 API 서버는 평문
+`http://10.0.2.2:8010`(에뮬레이터의 호스트 loopback 별칭)이라 브라우저 Mixed-Content 정책이
+모든 요청을 조용히 막고 있었음 — `network_security_config.xml`(cleartext 허용)은 OS 소켓 레벨
+정책이라 이 문제와 무관했고, `capacitor.config.ts`에 `server.androidScheme: 'http'`를 설정해
+스킴을 통일해서 해결. 서버 CORS에 `http://localhost` 오리진 추가도 필요. 상세는
+`CLAUDE.md`의 `web/android/` 섹션 참고.
+
+**남은 제약**: 이 구성은 "개발 PC + 에뮬레이터" 전용 로컬 브리지 — 물리 기기는 서버를 `0.0.0.0`
+바인딩 + LAN IP로 바꿔야 하고, 배포(3단계에서 별도 게이트로 분리해둔 항목)는 여전히 미착수.
+
+### 5단계: 실시간 기능 통합 — ✅ 완료 (2026-07-05)
+
+golf-realtime 방향 A(스윙 종료 후 배치 처리, 코어 보존) 채택 — 스윙 종료는 자동 감지가 아니라
+**사용자가 버튼을 직접 눌러 종료**하는 방식으로 확정(오탐지 리스크 없음, 구현 단순). 온디바이스
+`@mediapipe/tasks-vision`으로 라이브 스켈레톤·관절각 표시, 종료 시 손목Y 시계열만 기존
+`/detect-phases` 엔드포인트(이미 구현돼 있던 것, 서버 변경 없음)로 전송해 검증된 Python
+`detect_all_phases()`를 그대로 재사용. `analyzer/geometry.py`의 8개 함수를 `web/src/lib/geometry.ts`로
+포팅하고 합성 랜드마크로 Python 원본과 수치 일치 검증(golf-analysis-quality의 3종 영상 검증과는
+별개 절차 — 신규 JS 포팅 코드 자체의 정확성 검증). 웹 브라우저에서 실제 카메라 권한 허용 후
+라이브 스켈레톤 오버레이·촬영 종료·페이즈 파형 렌더링까지 확인 완료. 모바일(Capacitor) 앱에는
+아직 통합 안 함 — `web/`에만 우선 구현(사용자 선택).
+
+상세 구현 내역·발견한 버그(캔버스 오버레이가 `object-fit: cover`를 안 따라가 화면비 다르면
+어긋나던 문제, 해결됨)는 `CLAUDE.md`의 "Live webcam analysis" 섹션 참고.
 
 ## 출력 형식
 
