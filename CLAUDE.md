@@ -11,7 +11,9 @@ from another project — ignore it when working on this codebase.
 
 ## Running the App
 
-Two frontends share the same analysis core (`golf_swing_analyzer/analyzer/`):
+See [`RUNNING.md`](./RUNNING.md) for the full runbook (Android/Capacitor prerequisites, LAN-IP setup
+for physical devices, etc.). Quick reference — two frontends share the same analysis core
+(`golf_swing_analyzer/analyzer/`):
 
 **Streamlit (reference implementation)** — the original app, kept as the regression baseline:
 ```bash
