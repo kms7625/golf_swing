@@ -30,6 +30,7 @@ npm run dev   # http://localhost:5173
 |---|---|
 | `npm run dev` | 개발 서버 (HMR) |
 | `npm run build` | 타입체크(`tsc -b`) + 프로덕션 빌드 |
+| `npm run build:android` | `.env.capacitor` 기준으로 빌드 + `npx cap sync android` (Capacitor Android 래퍼, `android/` 참고) |
 | `npm run lint` | oxlint |
 | `npm run preview` | 빌드 결과 로컬 미리보기 |
 

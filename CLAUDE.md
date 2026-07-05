@@ -33,6 +33,15 @@ Both frontends require a Gemini/Claude/GPT API key entered by the user at runtim
 
 **Build/lint (`web/`)**: `npm run build` (`tsc -b && vite build`), `npm run lint` (oxlint), `npm run preview`.
 
+**Android (Capacitor wrapper around the same `web/` build, dev-only, added 2026-07-05)**:
+```bash
+cd web && npm run build:android           # builds with .env.capacitor + npx cap sync android
+cd android && ./gradlew.bat installDebug  # or `npx cap open android` for Android Studio
+```
+Requires Android Studio + SDK. `JAVA_HOME` can point at Android Studio's bundled JBR (e.g.
+`C:\Android\Android Studio\jbr`) if no system JDK is installed. See the `web/android/` section
+below for the dev-only network wiring this depends on (mixed-content/cleartext/CORS).
+
 `golf_swing_analyzer/requirements.txt` used to pin the old `google-generativeai` package while
 `analyzer/coach_llm.py` imports the newer `from google import genai` (`google-genai` package) — fixed
 2026-07-05. If a fresh install of the Streamlit app fails on the Gemini import, check this file matches
@@ -48,6 +57,7 @@ three splits, in order:
 1. `golf_swing_analyzer/app_v2.py` Section 0~8 (analysis core) → `golf_swing_analyzer/analyzer/` package
 2. Remaining UI (Section 9~10, 885 lines) → `golf_swing_analyzer/ui/` package (Streamlit only), `app_v2.py` reduced to ~53 lines of wiring
 3. New `server/` (FastAPI) + `web/` (React+Vite+TS) added — a second frontend that calls the *same* `analyzer/` package, per the "코어 보존 + 껍데기 교체" plan (see `.claude/skills/golf-platform/SKILL.md`)
+4. `web/android/` (Capacitor) added 2026-07-05 — wraps the same `web/` build for Android, no new frontend code, just a native shell + dev-only network wiring (see below)
 
 Algorithm logic was moved verbatim at every step (no behavior change) — see the golf-code-change
 skill (`.claude/skills/golf-code-change/SKILL.md`) for the invariants each split had to preserve.
@@ -81,6 +91,27 @@ base64) to keep API payloads small.
 `web/` intentionally does not replicate Streamlit Tab 5 (reference-DB batch learning) or Tab 3's
 CSV export — those stay Streamlit-only. See `.claude/skills/golf-platform/SKILL.md` stage 3 for
 the full scope decision.
+
+### `web/android/` — Capacitor Android wrapper (dev-only, added 2026-07-05)
+
+Wraps the same `web/` build for Android via Capacitor — no separate app code, just a native
+shell plus dev-only network wiring so an emulator/device can reach the FastAPI dev server:
+
+| File | Role |
+|---|---|
+| `capacitor.config.ts` | Sets `server.androidScheme: 'http'` — **not** Capacitor's default (`'https'`). Required because the default `https://localhost` origin triggers browser mixed-content blocking against the plain-`http://10.0.2.2:8010` dev API. This is a document-level (browser) policy, separate from and stricter than Android's cleartext-traffic setting below — setting the network security config alone does *not* fix it |
+| `.env.capacitor` | `VITE_API_BASE=http://10.0.2.2:8010`, used only by `npm run build:android` (`vite build --mode capacitor`), not the regular web build. `10.0.2.2` is the Android emulator's alias for the host machine's loopback interface |
+| `android/app/src/main/res/xml/network_security_config.xml` | Permits cleartext (non-HTTPS) traffic to `10.0.2.2`/`localhost` — Android 9+ (API 28+) blocks cleartext by default at the OS/socket level. Wired in via `android:networkSecurityConfig` in `AndroidManifest.xml` |
+
+`server/main.py`'s CORS `allow_origins` includes `http://localhost` (the Capacitor WebView's
+origin once `androidScheme` is `http`) alongside the Vite dev origins — a stale/unrestarted
+`uvicorn` process silently keeps serving the old CORS list, which looks identical to a
+mixed-content failure from the client (both manifest as a generic `Failed to fetch`).
+
+This whole setup is a **local-dev bridge**: it only works when the FastAPI server and the
+Android emulator run on the same machine. A physical device needs the server bound to `0.0.0.0`
+and `VITE_API_BASE` pointed at the dev machine's LAN IP instead of `10.0.2.2`. iOS is out of
+scope on Windows (no Xcode). See `.claude/skills/golf-platform/SKILL.md` stage 4.
 
 ### `analyzer/` package — analysis core (preserved, do not rewrite)
 

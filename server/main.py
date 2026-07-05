@@ -24,7 +24,11 @@ app = FastAPI(title="Golf Swing Analyzer API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost",  # Capacitor Android WebView origin (androidScheme: http, set for dev to avoid mixed-content blocking)
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
 )
