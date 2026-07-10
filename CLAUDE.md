@@ -61,9 +61,14 @@ below for the dev-only network wiring this depends on (mixed-content/cleartext/C
 `analyzer/coach_llm.py` imports the newer `from google import genai` (`google-genai` package) — fixed
 2026-07-05. If a fresh install of the Streamlit app fails on the Gemini import, check this file matches
 `server/requirements.txt`'s `google-genai` entry.
-There is no automated test suite (Python or TS) in this repo — regression checking is manual, via the
-golf-analysis-quality skill and the 3 videos in `golf_swing_analyzer/video/` (일반.mp4/프로.mp4/프로2.mp4),
-comparing `analyzer/` output before/after a change.
+**Tests (added 2026-07-10)**: `python -m pytest` at the repo root (deps: `pytest`, `httpx`).
+`tests/test_api.py` covers the server contract (auth, swings, quota/refund, caps, rate limit —
+isolated temp-SQLite env, never touches the real DB); `tests/test_analyzer_snapshot.py` is the
+analyzer regression gate (일반.mp4 vs `tests/snapshots/ilban_baseline.json` — after an *intended*
+core change, regenerate with `python tests/regen_snapshot.py` and commit both). Fast API-only run:
+`pytest tests/test_api.py`. Deeper/manual regression (all 3 videos, visual) is still the
+golf-analysis-quality skill's domain. There are no TS tests — web verification is `npm run build`
++ manual/E2E.
 
 ## Architecture
 

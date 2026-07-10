@@ -52,10 +52,21 @@ cd android && ./gradlew.bat installDebug  # 또는 `npx cap open android`로 And
 - 실기기에서 쓰려면 서버를 `0.0.0.0`으로 바인딩하고 `VITE_API_BASE`를 에뮬레이터용 `10.0.2.2` 대신 개발 머신의 LAN IP로 바꿔야 합니다
 - iOS는 Windows 환경에서는 Xcode가 없어 지원 범위 밖입니다
 
+## 5. 테스트 (2026-07-10 추가)
+
+```bash
+pip install pytest httpx
+python -m pytest              # 전체 (analyzer 스냅샷 포함, ~15초)
+python -m pytest tests/test_api.py   # 서버 계약만 빠르게
+```
+
+- 서버 테스트는 임시 SQLite로 격리 실행 — 실 DB(.env)와 섞이지 않습니다
+- `analyzer/`를 의도적으로 변경했다면 `python tests/regen_snapshot.py`로 기준값을 재생성해 함께 커밋
+
 ## 참고
 
-- 자동화된 테스트 스위트(Python/TS)는 없습니다 — 회귀 검증은 `golf-analysis-quality` 스킬과
-  `golf_swing_analyzer/video/`의 테스트 영상 3종(일반.mp4/프로.mp4/프로2.mp4)으로 수동 비교합니다
+- 심층 회귀 검증(3영상 전체·시각 비교)은 여전히 `golf-analysis-quality` 스킬로 수동 수행합니다
+  (자동 스냅샷은 일반.mp4 1종의 최소 게이트)
 - 아키텍처와 각 패키지 역할은 [`CLAUDE.md`](./CLAUDE.md)에 정리돼 있습니다
 
 ## 4. 프로덕션 배포 (Docker, 2026-07-10 추가)

@@ -1,0 +1,20 @@
+{
+  "video": "일반.mp4",
+  "sample_rate": 3,
+  "score": 65,
+  "phases": [
+    "다운스윙",
+    "백스윙",
+    "백스윙 톱",
+    "어드레스",
+    "임팩트",
+    "팔로우스루",
+    "피니시"
+  ],
+  "summary": {
+    "spine_angle_delta": 15.1,
+    "x_factor": 20.3,
+    "shoulder_rotation_max": 64.2,
+    "total_frames": 266
+  }
+}
