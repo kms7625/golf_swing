@@ -40,9 +40,15 @@ description: 골프 스윙 실시간(웹캠/모바일 카메라) 분석 기능�
 `web/src/components/LiveCapture.tsx`(온디바이스 `@mediapipe/tasks-vision` +
 `geometry.ts` 포팅), 스윙 종료는 자동 감지가 아니라 사용자 버튼 방식, 종료 시
 손목Y 시계열만 기존 `/detect-phases`로 전송(서버 무변경). 상세는 CLAUDE.md
-"Live webcam analysis" 섹션. **잔여 범위**: 모바일(Capacitor) 앱 통합 미착수,
-방향 B(실시간 임팩트 하이라이트)는 미채택 상태 — 이 스킬은 이제 이 확장들을
-다룰 때 적용된다.
+"Live webcam analysis" 섹션.
+
+**2026-07-10 확장 (P3)**: 라이브 세션에 점수·이슈·AI 코칭 연결 완료 — 여전히 방향 A.
+`LiveCapture.tsx`가 가시성 게이트를 통과한 프레임의 각도 7종(geometry.ts)을 wrist_y와
+1:1로 버퍼링해 종료 시 신규 `POST /score-live`(server/main.py)로 전송하고, 서버는
+`detect_all_phases()`→`get_phase_for_frame()`→`compute_summary()`→`compute_score()`를
+그대로 호출한다(코어 무변경). `/detect-phases`는 유지되나 라이브 흐름은 더 이상 쓰지 않음.
+**잔여 범위**: 모바일(Capacitor) 앱 통합 미착수, 방향 B(실시간 임팩트 하이라이트)는
+미채택 상태 — 이 스킬은 이제 이 확장들을 다룰 때 적용된다.
 
 ---
 

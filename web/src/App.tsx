@@ -144,7 +144,7 @@ function App() {
         />
       )}
 
-      {stage === "live" && <LiveCapture onBack={goLanding} />}
+      {stage === "live" && <LiveCapture onBack={goLanding} onLoginClick={() => setShowAuth(true)} />}
 
       {stage === "history" && (
         <HistoryPanel onOpen={handleOpenSaved} onLoginClick={() => setShowAuth(true)} />

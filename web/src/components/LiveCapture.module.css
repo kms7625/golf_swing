@@ -144,3 +144,112 @@
   font-size: 12px;
   margin-bottom: 10px;
 }
+
+.scoreRow {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.scoreBox {
+  background: var(--graphite-2);
+  border: 1px solid var(--graphite-3);
+  padding: 18px;
+  text-align: center;
+}
+
+.scoreBox .label {
+  font-size: 10.5px;
+  color: var(--steel);
+  margin-bottom: 8px;
+}
+
+.scoreNum {
+  font-size: 44px;
+  font-weight: 700;
+  color: var(--copper);
+  line-height: 1;
+}
+
+.scoreGrade {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--steel);
+}
+
+.liveStats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.liveStat {
+  background: var(--graphite-2);
+  border: 1px solid var(--graphite-3);
+  padding: 12px 14px;
+}
+
+.liveStatK {
+  font-size: 10px;
+  color: var(--steel);
+  margin-bottom: 6px;
+}
+
+.liveStatV {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.liveStatV.ok {
+  color: var(--ok);
+}
+
+.liveStatV.warn {
+  color: var(--copper);
+}
+
+.liveStatV.crit {
+  color: var(--alert);
+}
+
+.issueList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+
+.issueRow {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  background: var(--graphite-2);
+  border: 1px solid var(--graphite-3);
+  padding: 10px 14px;
+  font-size: 13px;
+}
+
+.issueTag {
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 64px;
+}
+
+.issueRow.critical .issueTag {
+  color: var(--alert);
+}
+
+.issueRow.warning .issueTag {
+  color: var(--copper);
+}
+
+.issueRow.good .issueTag {
+  color: var(--ok);
+}
+
+@media (max-width: 640px) {
+  .scoreRow {
+    grid-template-columns: 1fr;
+  }
+}

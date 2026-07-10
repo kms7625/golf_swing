@@ -212,6 +212,51 @@ async def detect_phases(body: DetectPhasesRequest):
     return to_jsonable({ph: list(bounds) for ph, bounds in boundaries.items()})
 
 
+# 라이브 프레임이 보내는 각도 키 — analyzer/scoring.py compute_summary가 읽는 키와 동일
+_LIVE_ANGLE_KEYS = (
+    "spine_angle", "shoulder_rotation", "hip_rotation",
+    "left_knee", "right_knee", "left_elbow", "right_elbow",
+)
+
+
+class ScoreLiveRequest(BaseModel):
+    wrist_y: list[float]
+    frames: list[dict]  # wrist_y와 1:1 — 온디바이스(geometry.ts)에서 계산된 프레임별 각도
+
+
+@app.post("/score-live")
+async def score_live(body: ScoreLiveRequest):
+    """라이브 세션 점수화 (golf-realtime 방향 A 확장) — 코어 함수를 그대로 호출.
+
+    프레임 각도는 geometry.ts(파이썬 geometry.py와 수치 동일 검증된 포팅)가 계산했고,
+    페이즈 부여·요약·점수는 업로드 경로와 같은 detect_all_phases/compute_summary/compute_score.
+    """
+    if len(body.frames) != len(body.wrist_y):
+        raise HTTPException(status_code=400, detail="프레임 수와 손목 좌표 수가 일치하지 않습니다.")
+    detector = SwingPhaseDetector()
+    for i, wy in enumerate(body.wrist_y):
+        detector.update(i, wy, wy)
+    boundaries = detector.detect_all_phases()
+
+    frame_data = []
+    for i, fr in enumerate(body.frames):
+        try:
+            entry = {k: float(fr[k]) for k in _LIVE_ANGLE_KEYS}
+        except (KeyError, TypeError, ValueError):
+            raise HTTPException(status_code=400, detail="프레임 각도 형식이 올바르지 않습니다.")
+        entry["phase"] = detector.get_phase_for_frame(i)
+        frame_data.append(entry)
+
+    summary = compute_summary(frame_data)
+    score, issues = compute_score(summary, ref_db=load_ref_db())
+    return to_jsonable({
+        "score": score,
+        "issues": [{"level": lvl, "message": msg} for lvl, msg in issues],
+        "summary": summary,
+        "phase_boundaries": {ph: list(bounds) for ph, bounds in boundaries.items()},
+    })
+
+
 # ---------------------------------------------------------------- 인증 (G2)
 
 class AuthRequest(BaseModel):

@@ -67,6 +67,25 @@ export async function getJob(jobId: string): Promise<JobStatus> {
   return handle<JobStatus>(res);
 }
 
+export interface LiveScoreResponse {
+  score: number;
+  issues: AnalyzeResponse["issues"];
+  summary: AnalyzeResponse["summary"];
+  phase_boundaries: Record<string, [number, number]>;
+}
+
+export async function scoreLive(
+  wristY: number[],
+  frames: Record<string, number>[]
+): Promise<LiveScoreResponse> {
+  const res = await fetch(`${API_BASE}/score-live`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ wrist_y: wristY, frames }),
+  });
+  return handle<LiveScoreResponse>(res);
+}
+
 export async function detectPhases(wristY: number[]): Promise<Record<string, [number, number]>> {
   const res = await fetch(`${API_BASE}/detect-phases`, {
     method: "POST",

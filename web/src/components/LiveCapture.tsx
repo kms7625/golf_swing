@@ -11,9 +11,13 @@ import {
   visibilityOk,
   type RawLandmark,
 } from "../lib/geometry";
-import { detectPhases } from "../lib/api";
+import { scoreLive, type LiveScoreResponse } from "../lib/api";
 import { useI18n } from "../lib/i18n";
+import { getStatus } from "../lib/status";
+import { translateIssueMessage } from "../lib/issueMessages";
 import { Waveform } from "./Waveform";
+import { CoachingPanel } from "./CoachingPanel";
+import { grade } from "./ResultScreen";
 import styles from "./LiveCapture.module.css";
 
 type Phase = "loading" | "ready" | "capturing" | "processing" | "done" | "error";
@@ -47,19 +51,21 @@ const SKELETON_CONNECTIONS: [number, number][] = [
 
 const MIN_FRAMES = 20;
 
-export function LiveCapture({ onBack }: { onBack: () => void }) {
-  const { t } = useI18n();
+export function LiveCapture({ onBack, onLoginClick }: { onBack: () => void; onLoginClick: () => void }) {
+  const { t, lang } = useI18n();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const landmarkerRef = useRef<PoseLandmarker | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const rafRef = useRef<number | null>(null);
   const wristYRef = useRef<number[]>([]);
+  // wristYRef와 1:1 — 같은 가시성 게이트를 통과한 프레임의 각도만 쌓인다 (/score-live 요구 형식)
+  const framesRef = useRef<Record<string, number>[]>([]);
 
   const [phase, setPhase] = useState<Phase>("loading");
   const [angles, setAngles] = useState<LiveAngles | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [phaseBoundaries, setPhaseBoundaries] = useState<Record<string, [number, number]> | null>(null);
+  const [liveResult, setLiveResult] = useState<LiveScoreResponse | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -120,6 +126,7 @@ export function LiveCapture({ onBack }: { onBack: () => void }) {
 
   function startCapture() {
     wristYRef.current = [];
+    framesRef.current = [];
     setPhase("capturing");
     const loop = () => {
       const video = videoRef.current;
@@ -139,18 +146,28 @@ export function LiveCapture({ onBack }: { onBack: () => void }) {
             drawSkeleton(ctx, raw, w, h);
             const { norm } = normalizeLandmarks(raw, w, h);
             if (KEY_JOINTS.every((idx) => visibilityOk(norm, idx))) {
+              const frame = {
+                spine_angle: calcSpineAngle(norm),
+                shoulder_rotation: calcShoulderRotation(norm),
+                hip_rotation: calcHipRotation(norm),
+                left_knee: calcKneeAngle(norm, "left"),
+                right_knee: calcKneeAngle(norm, "right"),
+                left_elbow: calcElbowAngle(norm, "left"),
+                right_elbow: calcElbowAngle(norm, "right"),
+              };
               setAngles({
-                spine: calcSpineAngle(norm),
-                shoulderRotation: calcShoulderRotation(norm),
-                hipRotation: calcHipRotation(norm),
-                leftKnee: calcKneeAngle(norm, "left"),
-                rightKnee: calcKneeAngle(norm, "right"),
-                leftElbow: calcElbowAngle(norm, "left"),
-                rightElbow: calcElbowAngle(norm, "right"),
+                spine: frame.spine_angle,
+                shoulderRotation: frame.shoulder_rotation,
+                hipRotation: frame.hip_rotation,
+                leftKnee: frame.left_knee,
+                rightKnee: frame.right_knee,
+                leftElbow: frame.left_elbow,
+                rightElbow: frame.right_elbow,
               });
               const lwY = raw[15].y * h;
               const rwY = raw[16].y * h;
               wristYRef.current.push((lwY + rwY) / 2);
+              framesRef.current.push(frame);
             }
           }
         }
@@ -170,8 +187,8 @@ export function LiveCapture({ onBack }: { onBack: () => void }) {
     }
     setPhase("processing");
     try {
-      const boundaries = await detectPhases(wristYRef.current);
-      setPhaseBoundaries(boundaries);
+      const res = await scoreLive(wristYRef.current, framesRef.current);
+      setLiveResult(res);
       setPhase("done");
     } catch (e) {
       setErrorMsg(e instanceof Error ? e.message : t("error_generic"));
@@ -223,12 +240,66 @@ export function LiveCapture({ onBack }: { onBack: () => void }) {
         </button>
       </div>
 
-      {phase === "done" && phaseBoundaries && (
+      {phase === "done" && liveResult && (
         <div className={styles.result}>
+          <div className={styles.scoreRow}>
+            <div className={styles.scoreBox}>
+              <div className="label tracked">{t("result_score_label")}</div>
+              <div className={`${styles.scoreNum} mono tabular`}>{liveResult.score}</div>
+              <div className={styles.scoreGrade}>
+                {t("grade")} {grade(liveResult.score)}
+              </div>
+            </div>
+            <div className={styles.liveStats}>
+              <LiveStat
+                label={t("result_metric_spine")}
+                value={`${liveResult.summary.spine_angle_delta}°`}
+                status={getStatus(liveResult.summary.spine_angle_delta, 0, 5, 5, 10)}
+              />
+              <LiveStat
+                label={t("result_metric_xfactor")}
+                value={`${liveResult.summary.x_factor}°`}
+                status={getStatus(liveResult.summary.x_factor, 35, 55, 20, 60)}
+              />
+              <LiveStat
+                label={t("result_metric_shoulder")}
+                value={`${liveResult.summary.shoulder_rotation_max}°`}
+              />
+              <LiveStat
+                label={t("result_metric_phases")}
+                value={`${liveResult.summary.phases_detected.length} / 7`}
+              />
+            </div>
+          </div>
+
+          <div className={styles.issueList}>
+            {liveResult.issues.map((issue, i) => (
+              <div key={i} className={`${styles.issueRow} ${styles[issue.level]}`}>
+                <span className={`${styles.issueTag} tracked`}>{issue.level}</span>
+                <span>{translateIssueMessage(lang, issue.message)}</span>
+              </div>
+            ))}
+          </div>
+
           <h3 className="tracked">{t("result_chart_title")}</h3>
-          <Waveform wristY={wristYRef.current} phaseBoundaries={phaseBoundaries} />
+          <Waveform wristY={wristYRef.current} phaseBoundaries={liveResult.phase_boundaries} />
+
+          <CoachingPanel
+            summary={liveResult.summary}
+            issues={liveResult.issues}
+            onLoginClick={onLoginClick}
+          />
         </div>
       )}
+    </div>
+  );
+}
+
+function LiveStat({ label, value, status }: { label: string; value: string; status?: string }) {
+  return (
+    <div className={styles.liveStat}>
+      <div className={`${styles.liveStatK} tracked`}>{label}</div>
+      <div className={`${styles.liveStatV} ${status ? styles[status] : ""} mono tabular`}>{value}</div>
     </div>
   );
 }

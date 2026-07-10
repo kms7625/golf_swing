@@ -24,7 +24,7 @@ interface Props {
   onLoginClick: () => void;
 }
 
-function grade(score: number): string {
+export function grade(score: number): string {
   if (score >= 95) return "S";
   if (score >= 85) return "A";
   if (score >= 70) return "B";
