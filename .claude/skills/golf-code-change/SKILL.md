@@ -78,7 +78,11 @@ Section 0~8에서 분리됨)는 실제 버그를 겪으며 얻은 불변식의 �
 
 ## B. 변경 후 필수 검증
 
-- [ ] 테스트 영상 3종(golf_swing_analyzer/video/일반.mp4·프로.mp4·프로2.mp4)으로 7단계 페이즈 감지 결과 회귀 확인 — golf-analysis-quality로 위임
+- [ ] **(2026-07-10 추가) `python -m pytest` 1차 게이트** — `tests/test_analyzer_snapshot.py`가
+  일반.mp4의 점수·페이즈·지표를 `tests/snapshots/ilban_baseline.json`과 대조하고 A7(frame_data↔
+  annotated_frames 1:1)을 검사한다. 의도된 코어 변경이면 `python tests/regen_snapshot.py`로
+  기준값을 재생성해 **변경과 같은 커밋**에 포함할 것 (기준값만 슬쩍 바꾸는 커밋 금지)
+- [ ] 테스트 영상 3종(golf_swing_analyzer/video/일반.mp4·프로.mp4·프로2.mp4)으로 7단계 페이즈 감지 결과 회귀 확인 — golf-analysis-quality로 위임 (자동 스냅샷은 일반.mp4 1종의 최소 게이트일 뿐)
 - [ ] `reference_db.json`(golf_swing_analyzer/reference_db.json — analyzer/ 이동 후에도 경로 불변)이 비어있는 현재 상태를 가정한 하드코딩 폴백 경로가 정상 동작하는지 확인
 - [ ] `frame_data`/`annotated_frames`/`trajectory_pts` 세 리스트의 길이·인덱스 정합성 확인
 - [ ] `analyzer/` 패키지를 건드렸다면 `streamlit run app_v2.py`로 앱이 정상 기동하는지 확인 (import 경로 오류는 기동 시점에만 드러남)
