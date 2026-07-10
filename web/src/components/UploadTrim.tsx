@@ -66,6 +66,12 @@ export function UploadTrim({ onAnalyze, onPrivacyClick }: Props) {
           {t("upload_dropzone")}
           <input id="file-input" type="file" accept="video/mp4,video/quicktime,video/x-msvideo" onChange={onSelect} />
         </div>
+        <p className={styles.privacy}>
+          {t("privacy_notice")}{" "}
+          <button className={styles.privacyLink} onClick={onPrivacyClick}>
+            {t("privacy_link")}
+          </button>
+        </p>
       </div>
     );
   }
