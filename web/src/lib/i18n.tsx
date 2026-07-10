@@ -108,6 +108,7 @@ const STRINGS = {
     share_making: "카드 생성 중...",
     share_downloaded: "이미지 저장됨 ✓",
     share_shared: "공유 완료 ✓",
+    live_full_analysis: "📋 이 영상으로 정식 분석 (대표 장면·저장·비교 가능)",
   },
   en: {
     nav_analyze: "Analyze",
@@ -214,6 +215,7 @@ const STRINGS = {
     share_making: "Rendering card...",
     share_downloaded: "Image saved ✓",
     share_shared: "Shared ✓",
+    live_full_analysis: "📋 Full analysis of this clip (frames · save · compare)",
   },
 } as const;
 

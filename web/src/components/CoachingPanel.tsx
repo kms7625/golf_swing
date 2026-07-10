@@ -3,6 +3,7 @@ import { coaching } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { useI18n } from "../lib/i18n";
 import { MODEL_OPTIONS, type Issue, type Provider, type Summary } from "../lib/types";
+import { Markdown } from "./Markdown";
 import styles from "./CoachingPanel.module.css";
 
 interface Props {
@@ -91,7 +92,11 @@ export function CoachingPanel({ summary, issues, swingId, initialFeedback, onLog
       )}
       {loading && <div className={styles.status}>{t("coaching_generating")}</div>}
       {error && <div className={styles.error}>{error}</div>}
-      {feedback && <div className={styles.report}>{feedback}</div>}
+      {feedback && (
+        <div className={styles.report}>
+          <Markdown text={feedback} />
+        </div>
+      )}
     </div>
   );
 }

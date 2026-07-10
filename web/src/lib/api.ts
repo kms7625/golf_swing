@@ -49,14 +49,17 @@ export async function analyze(
 
 export async function analyzeAsync(
   file: File,
-  startSec: number,
-  endSec: number,
+  startSec?: number,
+  endSec?: number,
   sampleRate = 3
 ): Promise<{ job_id: string }> {
   const form = new FormData();
   form.append("file", file);
-  form.append("start_sec", String(startSec));
-  form.append("end_sec", String(endSec));
+  // 구간 미지정(라이브 녹화본 등) 시 서버가 전체 영상을 분석 — 트림 생략
+  if (startSec !== undefined && endSec !== undefined) {
+    form.append("start_sec", String(startSec));
+    form.append("end_sec", String(endSec));
+  }
   form.append("sample_rate", String(sampleRate));
   const res = await fetch(`${API_BASE}/analyze-async`, { method: "POST", body: form });
   return handle<{ job_id: string }>(res);

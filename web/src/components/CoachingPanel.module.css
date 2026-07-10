@@ -85,8 +85,30 @@
   padding: 20px;
   font-size: 14px;
   line-height: 1.75;
-  white-space: pre-wrap;
   color: var(--text);
+}
+
+.report h4 {
+  color: var(--copper);
+  font-size: 14.5px;
+  margin: 18px 0 8px;
+}
+
+.report h4:first-child {
+  margin-top: 0;
+}
+
+.report p {
+  margin: 0 0 8px;
+}
+
+.report ul {
+  margin: 0 0 10px;
+  padding-left: 20px;
+}
+
+.report strong {
+  color: var(--teal);
 }
 
 @media (max-width: 860px) {

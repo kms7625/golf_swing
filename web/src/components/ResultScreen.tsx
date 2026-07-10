@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { AnalyzeResponse } from "../lib/types";
 import { PHASE_ORDER_KO } from "../lib/types";
-import { getStatus } from "../lib/status";
+import { getStatus, statusIcon } from "../lib/status";
 import { useAuth } from "../lib/auth";
 import { useI18n } from "../lib/i18n";
 import { translateIssueMessage } from "../lib/issueMessages";
@@ -132,11 +132,15 @@ export function ResultScreen({
         <div className={styles.statStrip}>
           <div className={styles.statTile}>
             <div className="k tracked">{t("result_metric_spine")}</div>
-            <div className={`v ${spineStatus} tabular mono`}>{summary.spine_angle_delta}°</div>
+            <div className={`v ${spineStatus} tabular mono`}>
+              {summary.spine_angle_delta}° {statusIcon(spineStatus)}
+            </div>
           </div>
           <div className={styles.statTile}>
             <div className="k tracked">{t("result_metric_xfactor")}</div>
-            <div className={`v ${xfactorStatus} tabular mono`}>{summary.x_factor}°</div>
+            <div className={`v ${xfactorStatus} tabular mono`}>
+              {summary.x_factor}° {statusIcon(xfactorStatus)}
+            </div>
           </div>
           <div className={styles.statTile}>
             <div className="k tracked">{t("result_metric_shoulder")}</div>
@@ -144,7 +148,9 @@ export function ResultScreen({
           </div>
           <div className={styles.statTile}>
             <div className="k tracked">{t("result_metric_phases")}</div>
-            <div className={`v ${phaseStatus} tabular mono`}>{phaseCount} / 7</div>
+            <div className={`v ${phaseStatus} tabular mono`}>
+              {phaseCount} / 7 {statusIcon(phaseStatus)}
+            </div>
           </div>
         </div>
       </div>

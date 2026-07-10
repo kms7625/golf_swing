@@ -6,6 +6,8 @@ mediapipe
 numpy
 Pillow
 google-genai
+anthropic
+openai
 sqlalchemy
 pyjwt
 psycopg[binary]

@@ -8,6 +8,7 @@ from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 # golf_swing_analyzer/를 sys.path에 추가 — analyzer 패키지는 상대 import를 쓰므로
@@ -22,6 +23,7 @@ from analyzer.reference_db import load_ref_db
 from analyzer.phase_detector import SwingPhaseDetector
 
 import jobs
+from ratelimit import rate_limited
 from auth import create_token, get_current_user, get_optional_user, hash_password, validate_credentials, verify_password
 from db import get_db, init_db
 from models import Swing, User
@@ -125,6 +127,7 @@ async def analyze(
     start_sec: Optional[float] = Form(None),
     end_sec: Optional[float] = Form(None),
     sample_rate: int = Form(3),
+    _rl: None = Depends(rate_limited("analyze", 12, 600)),
 ):
     """동기 분석 — 회귀 기준·샘플 재생성용으로 유지. 신규 프론트 흐름은 /analyze-async 사용."""
     tmp_path = None
@@ -153,6 +156,7 @@ async def analyze_async(
     start_sec: Optional[float] = Form(None),
     end_sec: Optional[float] = Form(None),
     sample_rate: int = Form(3),
+    _rl: None = Depends(rate_limited("analyze", 12, 600)),
 ):
     """비동기 분석 시작 — job_id 반환, 진행률은 GET /jobs/{job_id} 폴링."""
     tmp_path = _save_upload_to_temp(file)  # 상한 초과 시 여기서 413
@@ -184,7 +188,7 @@ async def job_status(job_id: str):
 
 
 @app.post("/auto-window")
-async def auto_window(file: UploadFile = File(...)):
+async def auto_window(file: UploadFile = File(...), _rl: None = Depends(rate_limited("analyze", 12, 600))):
     tmp_path = None
     try:
         tmp_path = _save_upload_to_temp(file)
@@ -203,8 +207,13 @@ class DetectPhasesRequest(BaseModel):
     wrist_y: list[float]
 
 
+_MAX_LIVE_FRAMES = 20_000  # 라이브 장시간 촬영 폭주 방지 (rAF ~60fps 기준 5분+)
+
+
 @app.post("/detect-phases")
-async def detect_phases(body: DetectPhasesRequest):
+async def detect_phases(body: DetectPhasesRequest, _rl: None = Depends(rate_limited("live", 30, 60))):
+    if len(body.wrist_y) > _MAX_LIVE_FRAMES:
+        raise HTTPException(status_code=400, detail="촬영이 너무 깁니다. 스윙 구간만 다시 촬영해주세요.")
     detector = SwingPhaseDetector()
     for i, wy in enumerate(body.wrist_y):
         detector.update(i, wy, wy)
@@ -225,7 +234,7 @@ class ScoreLiveRequest(BaseModel):
 
 
 @app.post("/score-live")
-async def score_live(body: ScoreLiveRequest):
+async def score_live(body: ScoreLiveRequest, _rl: None = Depends(rate_limited("live", 30, 60))):
     """라이브 세션 점수화 (golf-realtime 방향 A 확장) — 코어 함수를 그대로 호출.
 
     프레임 각도는 geometry.ts(파이썬 geometry.py와 수치 동일 검증된 포팅)가 계산했고,
@@ -233,6 +242,8 @@ async def score_live(body: ScoreLiveRequest):
     """
     if len(body.frames) != len(body.wrist_y):
         raise HTTPException(status_code=400, detail="프레임 수와 손목 좌표 수가 일치하지 않습니다.")
+    if len(body.wrist_y) > _MAX_LIVE_FRAMES:
+        raise HTTPException(status_code=400, detail="촬영이 너무 깁니다. 스윙 구간만 다시 촬영해주세요.")
     detector = SwingPhaseDetector()
     for i, wy in enumerate(body.wrist_y):
         detector.update(i, wy, wy)
@@ -265,7 +276,11 @@ class AuthRequest(BaseModel):
 
 
 @app.post("/auth/register")
-async def register(body: AuthRequest, db: Session = Depends(get_db)):
+async def register(
+    body: AuthRequest,
+    db: Session = Depends(get_db),
+    _rl: None = Depends(rate_limited("auth", 10, 60)),
+):
     email = body.email.strip().lower()
     problem = validate_credentials(email, body.password)
     if problem:
@@ -274,12 +289,21 @@ async def register(body: AuthRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=409, detail="이미 가입된 이메일입니다.")
     user = User(email=email, password_hash=hash_password(body.password))
     db.add(user)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        # select 검사와 insert 사이 동시 가입 레이스 — unique 제약이 최종 심판
+        db.rollback()
+        raise HTTPException(status_code=409, detail="이미 가입된 이메일입니다.")
     return {"token": create_token(user), "email": user.email}
 
 
 @app.post("/auth/login")
-async def login(body: AuthRequest, db: Session = Depends(get_db)):
+async def login(
+    body: AuthRequest,
+    db: Session = Depends(get_db),
+    _rl: None = Depends(rate_limited("auth", 10, 60)),
+):
     email = body.email.strip().lower()
     user = db.scalar(select(User).where(User.email == email))
     if user is None or not verify_password(body.password, user.password_hash):
@@ -323,6 +347,10 @@ async def save_swing(
 ):
     payload = dict(body.payload)
     payload.pop("frame_data", None)  # 재표시에 불필요 — 행당 용량 절감
+    import json as _json
+
+    if len(_json.dumps(payload)) > 2_000_000:
+        raise HTTPException(status_code=413, detail="저장할 결과가 너무 큽니다.")
     summary = payload.get("summary") or {}
     swing = Swing(
         user_id=user.id,
@@ -389,6 +417,7 @@ async def coaching(
 ):
     api_key = (body.api_key or "").strip()
     remaining: Optional[int] = None
+    charged = False  # 서버측 키 경로에서 쿼터를 차감했는지 — 실패 시 환불용
 
     if not api_key:
         # 서버측 키 경로: 로그인 + 월 무료 횟수 차감
@@ -406,6 +435,7 @@ async def coaching(
             raise HTTPException(status_code=429, detail=f"이번 달 무료 코칭 {FREE_COACHING_PER_MONTH}회를 모두 사용했습니다. 다음 달에 초기화됩니다.")
         user.coaching_used += 1
         db.commit()
+        charged = True
         remaining = FREE_COACHING_PER_MONTH - user.coaching_used
 
     try:
@@ -418,6 +448,10 @@ async def coaching(
         raise
     except Exception:
         logger.exception("/coaching failed (provider=%s)", body.provider)
+        if charged and user is not None:
+            # 생성 실패에 무료 횟수를 소모시키지 않는다 — 차감분 환불
+            user.coaching_used = max(user.coaching_used - 1, 0)
+            db.commit()
         raise HTTPException(status_code=502, detail="AI 코칭 생성에 실패했습니다. 잠시 후 다시 시도해주세요.")
 
     if body.swing_id is not None and user is not None:

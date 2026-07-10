@@ -10,3 +10,8 @@ export function getStatus(
   if (warnLo !== undefined && warnHi !== undefined && val >= warnLo && val <= warnHi) return "warn";
   return "crit";
 }
+
+/** 색각이상 대응 — 상태를 색에만 의존하지 않도록 값 옆에 병기하는 기호. */
+export function statusIcon(status: "ok" | "warn" | "crit"): string {
+  return status === "ok" ? "✓" : status === "warn" ? "⚠" : "✕";
+}

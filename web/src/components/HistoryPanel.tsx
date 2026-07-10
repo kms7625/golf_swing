@@ -97,6 +97,8 @@ export function HistoryPanel({ onOpen, onLoginClick }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  // 개별 스윙 삭제 2단계 확인 — 첫 클릭으로 무장, 3초 내 재클릭 시 실행
+  const [armedDeleteId, setArmedDeleteId] = useState<number | null>(null);
 
   async function refresh() {
     setLoading(true);
@@ -126,6 +128,12 @@ export function HistoryPanel({ onOpen, onLoginClick }: Props) {
   }
 
   async function remove(row: SwingRow) {
+    if (armedDeleteId !== row.id) {
+      setArmedDeleteId(row.id);
+      window.setTimeout(() => setArmedDeleteId((cur) => (cur === row.id ? null : cur)), 3000);
+      return;
+    }
+    setArmedDeleteId(null);
     try {
       await deleteSwing(row.id);
       setRows((rs) => rs.filter((r) => r.id !== row.id));
@@ -197,8 +205,12 @@ export function HistoryPanel({ onOpen, onLoginClick }: Props) {
                 XF {row.x_factor}° · SP {row.spine_angle_delta}°
               </span>
             </button>
-            <button className={styles.del} onClick={() => remove(row)} aria-label={t("history_delete")}>
-              ✕
+            <button
+              className={`${styles.del} ${armedDeleteId === row.id ? styles.delArmed : ""}`}
+              onClick={() => remove(row)}
+              aria-label={t("history_delete")}
+            >
+              {armedDeleteId === row.id ? t("history_delete") : "✕"}
             </button>
           </div>
         ))}

@@ -13,7 +13,7 @@ import {
 } from "../lib/geometry";
 import { scoreLive, type LiveScoreResponse } from "../lib/api";
 import { useI18n } from "../lib/i18n";
-import { getStatus } from "../lib/status";
+import { getStatus, statusIcon } from "../lib/status";
 import { translateIssueMessage } from "../lib/issueMessages";
 import { Waveform } from "./Waveform";
 import { CoachingPanel } from "./CoachingPanel";
@@ -51,7 +51,20 @@ const SKELETON_CONNECTIONS: [number, number][] = [
 
 const MIN_FRAMES = 20;
 
-export function LiveCapture({ onBack, onLoginClick }: { onBack: () => void; onLoginClick: () => void }) {
+const RECORD_MIME = ["video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"].find(
+  (m) => typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported(m)
+);
+
+export function LiveCapture({
+  onBack,
+  onLoginClick,
+  onAnalyzeVideo,
+}: {
+  onBack: () => void;
+  onLoginClick: () => void;
+  /** 녹화본을 업로드 분석 파이프라인(정식 결과·저장·비교)으로 넘긴다 */
+  onAnalyzeVideo: (file: File) => void;
+}) {
   const { t, lang } = useI18n();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -61,6 +74,9 @@ export function LiveCapture({ onBack, onLoginClick }: { onBack: () => void; onLo
   const wristYRef = useRef<number[]>([]);
   // wristYRef와 1:1 — 같은 가시성 게이트를 통과한 프레임의 각도만 쌓인다 (/score-live 요구 형식)
   const framesRef = useRef<Record<string, number>[]>([]);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
 
   const [phase, setPhase] = useState<Phase>("loading");
   const [angles, setAngles] = useState<LiveAngles | null>(null);
@@ -127,6 +143,21 @@ export function LiveCapture({ onBack, onLoginClick }: { onBack: () => void; onLo
   function startCapture() {
     wristYRef.current = [];
     framesRef.current = [];
+    setRecordedBlob(null);
+    // 화면과 동일한 스트림을 녹화 — 종료 후 "정식 분석"으로 업로드 파이프라인 재사용
+    if (RECORD_MIME && streamRef.current) {
+      try {
+        chunksRef.current = [];
+        const rec = new MediaRecorder(streamRef.current, { mimeType: RECORD_MIME });
+        rec.ondataavailable = (e) => {
+          if (e.data.size > 0) chunksRef.current.push(e.data);
+        };
+        rec.start(1000);
+        recorderRef.current = rec;
+      } catch {
+        recorderRef.current = null; // 녹화 불가 환경 — 라이브 점수만 제공
+      }
+    }
     setPhase("capturing");
     const loop = () => {
       const video = videoRef.current;
@@ -180,6 +211,18 @@ export function LiveCapture({ onBack, onLoginClick }: { onBack: () => void; onLo
   async function stopCapture() {
     if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
     rafRef.current = null;
+    // 트랙 정지 전에 레코더부터 마감해야 마지막 청크가 유실되지 않는다
+    const rec = recorderRef.current;
+    recorderRef.current = null;
+    if (rec && rec.state !== "inactive") {
+      await new Promise<void>((resolve) => {
+        rec.onstop = () => resolve();
+        rec.stop();
+      });
+      if (chunksRef.current.length > 0) {
+        setRecordedBlob(new Blob(chunksRef.current, { type: RECORD_MIME }));
+      }
+    }
     if (wristYRef.current.length < MIN_FRAMES) {
       setErrorMsg(t("live_too_short"));
       setPhase("ready");
@@ -281,6 +324,19 @@ export function LiveCapture({ onBack, onLoginClick }: { onBack: () => void; onLo
             ))}
           </div>
 
+          {recordedBlob && (
+            <button
+              className={styles.fullAnalysisBtn}
+              onClick={() =>
+                onAnalyzeVideo(
+                  new File([recordedBlob], `live-${Date.now()}.webm`, { type: recordedBlob.type })
+                )
+              }
+            >
+              {t("live_full_analysis")}
+            </button>
+          )}
+
           <h3 className="tracked">{t("result_chart_title")}</h3>
           <Waveform wristY={wristYRef.current} phaseBoundaries={liveResult.phase_boundaries} />
 
@@ -295,11 +351,14 @@ export function LiveCapture({ onBack, onLoginClick }: { onBack: () => void; onLo
   );
 }
 
-function LiveStat({ label, value, status }: { label: string; value: string; status?: string }) {
+function LiveStat({ label, value, status }: { label: string; value: string; status?: "ok" | "warn" | "crit" }) {
   return (
     <div className={styles.liveStat}>
       <div className={`${styles.liveStatK} tracked`}>{label}</div>
-      <div className={`${styles.liveStatV} ${status ? styles[status] : ""} mono tabular`}>{value}</div>
+      <div className={`${styles.liveStatV} ${status ? styles[status] : ""} mono tabular`}>
+        {value}
+        {status ? ` ${statusIcon(status)}` : ""}
+      </div>
     </div>
   );
 }

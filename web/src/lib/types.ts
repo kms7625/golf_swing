@@ -107,7 +107,7 @@ export type Provider = "Gemini" | "Claude" | "GPT";
 
 export const MODEL_OPTIONS: Record<Provider, string[]> = {
   Gemini: ["gemini-2.0-flash", "gemini-1.5-pro"],
-  Claude: ["claude-3-5-sonnet-20241022", "claude-3-haiku-20240307"],
+  Claude: ["claude-sonnet-5", "claude-haiku-4-5-20251001"], // 2026-07 현행 모델 ID
   GPT: ["gpt-4o", "gpt-4o-mini"],
 };
 

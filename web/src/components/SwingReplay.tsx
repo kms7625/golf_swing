@@ -7,7 +7,8 @@ export interface ReplaySource {
   /** 분석에 사용한 원본 파일의 objectURL (새 분석 흐름에서만 존재 — 원본은 서버 미보관) */
   url: string;
   startSec: number;
-  endSec: number;
+  /** 미지정이면 전체 영상(라이브 녹화본 등) — 길이는 metadata에서 취득 */
+  endSec?: number;
 }
 
 interface Props {
@@ -30,27 +31,45 @@ export function SwingReplay({ source, phaseBoundaries, fps, effSample }: Props) 
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState(1);
   const [pos, setPos] = useState(0); // 분석 구간 내 상대 초
+  const [metaDur, setMetaDur] = useState<number | null>(null);
 
-  const span = Math.max(source.endSec - source.startSec, 0.1);
+  const endSec = source.endSec ?? metaDur ?? source.startSec + 0.1;
+  const span = Math.max(endSec - source.startSec, 0.1);
 
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
     const onTime = () => {
       // 분석 구간 밖으로 나가면 구간 시작으로 루프 — 스윙 반복 리뷰 용도
-      if (v.currentTime >= source.endSec) {
+      const end = source.endSec ?? v.duration;
+      if (Number.isFinite(end) && v.currentTime >= end) {
         v.currentTime = source.startSec;
       }
       setPos(Math.max(v.currentTime - source.startSec, 0));
     };
     const onMeta = () => {
-      v.currentTime = source.startSec;
+      if (Number.isFinite(v.duration)) {
+        setMetaDur(v.duration);
+        v.currentTime = source.startSec;
+      } else if (source.endSec === undefined) {
+        // MediaRecorder webm은 duration이 Infinity로 오는 Chrome 특성 —
+        // 끝 너머로 시킹하면 durationchange에서 실제 길이가 확정된다
+        v.currentTime = 1e10;
+      }
+    };
+    const onDur = () => {
+      if (Number.isFinite(v.duration)) {
+        setMetaDur(v.duration);
+        v.currentTime = source.startSec;
+      }
     };
     v.addEventListener("timeupdate", onTime);
     v.addEventListener("loadedmetadata", onMeta);
+    v.addEventListener("durationchange", onDur);
     return () => {
       v.removeEventListener("timeupdate", onTime);
       v.removeEventListener("loadedmetadata", onMeta);
+      v.removeEventListener("durationchange", onDur);
     };
   }, [source]);
 

@@ -1,9 +1,8 @@
-import { useRef, useState } from "react";
+import { lazy, Suspense, useRef, useState } from "react";
 import { TopBar } from "./components/TopBar";
 import { Hero } from "./components/Hero";
 import { UploadTrim } from "./components/UploadTrim";
 import { ResultScreen } from "./components/ResultScreen";
-import { LiveCapture } from "./components/LiveCapture";
 import { AuthModal } from "./components/AuthModal";
 import { HistoryPanel } from "./components/HistoryPanel";
 import { AnalyzeProgress } from "./components/AnalyzeProgress";
@@ -13,6 +12,11 @@ import { useI18n } from "./lib/i18n";
 import type { AnalyzeResponse, JobStage } from "./lib/types";
 import type { ReplaySource } from "./components/SwingReplay";
 import styles from "./App.module.css";
+
+// mediapipe(tasks-vision) 청크가 무거워 라이브 화면만 지연 로딩 — 초기 번들 축소
+const LiveCapture = lazy(() =>
+  import("./components/LiveCapture").then((m) => ({ default: m.LiveCapture }))
+);
 
 type Stage = "landing" | "trim" | "analyzing" | "result" | "live" | "history" | "privacy";
 
@@ -57,14 +61,14 @@ function App() {
     setOpenedFeedback(undefined);
   }
 
-  async function handleAnalyze(file: File, startSec: number, endSec: number) {
+  async function handleAnalyze(file: File, startSec?: number, endSec?: number) {
     setStage("analyzing");
     setError(null);
     setJobStage("uploaded");
     setJobProgress(5);
     setVideoName(file.name);
     clearReplay();
-    setReplay({ url: URL.createObjectURL(file), startSec, endSec });
+    setReplay({ url: URL.createObjectURL(file), startSec: startSec ?? 0, endSec });
     try {
       const { job_id } = await analyzeAsync(file, startSec, endSec);
       pollRef.current = window.setInterval(async () => {
@@ -159,7 +163,15 @@ function App() {
         />
       )}
 
-      {stage === "live" && <LiveCapture onBack={goLanding} onLoginClick={() => setShowAuth(true)} />}
+      {stage === "live" && (
+        <Suspense fallback={<div className={styles.analyzing}><div className={styles.spinner} /></div>}>
+          <LiveCapture
+            onBack={goLanding}
+            onLoginClick={() => setShowAuth(true)}
+            onAnalyzeVideo={(file) => handleAnalyze(file)}
+          />
+        </Suspense>
+      )}
 
       {stage === "history" && (
         <HistoryPanel onOpen={handleOpenSaved} onLoginClick={() => setShowAuth(true)} />
