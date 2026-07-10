@@ -133,3 +133,108 @@
     display: none;
   }
 }
+
+.trendChart {
+  height: 200px;
+  background: var(--graphite-2);
+  border: 1px solid var(--graphite-3);
+  padding: 10px 6px 4px;
+  margin-bottom: 14px;
+}
+
+.metricTrends {
+  background: var(--graphite-2);
+  border: 1px solid var(--graphite-3);
+  padding: 14px 16px;
+  margin-bottom: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.metricTrendsTitle {
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--steel);
+  margin-bottom: 2px;
+}
+
+.metricRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.metricLabel {
+  color: var(--text);
+}
+
+.metricVals {
+  color: var(--steel);
+}
+
+.improved {
+  color: var(--ok);
+}
+
+.worsened {
+  color: var(--copper);
+}
+
+.flat {
+  color: var(--steel);
+}
+
+.accountZone {
+  margin-top: 40px;
+  padding-top: 16px;
+  border-top: 1px solid var(--graphite-3);
+}
+
+.accountDelete {
+  background: none;
+  border: none;
+  color: var(--steel);
+  font-size: 11.5px;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 8px 0;
+}
+
+.accountDelete:hover {
+  color: var(--alert);
+}
+
+.confirmBox p {
+  font-size: 13px;
+  color: var(--alert);
+  margin-bottom: 10px;
+}
+
+.confirmBtns {
+  display: flex;
+  gap: 10px;
+}
+
+.confirmYes {
+  background: var(--alert);
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  min-height: 40px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.confirmNo {
+  background: var(--graphite-2);
+  border: 1px solid var(--graphite-3);
+  color: var(--text);
+  padding: 10px 16px;
+  min-height: 40px;
+  font-size: 12px;
+  cursor: pointer;
+}

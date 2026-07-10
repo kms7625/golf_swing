@@ -117,6 +117,11 @@ export async function authLogin(email: string, password: string): Promise<AuthRe
   return handle<AuthResponse>(res);
 }
 
+export async function deleteAccount(): Promise<{ ok: boolean }> {
+  const res = await fetch(`${API_BASE}/auth/account`, { method: "DELETE", headers: authHeaders() });
+  return handle<{ ok: boolean }>(res);
+}
+
 // ---------------------------------------------------------------- 스윙 기록
 
 export async function saveSwing(videoName: string, payload: AnalyzeResponse): Promise<SwingRow> {

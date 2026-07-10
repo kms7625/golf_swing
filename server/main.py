@@ -242,6 +242,14 @@ async def login(body: AuthRequest, db: Session = Depends(get_db)):
     return {"token": create_token(user), "email": user.email}
 
 
+@app.delete("/auth/account")
+async def delete_account(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """회원 탈퇴 — 계정과 저장된 스윙 전부 삭제 (개인정보처리방침 5조 셀프서비스)."""
+    db.delete(user)  # swings는 cascade="all, delete-orphan"으로 함께 파기
+    db.commit()
+    return {"ok": True}
+
+
 # ---------------------------------------------------------------- 스윙 기록 (G1)
 
 class SwingCreateRequest(BaseModel):

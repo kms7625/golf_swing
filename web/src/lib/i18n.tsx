@@ -82,6 +82,12 @@ const STRINGS = {
     privacy_link: "개인정보처리방침",
     privacy_back: "돌아가기",
     theme_toggle: "밝은/어두운 테마 전환",
+    trend_title: "내 성장 그래프",
+    trend_metrics: "지표별 추이 (처음 → 최근)",
+    account_delete: "회원 탈퇴 (모든 기록 삭제)",
+    account_delete_confirm: "정말 탈퇴할까요? 계정과 저장된 스윙이 모두 삭제되며 되돌릴 수 없습니다.",
+    account_delete_yes: "탈퇴 확정",
+    account_delete_cancel: "취소",
   },
   en: {
     nav_analyze: "Analyze",
@@ -162,6 +168,12 @@ const STRINGS = {
     privacy_link: "Privacy Policy",
     privacy_back: "Back",
     theme_toggle: "Toggle light/dark theme",
+    trend_title: "My Progress",
+    trend_metrics: "Metric trends (first → latest)",
+    account_delete: "Delete account (erases all data)",
+    account_delete_confirm: "Really delete? Your account and all saved swings will be permanently removed.",
+    account_delete_yes: "Confirm deletion",
+    account_delete_cancel: "Cancel",
   },
 } as const;
 

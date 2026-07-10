@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { deleteSwing, getSwing, listSwings } from "../lib/api";
+import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { deleteAccount, deleteSwing, getSwing, listSwings } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { useI18n } from "../lib/i18n";
 import type { AnalyzeResponse, SwingRow } from "../lib/types";
@@ -17,12 +18,85 @@ function fmtDate(iso: string): string {
   ).padStart(2, "0")}`;
 }
 
+/** 점수 추이 — 단일 시리즈 라인 (제목이 시리즈명을 대신하므로 범례 없음, 표 역할은 아래 기록 목록) */
+function TrendChart({ rows }: { rows: SwingRow[] }) {
+  const data = [...rows].reverse().map((r) => ({ label: fmtDate(r.created_at).split(" ")[0], score: r.score }));
+  return (
+    <div className={styles.trendChart}>
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={data} margin={{ top: 8, right: 12, bottom: 0, left: 12 }}>
+          <XAxis
+            dataKey="label"
+            tick={{ fontSize: 10, fill: "var(--steel)" }}
+            axisLine={false}
+            tickLine={false}
+          />
+          <YAxis hide domain={[0, 100]} />
+          <Tooltip
+            isAnimationActive={false}
+            contentStyle={{
+              background: "var(--graphite-2)",
+              border: "1px solid var(--graphite-3)",
+              color: "var(--text)",
+              fontSize: 12,
+            }}
+            labelStyle={{ color: "var(--steel)" }}
+            formatter={(value) => [String(value), ""]}
+          />
+          <Line
+            type="monotone"
+            dataKey="score"
+            stroke="var(--teal)"
+            strokeWidth={2}
+            dot={{ r: 3.5, fill: "var(--teal)", strokeWidth: 0 }}
+            isAnimationActive={false}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+/** 지표별 처음→최근 변화 — 지표마다 개선 방향이 달라 색은 방향 의미에 맞게 */
+function MetricTrends({ rows }: { rows: SwingRow[] }) {
+  const { t } = useI18n();
+  const first = rows[rows.length - 1];
+  const last = rows[0];
+  const items: { label: string; from: number; to: number; betterWhenLower: boolean }[] = [
+    { label: t("result_metric_spine"), from: first.spine_angle_delta, to: last.spine_angle_delta, betterWhenLower: true },
+    { label: t("result_metric_xfactor"), from: first.x_factor, to: last.x_factor, betterWhenLower: false },
+    { label: t("result_metric_shoulder"), from: first.shoulder_rotation_max, to: last.shoulder_rotation_max, betterWhenLower: false },
+  ];
+  return (
+    <div className={styles.metricTrends}>
+      <div className={styles.metricTrendsTitle}>{t("trend_metrics")}</div>
+      {items.map((m) => {
+        const diff = m.to - m.from;
+        const improved = m.betterWhenLower ? diff < 0 : diff > 0;
+        const flat = Math.abs(diff) < 0.05;
+        return (
+          <div key={m.label} className={styles.metricRow}>
+            <span className={styles.metricLabel}>{m.label}</span>
+            <span className={`mono tabular ${styles.metricVals}`}>
+              {m.from}° → {m.to}°{" "}
+              <span className={flat ? styles.flat : improved ? styles.improved : styles.worsened}>
+                {flat ? "—" : diff > 0 ? "▲" : "▼"}
+              </span>
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function HistoryPanel({ onOpen, onLoginClick }: Props) {
   const { t } = useI18n();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, logout } = useAuth();
   const [rows, setRows] = useState<SwingRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   async function refresh() {
     setLoading(true);
@@ -60,6 +134,17 @@ export function HistoryPanel({ onOpen, onLoginClick }: Props) {
     }
   }
 
+  async function removeAccount() {
+    try {
+      await deleteAccount();
+      setConfirmingDelete(false);
+      setRows([]);
+      logout();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("error_generic"));
+    }
+  }
+
   if (!isLoggedIn) {
     return (
       <div className={styles.wrap}>
@@ -78,13 +163,23 @@ export function HistoryPanel({ onOpen, onLoginClick }: Props) {
 
   return (
     <div className={styles.wrap}>
+      {rows.length >= 2 && (
+        <>
+          <div className={styles.head}>
+            <h3 className="tracked">{t("trend_title")}</h3>
+            {trend !== null && (
+              <span className={`${styles.trend} mono tabular`}>
+                {trend >= 0 ? "▲" : "▼"} {Math.abs(trend)}
+              </span>
+            )}
+          </div>
+          <TrendChart rows={rows} />
+          <MetricTrends rows={rows} />
+        </>
+      )}
+
       <div className={styles.head}>
         <h3 className="tracked">{t("history_title")}</h3>
-        {trend !== null && (
-          <span className={`${styles.trend} mono tabular`}>
-            {trend >= 0 ? "▲" : "▼"} {Math.abs(trend)}
-          </span>
-        )}
       </div>
       {error && <div className={styles.error}>{error}</div>}
       {loading && <div className={styles.hint}>…</div>}
@@ -107,6 +202,26 @@ export function HistoryPanel({ onOpen, onLoginClick }: Props) {
             </button>
           </div>
         ))}
+      </div>
+
+      <div className={styles.accountZone}>
+        {confirmingDelete ? (
+          <div className={styles.confirmBox}>
+            <p>{t("account_delete_confirm")}</p>
+            <div className={styles.confirmBtns}>
+              <button className={styles.confirmYes} onClick={removeAccount}>
+                {t("account_delete_yes")}
+              </button>
+              <button className={styles.confirmNo} onClick={() => setConfirmingDelete(false)}>
+                {t("account_delete_cancel")}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button className={styles.accountDelete} onClick={() => setConfirmingDelete(true)}>
+            {t("account_delete")}
+          </button>
+        )}
       </div>
     </div>
   );
