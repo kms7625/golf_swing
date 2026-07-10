@@ -1,0 +1,93 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 40;
+  padding: 20px;
+}
+
+.modal {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  background: var(--graphite-2);
+  border: 1px solid var(--graphite-3);
+  padding: 28px;
+}
+
+.modal h3 {
+  font-size: 13px;
+  color: var(--copper);
+  margin-bottom: 20px;
+}
+
+.modal form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.modal label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--steel);
+}
+
+.modal input {
+  background: var(--graphite);
+  border: 1px solid var(--graphite-3);
+  color: var(--text);
+  padding: 11px 12px;
+  font-size: 14px;
+}
+
+.submit {
+  background: var(--copper);
+  color: var(--graphite);
+  border: none;
+  padding: 12px 20px;
+  min-height: 44px; /* 장갑 낀 손 터치 타깃 */
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.switchMode {
+  margin-top: 14px;
+  background: none;
+  border: none;
+  color: var(--teal);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 6px 0;
+}
+
+.close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  color: var(--steel);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 8px;
+}
+
+.error {
+  font-size: 12px;
+  color: var(--alert);
+}

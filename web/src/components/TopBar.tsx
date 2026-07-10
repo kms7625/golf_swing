@@ -1,13 +1,20 @@
+import { useState } from "react";
+import { useAuth } from "../lib/auth";
 import { useI18n } from "../lib/i18n";
+import { getTheme, toggleTheme, type Theme } from "../lib/theme";
 import styles from "./TopBar.module.css";
 
 interface Props {
   onBrandClick: () => void;
   onLiveClick: () => void;
+  onHistoryClick: () => void;
+  onLoginClick: () => void;
 }
 
-export function TopBar({ onBrandClick, onLiveClick }: Props) {
+export function TopBar({ onBrandClick, onLiveClick, onHistoryClick, onLoginClick }: Props) {
   const { t, lang, setLang } = useI18n();
+  const { isLoggedIn, email, logout } = useAuth();
+  const [theme, setTheme] = useState<Theme>(getTheme());
 
   return (
     <div className={styles.bar}>
@@ -16,10 +23,17 @@ export function TopBar({ onBrandClick, onLiveClick }: Props) {
       </button>
       <div className={styles.right}>
         <nav className={styles.nav}>
-          <a>{t("nav_analyze")}</a>
-          <a>{t("nav_sample")}</a>
           <a onClick={onLiveClick}>{t("nav_live")}</a>
+          <a onClick={onHistoryClick}>{t("nav_history")}</a>
         </nav>
+        <button
+          className={styles.iconBtn}
+          onClick={() => setTheme(toggleTheme())}
+          aria-label={t("theme_toggle")}
+          title={t("theme_toggle")}
+        >
+          {theme === "dark" ? "☀" : "☾"}
+        </button>
         <div className={styles.langToggle}>
           <button className={lang === "ko" ? styles.active : ""} onClick={() => setLang("ko")}>
             KO
@@ -28,6 +42,15 @@ export function TopBar({ onBrandClick, onLiveClick }: Props) {
             EN
           </button>
         </div>
+        {isLoggedIn ? (
+          <button className={styles.authBtn} onClick={logout} title={email ?? undefined}>
+            {t("auth_logout")}
+          </button>
+        ) : (
+          <button className={styles.authBtn} onClick={onLoginClick}>
+            {t("auth_login")}
+          </button>
+        )}
       </div>
     </div>
   );

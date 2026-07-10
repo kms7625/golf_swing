@@ -29,6 +29,35 @@
   font-weight: 700;
 }
 
+.savedBadge {
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ok);
+  border: 1px solid var(--ok);
+  padding: 4px 10px;
+  font-weight: 700;
+}
+
+.saveBtn {
+  background: var(--copper);
+  color: var(--graphite);
+  border: none;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 9px 14px;
+  min-height: 36px;
+  cursor: pointer;
+}
+
+.saveError {
+  font-size: 12px;
+  color: var(--alert);
+  margin-bottom: 20px;
+}
+
 .backLink {
   background: none;
   border: 1px solid var(--graphite-3);
@@ -169,7 +198,7 @@
   padding: 12px 16px;
   font-size: 13.5px;
   line-height: 1.55;
-  color: #cfd6db;
+  color: var(--text);
 }
 
 .chartWrap {

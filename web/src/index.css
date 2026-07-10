@@ -1,10 +1,13 @@
 /* ============================================================
    AI 골프 스윙 분석기 — "모션 랩" 디자인 시스템
    그래파이트 배경 + 코퍼/틸 액센트 + 모노스페이스 데이터 타이포.
-   단일 다크 테마로 의도적 커밋 (golf-platform 2단계 아키텍처 결정 참조).
+   다크가 기본 시안(golf-platform 2단계 결정 유지) + 야외 직사광선용
+   라이트 테마 오버라이드 추가(2026-07-10 상용화 검토 G7 — 다크 단일로는
+   야외 가독성·WCAG 대비 요건을 충족 못함). 전환은 lib/theme.ts.
    ============================================================ */
 
-:root {
+:root,
+:root[data-theme="dark"] {
   --graphite: #14181d;
   --graphite-2: #1c222a;
   --graphite-3: #262e38;
@@ -19,6 +22,22 @@
   --font-mono: "Cascadia Code", "SF Mono", Consolas, monospace;
 
   color-scheme: dark;
+}
+
+/* 라이트(야외) 테마 — 같은 토큰 이름을 고대비 값으로 재정의.
+   본문 대비 AA(4.5:1) 이상 유지: #1c2228 on #f4f2ee ≈ 13:1, steel/copper도 어둡게 보정 */
+:root[data-theme="light"] {
+  --graphite: #f4f2ee;
+  --graphite-2: #ffffff;
+  --graphite-3: #d8d3ca;
+  --steel: #5a6a74;
+  --copper: #b05f2c;
+  --teal: #1f7d75;
+  --alert: #c03a30;
+  --ok: #2e7d4f;
+  --text: #1c2228;
+
+  color-scheme: light;
 }
 
 * {

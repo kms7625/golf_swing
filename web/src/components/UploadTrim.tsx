@@ -5,9 +5,10 @@ import styles from "./UploadTrim.module.css";
 
 interface Props {
   onAnalyze: (file: File, startSec: number, endSec: number) => void;
+  onPrivacyClick: () => void;
 }
 
-export function UploadTrim({ onAnalyze }: Props) {
+export function UploadTrim({ onAnalyze, onPrivacyClick }: Props) {
   const { t } = useI18n();
   const [file, setFile] = useState<File | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
@@ -138,6 +139,13 @@ export function UploadTrim({ onAnalyze }: Props) {
           >
             {t("trim_cta")}
           </button>
+
+          <p className={styles.privacy}>
+            {t("privacy_notice")}{" "}
+            <button className={styles.privacyLink} onClick={onPrivacyClick}>
+              {t("privacy_link")}
+            </button>
+          </p>
         </div>
       </div>
     </div>

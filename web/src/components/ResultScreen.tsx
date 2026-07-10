@@ -1,8 +1,11 @@
+import { useState } from "react";
 import type { AnalyzeResponse } from "../lib/types";
 import { PHASE_ORDER_KO } from "../lib/types";
 import { getStatus } from "../lib/status";
+import { useAuth } from "../lib/auth";
 import { useI18n } from "../lib/i18n";
 import { translateIssueMessage } from "../lib/issueMessages";
+import { saveSwing } from "../lib/api";
 import { Waveform } from "./Waveform";
 import { CoachingPanel } from "./CoachingPanel";
 import styles from "./ResultScreen.module.css";
@@ -11,6 +14,13 @@ interface Props {
   result: AnalyzeResponse;
   isSample: boolean;
   onBack: () => void;
+  /** 분석에 사용한 파일명 — 저장 시 기록 */
+  videoName?: string;
+  /** 히스토리에서 열었을 때의 스윙 id (이미 저장된 결과) */
+  swingId?: number;
+  /** 저장된 스윙에 붙어 있던 코칭 리포트 */
+  initialFeedback?: string;
+  onLoginClick: () => void;
 }
 
 function grade(score: number): string {
@@ -21,9 +31,30 @@ function grade(score: number): string {
   return "D";
 }
 
-export function ResultScreen({ result, isSample, onBack }: Props) {
+export function ResultScreen({
+  result,
+  isSample,
+  onBack,
+  videoName,
+  swingId,
+  initialFeedback,
+  onLoginClick,
+}: Props) {
   const { t, lang, phaseLabel } = useI18n();
+  const { isLoggedIn } = useAuth();
+  const [savedId, setSavedId] = useState<number | null>(swingId ?? null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const { score, issues, summary, rep_frames, wrist_y_history, phase_boundaries } = result;
+
+  async function handleSave() {
+    setSaveError(null);
+    try {
+      const row = await saveSwing(videoName ?? "", result);
+      setSavedId(row.id);
+    } catch (e) {
+      setSaveError(e instanceof Error ? e.message : t("error_generic"));
+    }
+  }
 
   const spineStatus = getStatus(summary.spine_angle_delta, 0, 5, 5, 10);
   const xfactorStatus = getStatus(summary.x_factor, 35, 55, 20, 60);
@@ -34,8 +65,20 @@ export function ResultScreen({ result, isSample, onBack }: Props) {
     <div className={styles.wrap}>
       <div className={styles.header}>
         <span className={styles.sectionTitle}>{t("result_phases_title")}</span>
-        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
           {isSample && <span className={styles.sampleBadge}>{t("sample_badge")}</span>}
+          {!isSample &&
+            (savedId !== null ? (
+              <span className={styles.savedBadge}>{t("save_done")}</span>
+            ) : isLoggedIn ? (
+              <button className={styles.saveBtn} onClick={handleSave}>
+                {t("save_swing")}
+              </button>
+            ) : (
+              <button className={styles.saveBtn} onClick={onLoginClick}>
+                {t("save_login_required")}
+              </button>
+            ))}
           <button className={styles.backLink} onClick={onBack}>
             {t("result_back")}
           </button>
@@ -99,7 +142,15 @@ export function ResultScreen({ result, isSample, onBack }: Props) {
         ))}
       </div>
 
-      <CoachingPanel summary={summary} issues={issues} />
+      {saveError && <div className={styles.saveError}>{saveError}</div>}
+
+      <CoachingPanel
+        summary={summary}
+        issues={issues}
+        swingId={savedId ?? undefined}
+        initialFeedback={initialFeedback}
+        onLoginClick={onLoginClick}
+      />
     </div>
   );
 }

@@ -132,3 +132,20 @@
     grid-template-columns: 1fr;
   }
 }
+
+.privacy {
+  margin-top: 14px;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--steel);
+}
+
+.privacyLink {
+  background: none;
+  border: none;
+  color: var(--teal);
+  font-size: 11.5px;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+}

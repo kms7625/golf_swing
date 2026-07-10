@@ -68,6 +68,39 @@ export interface AutoWindowResponse {
 
 export interface CoachingResponse {
   feedback: string;
+  /** 서버측 키 사용 시 이번 달 남은 무료 횟수 (BYO-key 경로면 null) */
+  remaining: number | null;
+}
+
+export interface AuthResponse {
+  token: string;
+  email: string;
+}
+
+export type JobStage = "uploaded" | "trimming" | "analyzing" | "scoring" | "done";
+
+export interface JobStatus {
+  status: "pending" | "running" | "done" | "error";
+  stage: JobStage;
+  progress: number;
+  result: AnalyzeResponse | null;
+  error: string | null;
+}
+
+export interface SwingRow {
+  id: number;
+  created_at: string;
+  video_name: string;
+  score: number;
+  spine_angle_delta: number;
+  x_factor: number;
+  shoulder_rotation_max: number;
+  has_feedback: boolean;
+}
+
+export interface SwingDetail extends SwingRow {
+  payload: AnalyzeResponse;
+  feedback: string;
 }
 
 export type Provider = "Gemini" | "Claude" | "GPT";
