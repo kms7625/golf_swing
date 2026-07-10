@@ -6,3 +6,5 @@ mediapipe
 numpy
 Pillow
 google-genai
+sqlalchemy
+pyjwt
