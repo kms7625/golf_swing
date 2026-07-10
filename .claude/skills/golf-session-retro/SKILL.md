@@ -36,7 +36,7 @@ git log와 CLAUDE.md, 8개 golf-* 스킬 파일, 메모리 인덱스(MEMORY.md)�
 | 코드·알고리즘 불변식, 코드 자체에서 확인된 사실 | CLAUDE.md 해당 섹션 |
 | 체크리스트 항목·판정 기준·경계 정의 | 해당 `golf-*` SKILL.md 파일 (`.claude/skills/`) |
 | 진행 상태·아키텍처 결정·사용자 선호 | 메모리 (`~/.claude/projects/.../memory/` — MEMORY.md 인덱스 동기화 필수) |
-| 재사용 프롬프트 | 프로젝트 루트 파일 (예: `골프코칭_스킬세트_생성_프롬프트.md` 전례) |
+| 재사용 프롬프트 | 전역 prompt-library (`~/claude-config/prompts/golf_swing/`, INDEX.md 갱신 — 2026-07-10 확정 방식, golf-prompt-engineer "출력 후" 절 참조). 루트의 `골프코칭_스킬세트_생성_프롬프트.md` 등은 확정 이전 전례 — 새 프롬프트를 루트에 만들지 말 것 |
 
 잘못 넣으면 낡거나 못 찾는다. 특히:
 - **수치 하드코딩 금지** — 빠르게 낡는 수치(reference_db.json 샘플 수 등)는 값 대신 조회 방법을 기록
