@@ -11,6 +11,7 @@ import { PrivacyPolicy } from "./components/PrivacyPolicy";
 import { analyzeAsync, getJob } from "./lib/api";
 import { useI18n } from "./lib/i18n";
 import type { AnalyzeResponse, JobStage } from "./lib/types";
+import type { ReplaySource } from "./components/SwingReplay";
 import styles from "./App.module.css";
 
 type Stage = "landing" | "trim" | "analyzing" | "result" | "live" | "history" | "privacy";
@@ -29,7 +30,15 @@ function App() {
   const [videoName, setVideoName] = useState("");
   const [openedSwingId, setOpenedSwingId] = useState<number | undefined>(undefined);
   const [openedFeedback, setOpenedFeedback] = useState<string | undefined>(undefined);
+  const [replay, setReplay] = useState<ReplaySource | undefined>(undefined);
   const pollRef = useRef<number | null>(null);
+
+  function clearReplay() {
+    setReplay((prev) => {
+      if (prev) URL.revokeObjectURL(prev.url);
+      return undefined;
+    });
+  }
 
   function stopPolling() {
     if (pollRef.current !== null) {
@@ -40,6 +49,7 @@ function App() {
 
   function goLanding() {
     stopPolling();
+    clearReplay();
     setStage("landing");
     setResult(null);
     setError(null);
@@ -53,6 +63,8 @@ function App() {
     setJobStage("uploaded");
     setJobProgress(5);
     setVideoName(file.name);
+    clearReplay();
+    setReplay({ url: URL.createObjectURL(file), startSec, endSec });
     try {
       const { job_id } = await analyzeAsync(file, startSec, endSec);
       pollRef.current = window.setInterval(async () => {
@@ -88,6 +100,7 @@ function App() {
     try {
       const res = await fetch("/samples/il-ban.json");
       const data: AnalyzeResponse = await res.json();
+      clearReplay();
       setResult(data);
       setIsSample(true);
       setOpenedSwingId(undefined);
@@ -99,6 +112,7 @@ function App() {
   }
 
   function handleOpenSaved(payload: AnalyzeResponse, swingId: number, feedback: string) {
+    clearReplay();
     setResult(payload);
     setIsSample(false);
     setOpenedSwingId(swingId);
@@ -140,6 +154,7 @@ function App() {
           videoName={videoName}
           swingId={openedSwingId}
           initialFeedback={openedFeedback}
+          replay={replay}
           onLoginClick={() => setShowAuth(true)}
         />
       )}

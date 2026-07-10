@@ -9,6 +9,7 @@ import { saveSwing } from "../lib/api";
 import { Waveform } from "./Waveform";
 import { CompareSection } from "./CompareSection";
 import { CoachingPanel } from "./CoachingPanel";
+import { SwingReplay, type ReplaySource } from "./SwingReplay";
 import styles from "./ResultScreen.module.css";
 
 interface Props {
@@ -21,6 +22,8 @@ interface Props {
   swingId?: number;
   /** 저장된 스윙에 붙어 있던 코칭 리포트 */
   initialFeedback?: string;
+  /** 새 분석 직후에만 존재 — 원본 영상 objectURL+구간 (저장/샘플 결과에는 없음) */
+  replay?: ReplaySource;
   onLoginClick: () => void;
 }
 
@@ -39,6 +42,7 @@ export function ResultScreen({
   videoName,
   swingId,
   initialFeedback,
+  replay,
   onLoginClick,
 }: Props) {
   const { t, lang, phaseLabel } = useI18n();
@@ -144,6 +148,15 @@ export function ResultScreen({
       </div>
 
       {saveError && <div className={styles.saveError}>{saveError}</div>}
+
+      {replay && (
+        <SwingReplay
+          source={replay}
+          phaseBoundaries={phase_boundaries}
+          fps={result.fps}
+          effSample={result.eff_sample}
+        />
+      )}
 
       <CompareSection result={result} currentSwingId={savedId ?? undefined} />
 

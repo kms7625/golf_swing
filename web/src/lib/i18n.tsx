@@ -99,6 +99,11 @@ const STRINGS = {
     compare_score: "종합 점수",
     compare_login_hint: "로그인하면 저장해 둔 과거 스윙과도 비교할 수 있습니다.",
     compare_loading: "비교 데이터 불러오는 중...",
+    replay_title: "스윙 다시보기",
+    replay_play: "재생",
+    replay_pause: "일시정지",
+    replay_speed: "속도",
+    replay_hint: "구간 버튼을 누르면 해당 페이즈로 이동합니다. 타임라인 색은 7단계 구간입니다.",
   },
   en: {
     nav_analyze: "Analyze",
@@ -196,6 +201,11 @@ const STRINGS = {
     compare_score: "Total score",
     compare_login_hint: "Log in to also compare with your saved swings.",
     compare_loading: "Loading comparison...",
+    replay_title: "Swing Replay",
+    replay_play: "Play",
+    replay_pause: "Pause",
+    replay_speed: "Speed",
+    replay_hint: "Tap a phase chip to jump there. Timeline colors mark the 7 phases.",
   },
 } as const;
 
