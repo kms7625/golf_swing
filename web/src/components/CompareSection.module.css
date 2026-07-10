@@ -1,0 +1,130 @@
+.wrap {
+  margin: 36px 0;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.wrap h3 {
+  font-size: 11.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--copper);
+}
+
+.head select {
+  background: var(--graphite);
+  border: 1px solid var(--graphite-3);
+  color: var(--text);
+  padding: 9px 12px;
+  min-height: 40px;
+  font-size: 13px;
+  max-width: 100%;
+}
+
+.hint {
+  color: var(--steel);
+  font-size: 12.5px;
+  margin-bottom: 10px;
+}
+
+.error {
+  color: var(--alert);
+  font-size: 12.5px;
+  margin-bottom: 10px;
+}
+
+.metricTable {
+  background: var(--graphite-2);
+  border: 1px solid var(--graphite-3);
+  margin-bottom: 16px;
+}
+
+.metricRow {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1.4fr 1fr;
+  gap: 8px;
+  padding: 9px 14px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--graphite-3);
+}
+
+.metricRow:last-child {
+  border-bottom: none;
+}
+
+.metricHead {
+  font-size: 10.5px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--steel);
+}
+
+.targetCol {
+  color: var(--teal);
+}
+
+.pairGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+}
+
+.pairCell {
+  background: var(--graphite-2);
+  border: 1px solid var(--graphite-3);
+}
+
+.pairThumb {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+}
+
+.pairThumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.thumbTag {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 2px 6px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+}
+
+.thumbTagTarget {
+  background: var(--teal);
+  color: var(--graphite);
+}
+
+.pairCap {
+  padding: 7px 6px;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--teal);
+  border-top: 1px solid var(--copper);
+}
+
+@media (max-width: 860px) {
+  .pairGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .metricRow {
+    grid-template-columns: 1.6fr 1fr 1fr 0.8fr;
+    font-size: 12px;
+  }
+}

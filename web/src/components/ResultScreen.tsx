@@ -7,6 +7,7 @@ import { useI18n } from "../lib/i18n";
 import { translateIssueMessage } from "../lib/issueMessages";
 import { saveSwing } from "../lib/api";
 import { Waveform } from "./Waveform";
+import { CompareSection } from "./CompareSection";
 import { CoachingPanel } from "./CoachingPanel";
 import styles from "./ResultScreen.module.css";
 
@@ -143,6 +144,8 @@ export function ResultScreen({
       </div>
 
       {saveError && <div className={styles.saveError}>{saveError}</div>}
+
+      <CompareSection result={result} currentSwingId={savedId ?? undefined} />
 
       <CoachingPanel
         summary={summary}
