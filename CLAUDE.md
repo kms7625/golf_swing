@@ -34,7 +34,17 @@ cd server && uvicorn main:app --port 8010
 cd web && npm install && npm run dev   # http://localhost:5173
 ```
 
-Both frontends require a Gemini/Claude/GPT API key entered by the user at runtime (not stored anywhere). Gemini is the default and has a free tier.
+LLM coaching keys (updated 2026-07-10): the **Streamlit app** still takes a user-entered API key in
+the sidebar, but the **web app no longer does** — `/coaching` uses a server-side key from env
+(`GEMINI_API_KEY`/`ANTHROPIC_API_KEY`/`OPENAI_API_KEY`), gated by login and a per-user monthly free
+quota (`FREE_COACHING_PER_MONTH`, default 10, refunded on LLM failure). The server reads a repo-root
+`.env` on startup (`server/db.py::_load_dotenv`, no python-dotenv dependency; existing env vars win) —
+copy `.env.example` to `.env` (gitignored). DB defaults to SQLite at `server/golf.db` (gitignored);
+setting `DATABASE_URL` switches to Postgres/Supabase. **Supabase trap**: the direct
+`db.<ref>.supabase.co` host is IPv6-only — use the session-mode pooler
+(`aws-1-ap-northeast-2.pooler.supabase.com:5432`, user `postgres.<ref>`). The live project ref is
+`nfdsphaigcjgqgukfzld` (Seoul); its MCP server is registered in `.mcp.json` (read-only, OAuth — no
+secrets in that file).
 
 **Build/lint (`web/`)**: `npm run build` (`tsc -b && vite build`), `npm run lint` (oxlint), `npm run preview`.
 
@@ -73,25 +83,40 @@ regression baseline — new work happens in `server/` + `web/`.
 
 | File | Role |
 |---|---|
-| `main.py` | 4 endpoints: `POST /analyze`, `POST /auto-window`, `POST /detect-phases` (pre-built for future real-time use), `POST /coaching` |
+| `main.py` | All endpoints (see below) + CORS from `CORS_ORIGINS` env + chunked upload with `MAX_UPLOAD_MB` cap |
 | `serialization.py` | numpy→JSON conversion, representative-frame extraction (byte-identical duplicate of `ui/tab_analysis.py`'s logic — see golf-code-change A8), base64 JPEG encoding |
+| `db.py` | SQLAlchemy engine/session + repo-root `.env` loader; `DATABASE_URL` env switches SQLite↔Postgres |
+| `models.py` | `users` (email, pbkdf2 hash, monthly coaching quota fields) / `swings` (result payload JSON + promoted metric columns) |
+| `auth.py` | JWT issue/verify (`JWT_SECRET` env — random per boot if unset), `get_current_user`/`get_optional_user` deps |
+| `jobs.py` | In-memory async job store for `/analyze-async` — **single-process assumption**; move to Redis/DB before multi-worker |
+| `ratelimit.py` | Per-IP sliding window (in-memory, same single-process assumption) — auth 10/min, analyze 12/10min, live 30/min |
+
+Endpoints (2026-07-10): analysis `POST /analyze` (sync — kept for regression/sample regeneration),
+`POST /analyze-async` + `GET /jobs/{id}` (what the web UI uses; stage-based progress),
+`POST /auto-window`, `POST /detect-phases`, `POST /score-live` (live-session scoring — reuses
+`detect_all_phases`/`compute_summary`/`compute_score`, core untouched); auth `POST /auth/register|login`,
+`DELETE /auth/account` (cascade-deletes swings); records `POST|GET /swings`, `GET|DELETE /swings/{id}`;
+coaching `POST /coaching` (server key + quota). Uploaded videos are deleted right after analysis —
+**originals are never stored** (개인정보처리방침.md codifies this; keep it true).
 
 The server imports `analyzer/` directly (adds `golf_swing_analyzer/` to `sys.path`) — no core logic
 lives in `server/`. It never returns `annotated_frames` in full (only 7 representative frames as
-base64) to keep API payloads small.
+base64) to keep API payloads small. Client-facing error messages are generic Korean strings; details
+go to the server log only (don't reintroduce `detail=str(e)`).
 
 ### `web/` package — React + Vite + TypeScript frontend ("모션 랩" design)
 
 | Path | Role |
 |---|---|
-| `src/index.css` | Design tokens (graphite/copper/teal palette) — single dark theme, deliberate |
-| `src/lib/api.ts` | Fetch wrappers for the 4 server endpoints |
-| `src/lib/types.ts` | API response types, `PHASE_KEY_MAP`, `PHASE_COLORS` (mirrors `analyzer/drawing.py`) |
-| `src/lib/i18n.tsx` | KO/EN string dictionary + phase-name translation table — server responses stay Korean, only display is translated |
-| `src/lib/status.ts` | Port of `ui/components.py`'s `get_status()` — same thresholds |
+| `src/index.css` | Design tokens (graphite/copper/teal palette) — dark is the default look; a light/high-contrast override (`:root[data-theme="light"]`, added 2026-07-10 for outdoor readability) redefines the same token names. New CSS must use `var(--*)` tokens, never hardcoded theme colors |
+| `src/lib/api.ts` | Fetch wrappers for all server endpoints; attaches the JWT from localStorage where needed |
+| `src/lib/types.ts` | API response types, `MODEL_OPTIONS` (LLM model IDs — keep current), `PHASE_KEY_MAP`, `PHASE_COLORS` (mirrors `analyzer/drawing.py`) |
+| `src/lib/i18n.tsx` | KO/EN string dictionary + phase-name translation table — server responses stay Korean, only display is translated. **Every new UI string goes here in both languages** |
+| `src/lib/status.ts` | Port of `ui/components.py`'s `get_status()` — same thresholds; `statusIcon()` pairs each status with ✓/⚠/✕ so state is never color-only |
 | `src/lib/issueMessages.ts` | Regex-based KO→EN translation for `compute_score()`'s diagnostic messages (12 fixed templates) — server messages stay Korean (same principle as phase names), untranslatable text falls back to the Korean original rather than breaking |
-| `src/components/` | `TopBar`, `Hero`, `UploadTrim` (upload + auto/manual trim), `ResultScreen`, `Waveform` (recharts), `CoachingPanel`, `LiveCapture` (live webcam) |
-| `public/samples/*.json` | Pre-computed `/analyze` responses for the 3 test videos — lets visitors view a full result screen with no server call and no API key |
+| `src/lib/auth.tsx` / `theme.ts` / `shareCard.ts` | Auth context (token in localStorage, guest flows keep working logged-out) / light-dark toggle persistence / canvas-rendered 1080×1350 share-card PNG (no server call) |
+| `src/components/` | `TopBar`, `Hero`, `UploadTrim` (upload + auto/manual trim + privacy notice), `AnalyzeProgress` (async job polling UI), `ResultScreen`, `SwingReplay` (scrub/phase-jump/slow-mo over the in-memory original — only on fresh analyses), `CompareSection` (pro sample or saved swing, side-by-side), `Waveform` (recharts), `CoachingPanel` (no key input; login gate + quota), `Markdown` (coaching-report renderer), `HistoryPanel` (trend chart + saved swings + account deletion), `AuthModal`, `PrivacyPolicy`, `LiveCapture` (live webcam — **lazy-loaded**, keep it that way: the mediapipe chunk is ~144KB) |
+| `public/samples/*.json` | Pre-computed `/analyze` responses for the 3 test videos — lets visitors view a full result screen with no server call and no API key. `pro.json` doubles as the CompareSection reference |
 
 `web/` intentionally does not replicate Streamlit Tab 5 (reference-DB batch learning) or Tab 3's
 CSV export — those stay Streamlit-only. See `.claude/skills/golf-platform/SKILL.md` stage 3 for
@@ -115,13 +140,15 @@ only after the user stops.
   space (`video.videoWidth`/`videoHeight`), so if only the `<video>` has `object-fit: cover` and the
   canvas doesn't, the skeleton overlay drifts out of alignment whenever the camera's aspect ratio
   isn't exactly the panel's 4:3 (silent visual bug, no console error)
-- On "촬영 종료": the raw wrist-Y buffer (same `(left+right)/2` pixel-y convention as
-  `SwingPhaseDetector.update`) is sent to the *existing* `/detect-phases` endpoint — nothing new on
-  the server side. The `Waveform` component (built for the uploaded-video result screen) is reused
-  as-is; its props already happen to match `/detect-phases`'s response shape
-- No score/issues/coaching for live sessions — only the phase-segmented wrist-Y waveform. A full
-  `compute_score()`-equivalent result would require porting `analyzer/scoring.py` too, which is out
-  of scope for this stage
+- On "촬영 종료" (updated 2026-07-10): per-frame joint angles (computed anyway for the HUD) are
+  buffered 1:1 with the wrist-Y buffer — same visibility gate, so indices never diverge — and both
+  are sent to `POST /score-live`, which runs the *unchanged* core
+  (`detect_all_phases` → `get_phase_for_frame` → `compute_summary` → `compute_score`). Live sessions
+  now get score/issues/coaching; `/detect-phases` remains but the live flow no longer uses it
+- The capture is also recorded via MediaRecorder (webm); the done-screen "정식 분석" button feeds the
+  recording into the normal `/analyze-async` pipeline for a full result (rep frames, save, compare).
+  MediaRecorder webm reports `duration: Infinity` in Chrome — `SwingReplay` works around it by
+  seeking past the end and listening for `durationchange`
 
 ### `web/android/` — Capacitor Android wrapper (dev-only, added 2026-07-05)
 
@@ -143,6 +170,19 @@ This whole setup is a **local-dev bridge**: it only works when the FastAPI serve
 Android emulator run on the same machine. A physical device needs the server bound to `0.0.0.0`
 and `VITE_API_BASE` pointed at the dev machine's LAN IP instead of `10.0.2.2`. iOS is out of
 scope on Windows (no Xcode). See `.claude/skills/golf-platform/SKILL.md` stage 4.
+
+### Production deployment & service docs (added 2026-07-10)
+
+- `docker-compose.yml` + `server/Dockerfile` (installs `fonts-nanum` so the Korean HUD renders on
+  Linux — `analyzer/drawing.py` already probes that path) + `web/Dockerfile`/`nginx.conf`. TLS is a
+  front proxy's job; the api port binds to `127.0.0.1`. See RUNNING.md §4.
+- `.env.example` documents every env var (`JWT_SECRET` required in compose; `DATABASE_URL`,
+  `CORS_ORIGINS`, `VITE_API_BASE`, LLM keys, `MAX_UPLOAD_MB`, `FREE_COACHING_PER_MONTH`).
+- `개인정보처리방침.md` (repo root) ↔ `web/src/components/PrivacyPolicy.tsx` are a synced pair —
+  change both together. Core promise: originals deleted right after analysis; only joint-angle JSON
+  ever goes to LLM providers.
+- `상용화_검토보고서_2026-07-10.md` records the commercialization review, competitor research, MVP
+  gates (all implemented) and the remaining non-code items (payments, store listing, domain/TLS).
 
 ### `analyzer/` package — analysis core (preserved, do not rewrite)
 
@@ -223,7 +263,9 @@ invariant — see golf-code-change A8:
 `google.genai` is imported eagerly at module top — this is an inconsistency in the current
 code, not a design choice; don't assume all three behave the same way when reasoning about
 import cost or startup errors. The prompt (`build_prompt()`) sends structured JSON of
-per-phase statistics and AI-flagged issues.
+per-phase statistics and AI-flagged issues. Note the fallback model IDs hardcoded in
+`get_llm_feedback()` are stale (2024-era); both frontends always pass an explicit `model_name`
+(web: `MODEL_OPTIONS` in `web/src/lib/types.ts` — keep that list current instead).
 
 ## Key Data Structures
 
