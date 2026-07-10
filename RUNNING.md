@@ -57,3 +57,23 @@ cd android && ./gradlew.bat installDebug  # 또는 `npx cap open android`로 And
 - 자동화된 테스트 스위트(Python/TS)는 없습니다 — 회귀 검증은 `golf-analysis-quality` 스킬과
   `golf_swing_analyzer/video/`의 테스트 영상 3종(일반.mp4/프로.mp4/프로2.mp4)으로 수동 비교합니다
 - 아키텍처와 각 패키지 역할은 [`CLAUDE.md`](./CLAUDE.md)에 정리돼 있습니다
+
+## 4. 프로덕션 배포 (Docker, 2026-07-10 추가)
+
+`.env.example`을 `.env`로 복사해 채운 뒤:
+
+```bash
+docker compose up -d --build
+# web: http://localhost:8080 / api: 127.0.0.1:8010 (로컬 바인딩)
+```
+
+- **HTTPS**: compose는 TLS를 직접 처리하지 않습니다. 앞단에 Caddy 한 줄
+  (`example.com { reverse_proxy localhost:8080 }`, api 서브도메인 → `localhost:8010`)
+  또는 nginx+certbot을 두세요. api 포트는 `127.0.0.1` 바인딩이라 프록시 없이는 외부 노출되지 않습니다.
+- **DB**: 기본은 컨테이너 볼륨의 SQLite. Supabase(Postgres)로 전환하려면 `.env`의
+  `DATABASE_URL`만 교체하고 `server/requirements.txt`에 `psycopg[binary]`를 추가하세요.
+- **AI 코칭**: 사용자에게 키를 받지 않습니다 — `.env`에 서버측 키(GEMINI_API_KEY 권장)를
+  설정해야 코칭이 활성화되고, 회원별 월 무료 횟수(`FREE_COACHING_PER_MONTH`)로 원가를 통제합니다.
+- **한글 HUD**: 서버 이미지에 `fonts-nanum`이 포함돼 Linux에서도 한글 오버레이가 렌더링됩니다.
+- **비동기 분석 큐는 단일 프로세스 전제**(인메모리) — uvicorn 워커를 늘리려면 큐를 Redis/DB로
+  이전해야 합니다 (`server/jobs.py` 참조).

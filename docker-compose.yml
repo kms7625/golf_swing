@@ -1,0 +1,35 @@
+# 프로덕션 배포 골격 — .env를 채운 뒤 `docker compose up -d --build`
+# HTTPS(TLS 종단)는 이 compose 앞단의 리버스 프록시(Caddy/nginx+certbot) 담당 —
+# RUNNING.md "프로덕션 배포" 절 참조. api는 외부에 직접 노출하지 말 것.
+services:
+  api:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    environment:
+      # SQLite(기본, /data 볼륨) ↔ Supabase Postgres 전환은 이 한 줄
+      DATABASE_URL: ${DATABASE_URL:-sqlite:////data/golf.db}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET을 .env에 설정하세요}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080}
+      MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-200}
+      FREE_COACHING_PER_MONTH: ${FREE_COACHING_PER_MONTH:-10}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    volumes:
+      - api-data:/data
+    ports:
+      - "127.0.0.1:8010:8010"
+    restart: unless-stopped
+
+  web:
+    build:
+      context: web
+      args:
+        VITE_API_BASE: ${VITE_API_BASE:-http://localhost:8010}
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+
+volumes:
+  api-data:
