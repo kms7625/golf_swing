@@ -6,7 +6,10 @@ This repo has a project-specific skillset in `.claude/skills/golf-*` (golf-code-
 golf-realtime, golf-platform, golf-coach-llm, golf-analysis-quality, golf-session-retro,
 golf-prompt-engineer) that encodes the invariants, checklists, and cross-file duplication traps
 referenced throughout this document — check there before non-trivial changes to `analyzer/`, `ui/`,
-or `web/`+`server/`. `golf_swing_analyzer/skills/kis-*` is an unrelated reference skillset copied in
+or `web/`+`server/`. There is also `.claude/agents/golf-a9-reviewer.md` (added 2026-07-10) — a
+read-only isolated reviewer agent that re-judges the golf-code-change A1~A9 checklist on a diff
+before commit; use it when a change touches `analyzer/` or its duplication points (see
+golf-code-change "커밋 전 격리 교차 검증"). `golf_swing_analyzer/skills/kis-*` is an unrelated reference skillset copied in
 from another project — ignore it when working on this codebase.
 
 ## Running the App
