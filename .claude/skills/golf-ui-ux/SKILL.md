@@ -64,9 +64,13 @@ components.py(카드/상태 헬퍼), sidebar.py, tab_analysis/phases/data/coachi
 
 구조: `src/index.css`(그래파이트+코퍼+틸 디자인 토큰, 단일 다크 테마 — golf-platform
 2단계에서 확정한 "모션 랩" 시안), `src/lib/`(api.ts, types.ts, i18n.tsx, status.ts),
-`src/components/`(TopBar, Hero, UploadTrim, ResultScreen, Waveform, CoachingPanel).
+`src/components/`(TopBar, Hero, UploadTrim, ResultScreen, Waveform, CoachingPanel,
+LiveCapture — 5단계 라이브 웹캠, 캔버스 오버레이는 `object-fit: cover` 미러링 필수,
+CLAUDE.md "Live webcam analysis" 참조).
 백엔드는 `server/`(FastAPI, `analyzer/` 직접 import) — 엔드포인트: `/analyze`,
-`/auto-window`, `/detect-phases`(5단계 실시간 대비 선구현), `/coaching`.
+`/auto-window`, `/detect-phases`(라이브 종료 시에도 사용), `/coaching`.
+4단계 산출물 `web/android/`(Capacitor 래퍼, dev 전용 네트워크 배선)도 같은
+`web/` 빌드를 감싼다 — 배선 수정 시 CLAUDE.md `web/android/` 섹션 선행 확인.
 
 ### B1. 서버 응답 포맷 불변 원칙
 - [ ] API 응답 필드명이나 페이즈명("어드레스" 등 한국어)을 프론트 편의로 바꾸려 하는가?

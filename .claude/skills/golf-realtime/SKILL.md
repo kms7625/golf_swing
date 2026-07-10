@@ -36,6 +36,14 @@ description: 골프 스윙 실시간(웹캠/모바일 카메라) 분석 기능�
 스윙 후 리뷰면 충분한지)를 확인하고 결정한다. 기본 추천은 방향 A — 코어 보존
 원칙에 부합하고 구현 리스크가 낮다.
 
+**현황 (2026-07-05, golf-platform 5단계)**: 방향 A로 `web/`에 구현 완료 —
+`web/src/components/LiveCapture.tsx`(온디바이스 `@mediapipe/tasks-vision` +
+`geometry.ts` 포팅), 스윙 종료는 자동 감지가 아니라 사용자 버튼 방식, 종료 시
+손목Y 시계열만 기존 `/detect-phases`로 전송(서버 무변경). 상세는 CLAUDE.md
+"Live webcam analysis" 섹션. **잔여 범위**: 모바일(Capacitor) 앱 통합 미착수,
+방향 B(실시간 임팩트 하이라이트)는 미채택 상태 — 이 스킬은 이제 이 확장들을
+다룰 때 적용된다.
+
 ---
 
 ## 온디바이스 vs 서버 처리 트레이드오프 (PPTX 슬라이드 10 비전)
