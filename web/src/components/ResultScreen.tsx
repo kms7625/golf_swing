@@ -6,6 +6,7 @@ import { useAuth } from "../lib/auth";
 import { useI18n } from "../lib/i18n";
 import { translateIssueMessage } from "../lib/issueMessages";
 import { saveSwing } from "../lib/api";
+import { buildShareCard, shareOrDownload } from "../lib/shareCard";
 import { Waveform } from "./Waveform";
 import { CompareSection } from "./CompareSection";
 import { CoachingPanel } from "./CoachingPanel";
@@ -49,6 +50,7 @@ export function ResultScreen({
   const { isLoggedIn } = useAuth();
   const [savedId, setSavedId] = useState<number | null>(swingId ?? null);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [shareState, setShareState] = useState<"idle" | "making" | "shared" | "downloaded">("idle");
   const { score, issues, summary, rep_frames, wrist_y_history, phase_boundaries } = result;
 
   async function handleSave() {
@@ -58,6 +60,24 @@ export function ResultScreen({
       setSavedId(row.id);
     } catch (e) {
       setSaveError(e instanceof Error ? e.message : t("error_generic"));
+    }
+  }
+
+  async function handleShare() {
+    setShareState("making");
+    try {
+      const blob = await buildShareCard(result, {
+        scoreLabel: t("result_score_label"),
+        gradeLabel: t("grade"),
+        spine: t("result_metric_spine"),
+        xfactor: t("result_metric_xfactor"),
+        shoulder: t("result_metric_shoulder"),
+      });
+      const action = await shareOrDownload(blob, `swinglab-${result.score}.png`);
+      setShareState(action);
+      setTimeout(() => setShareState("idle"), 2500);
+    } catch {
+      setShareState("idle");
     }
   }
 
@@ -72,6 +92,15 @@ export function ResultScreen({
         <span className={styles.sectionTitle}>{t("result_phases_title")}</span>
         <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
           {isSample && <span className={styles.sampleBadge}>{t("sample_badge")}</span>}
+          <button className={styles.shareBtn} onClick={handleShare} disabled={shareState === "making"}>
+            {shareState === "making"
+              ? t("share_making")
+              : shareState === "shared"
+                ? t("share_shared")
+                : shareState === "downloaded"
+                  ? t("share_downloaded")
+                  : t("share")}
+          </button>
           {!isSample &&
             (savedId !== null ? (
               <span className={styles.savedBadge}>{t("save_done")}</span>

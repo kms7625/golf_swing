@@ -104,6 +104,10 @@ const STRINGS = {
     replay_pause: "일시정지",
     replay_speed: "속도",
     replay_hint: "구간 버튼을 누르면 해당 페이즈로 이동합니다. 타임라인 색은 7단계 구간입니다.",
+    share: "공유하기",
+    share_making: "카드 생성 중...",
+    share_downloaded: "이미지 저장됨 ✓",
+    share_shared: "공유 완료 ✓",
   },
   en: {
     nav_analyze: "Analyze",
@@ -206,6 +210,10 @@ const STRINGS = {
     replay_pause: "Pause",
     replay_speed: "Speed",
     replay_hint: "Tap a phase chip to jump there. Timeline colors mark the 7 phases.",
+    share: "Share",
+    share_making: "Rendering card...",
+    share_downloaded: "Image saved ✓",
+    share_shared: "Shared ✓",
   },
 } as const;
 
