@@ -9,6 +9,29 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
+
+def _load_dotenv() -> None:
+    """레포 루트 .env를 os.environ에 주입 (이미 설정된 키는 유지).
+
+    docker-compose는 .env를 자체 처리하지만, 로컬 `uvicorn main:app` 개발 실행에서도
+    같은 파일 하나로 DATABASE_URL/JWT_SECRET/LLM 키가 먹히도록 한다. 외부 의존성 없음.
+    """
+    env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
+    if not os.path.exists(env_path):
+        return
+    with open(env_path, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, _, value = line.partition("=")
+            key, value = key.strip(), value.strip().strip('"').strip("'")
+            if key and value and key not in os.environ:
+                os.environ[key] = value
+
+
+_load_dotenv()
+
 _DEFAULT_SQLITE = "sqlite:///" + os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "golf.db"
 ).replace("\\", "/")

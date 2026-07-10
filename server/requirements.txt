@@ -8,3 +8,4 @@ Pillow
 google-genai
 sqlalchemy
 pyjwt
+psycopg[binary]
