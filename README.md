@@ -3,6 +3,11 @@
 MediaPipe 포즈 추정과 LLM 코칭을 결합해, 골프 스윙 영상 한 편을 7단계로 자동 분할하고
 관절 각도·궤적 데이터를 원인→결과→해결책 구조의 코칭 리포트로 바꿔주는 프로젝트입니다.
 
+<p align="center">
+  <img src="./docs/screenshots/hero.jpg" width="49%" alt="Swing.Lab 랜딩 화면" />
+  <img src="./docs/screenshots/result.jpg" width="49%" alt="7단계 스윙 분석 결과 화면" />
+</p>
+
 같은 분석 코어를 공유하는 두 개의 프론트엔드가 있습니다.
 
 | | 역할 | 실행 방법 |
