@@ -1,9 +1,12 @@
 fastapi
 uvicorn[standard]
 python-multipart
-opencv-python
-mediapipe
-numpy
+# mediapipe>=0.10.30(cp313 휠)부터 mp.solutions(레거시 Pose API)가 빠져 analyzer/mp_setup.py가 깨진다.
+# solutions가 살아있는 마지막 대에서 고정 — Python 3.12 이하 필요(2026-08-28 맥 이전 시 확인).
+mediapipe==0.10.21
+opencv-python==4.10.0.84
+opencv-contrib-python==4.10.0.84
+numpy<2
 Pillow
 google-genai
 anthropic

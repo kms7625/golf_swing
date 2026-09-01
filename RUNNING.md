@@ -2,6 +2,12 @@
 
 같은 분석 코어(`golf_swing_analyzer/analyzer/`)를 공유하는 두 개의 프론트엔드가 있습니다.
 
+**Python 버전 — 3.12 이하 사용** (2026-08-28 맥 이전 시 확인). `mediapipe` cp313 휠(0.10.30+, 1.0.x)은
+레거시 `mp.solutions.pose` API를 뺐고, `analyzer/mp_setup.py`가 그 API로 되어 있어 Python 3.13 venv에서는
+`AttributeError: module 'mediapipe' has no attribute 'solutions'`로 서버가 아예 뜨지 않는다. 두
+`requirements.txt`는 `mediapipe==0.10.21`(solutions 살아있는 마지막 대)로 고정해뒀으니, venv 자체를
+3.12 이하로 만들 것: `python3.12 -m venv .venv`.
+
 ## 1. Streamlit (레퍼런스 구현, 회귀 검증 기준)
 
 ```bash
