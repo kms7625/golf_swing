@@ -191,7 +191,12 @@ export function HistoryPanel({ onOpen, onLoginClick }: Props) {
       </div>
       {error && <div className={styles.error}>{error}</div>}
       {loading && <div className={styles.hint}>…</div>}
-      {!loading && rows.length === 0 && <p className={styles.hint}>{t("history_empty")}</p>}
+      {!loading && rows.length === 0 && (
+        <div>
+          <img className={styles.emptyImage} src="/images/first-swing.webp" width="480" height="480" loading="lazy" alt="" aria-hidden="true" />
+          <p className={styles.hint}>{t("history_empty")}</p>
+        </div>
+      )}
       <div className={styles.list}>
         {rows.map((row) => (
           <div key={row.id} className={styles.row}>

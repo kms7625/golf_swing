@@ -1,6 +1,7 @@
 import { useRef, useState, type ChangeEvent, type DragEvent } from "react";
 import { autoWindow } from "../lib/api";
 import { useI18n } from "../lib/i18n";
+import { ShieldIcon, TrimIcon } from "./icons";
 import styles from "./UploadTrim.module.css";
 
 interface Props {
@@ -63,10 +64,12 @@ export function UploadTrim({ onAnalyze, onPrivacyClick }: Props) {
           onDragLeave={() => setDragOver(false)}
           onDrop={onDrop}
         >
-          {t("upload_dropzone")}
+          <img className={styles.emptyImage} src="/images/first-swing.webp" width="480" height="480" loading="lazy" alt="" aria-hidden="true" />
+          <p>{t("upload_dropzone")}</p>
           <input id="file-input" type="file" accept="video/mp4,video/quicktime,video/x-msvideo" onChange={onSelect} />
         </div>
         <p className={styles.privacy}>
+          <ShieldIcon />
           {t("privacy_notice")}{" "}
           <button className={styles.privacyLink} onClick={onPrivacyClick}>
             {t("privacy_link")}
@@ -92,7 +95,7 @@ export function UploadTrim({ onAnalyze, onPrivacyClick }: Props) {
           />
         </div>
         <div className={styles.controls}>
-          <h3 className="tracked">{t("trim_title")}</h3>
+          <h3 className="tracked"><TrimIcon />{t("trim_title")}</h3>
           <p className={styles.hint}>{detecting ? t("upload_detecting") : t("trim_hint")}</p>
 
           <div className={styles.sliderRow}>
@@ -147,6 +150,7 @@ export function UploadTrim({ onAnalyze, onPrivacyClick }: Props) {
           </button>
 
           <p className={styles.privacy}>
+            <ShieldIcon />
             {t("privacy_notice")}{" "}
             <button className={styles.privacyLink} onClick={onPrivacyClick}>
               {t("privacy_link")}

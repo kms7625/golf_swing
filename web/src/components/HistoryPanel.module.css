@@ -30,6 +30,15 @@
   margin-bottom: 14px;
 }
 
+.emptyImage {
+  display: block;
+  width: 120px;
+  height: 120px;
+  margin-bottom: 14px;
+  object-fit: contain;
+  pointer-events: none;
+}
+
 .cta {
   background: var(--copper);
   color: var(--graphite);
@@ -130,6 +139,7 @@
 }
 
 @media (max-width: 640px) {
+  .emptyImage { width: 104px; height: 104px; }
   .wrap {
     padding: 0 20px;
   }

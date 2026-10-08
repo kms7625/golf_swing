@@ -9,7 +9,7 @@
   border-radius: var(--radius-panel);
   background: var(--graphite-2);
   box-shadow: var(--shadow-panel);
-  padding: 80px 30px;
+  padding: 40px 30px;
   text-align: center;
   color: var(--steel);
   cursor: pointer;
@@ -20,6 +20,17 @@
 .dropzone.dragOver {
   border-color: var(--copper);
   color: var(--copper);
+  outline: 1px dashed var(--copper);
+  outline-offset: 4px;
+}
+
+.emptyImage {
+  display: block;
+  width: 160px;
+  height: 160px;
+  margin: 0 auto 20px;
+  object-fit: contain;
+  pointer-events: none;
 }
 
 .dropzone input {
@@ -162,6 +173,7 @@
 
 @media (max-width: 640px) {
   .wrap { padding: 36px 20px 64px; }
-  .dropzone { padding: 64px 20px; }
+  .dropzone { padding: 32px 20px; }
+  .emptyImage { width: 128px; height: 128px; margin-bottom: 16px; }
   .controls { padding: 20px; }
 }
