@@ -1,11 +1,13 @@
 .wrap {
   background: var(--graphite-2);
   border: 1px solid var(--graphite-3);
-  padding: 26px;
+  padding: 28px;
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-panel);
 }
 
 .wrap h3 {
-  font-size: 12px;
+  font-size: 14px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--copper);
@@ -24,17 +26,18 @@
   display: flex;
   align-items: center;
   gap: 16px;
+  flex-wrap: wrap;
   margin-bottom: 16px;
 }
 
 .loginGate p {
   color: var(--steel);
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .field label {
   display: block;
-  font-size: 10.5px;
+  font-size: 12px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--steel);
@@ -44,19 +47,23 @@
 .field select,
 .field input {
   width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  border-radius: var(--radius-control);
   background: var(--graphite);
-  border: 1px solid var(--graphite-3);
+  border: 1px solid var(--border-strong);
   color: var(--text);
   padding: 10px 12px;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .generateBtn {
   background: var(--copper);
   color: var(--graphite);
   border: none;
-  padding: 11px 20px;
-  font-size: 12px;
+  padding: 12px 20px;
+  min-height: 48px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
@@ -69,12 +76,12 @@
 }
 
 .status {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--teal);
   margin-bottom: 12px;
 }
 .error {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--alert);
   margin-bottom: 12px;
 }
@@ -83,6 +90,8 @@
   background: var(--graphite);
   border: 1px solid var(--graphite-3);
   padding: 20px;
+  border-radius: var(--radius-control);
+  overflow-wrap: anywhere;
   font-size: 14px;
   line-height: 1.75;
   color: var(--text);
@@ -115,4 +124,10 @@
   .controls {
     grid-template-columns: 1fr;
   }
+}
+
+@media (max-width: 640px) {
+  .wrap { padding: 20px; }
+  .loginGate { align-items: flex-start; }
+  .generateBtn { white-space: normal; }
 }
