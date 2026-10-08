@@ -287,8 +287,8 @@ export function LiveCapture({
         <div className={styles.result}>
           <div className={styles.scoreRow}>
             <div className={styles.scoreBox}>
-              <div className="label tracked">{t("result_score_label")}</div>
-              <div className={`${styles.scoreNum} mono tabular`}>{liveResult.score}</div>
+              <div className={`${styles.label} tracked`}>{t("result_score_label")}</div>
+              <div className={`${styles.scoreNum} tabular`}>{liveResult.score}</div>
               <div className={styles.scoreGrade}>
                 {t("grade")} {grade(liveResult.score)}
               </div>
