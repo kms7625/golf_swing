@@ -90,7 +90,7 @@ export function ResultScreen({
     <div className={styles.wrap}>
       <div className={styles.header}>
         <span className={styles.sectionTitle}>{t("result_phases_title")}</span>
-        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+        <div className={styles.actions}>
           {isSample && <span className={styles.sampleBadge}>{t("sample_badge")}</span>}
           <button className={styles.shareBtn} onClick={handleShare} disabled={shareState === "making"}>
             {shareState === "making"
@@ -123,32 +123,32 @@ export function ResultScreen({
         <div className={`${styles.panel} ${styles.scorePanel}`}>
           <div className={`${styles.bracket} ${styles.tl}`} />
           <div className={`${styles.bracket} ${styles.br}`} />
-          <div className="label tracked">{t("result_score_label")}</div>
-          <div className="num tabular mono">{score}</div>
-          <div className="grade tracked">
+          <div className={`${styles.label} tracked`}>{t("result_score_label")}</div>
+          <div className={`${styles.num} tabular`}>{score}</div>
+          <div className={`${styles.grade} tracked`}>
             {t("grade")} {grade(score)}
           </div>
         </div>
         <div className={styles.statStrip}>
           <div className={styles.statTile}>
-            <div className="k tracked">{t("result_metric_spine")}</div>
-            <div className={`v ${spineStatus} tabular mono`}>
+            <div className={`${styles.k} tracked`}>{t("result_metric_spine")}</div>
+            <div className={`${styles.v} ${styles[spineStatus]} tabular mono`}>
               {summary.spine_angle_delta}° {statusIcon(spineStatus)}
             </div>
           </div>
           <div className={styles.statTile}>
-            <div className="k tracked">{t("result_metric_xfactor")}</div>
-            <div className={`v ${xfactorStatus} tabular mono`}>
+            <div className={`${styles.k} tracked`}>{t("result_metric_xfactor")}</div>
+            <div className={`${styles.v} ${styles[xfactorStatus]} tabular mono`}>
               {summary.x_factor}° {statusIcon(xfactorStatus)}
             </div>
           </div>
           <div className={styles.statTile}>
-            <div className="k tracked">{t("result_metric_shoulder")}</div>
-            <div className="v tabular mono">{summary.shoulder_rotation_max}°</div>
+            <div className={`${styles.k} tracked`}>{t("result_metric_shoulder")}</div>
+            <div className={`${styles.v} tabular mono`}>{summary.shoulder_rotation_max}°</div>
           </div>
           <div className={styles.statTile}>
-            <div className="k tracked">{t("result_metric_phases")}</div>
-            <div className={`v ${phaseStatus} tabular mono`}>
+            <div className={`${styles.k} tracked`}>{t("result_metric_phases")}</div>
+            <div className={`${styles.v} ${styles[phaseStatus]} tabular mono`}>
               {phaseCount} / 7 {statusIcon(phaseStatus)}
             </div>
           </div>
@@ -158,8 +158,8 @@ export function ResultScreen({
       <div className={styles.issues}>
         {issues.map((issue, i) => (
           <div key={i} className={`${styles.issue} ${styles[issue.level]}`}>
-            <div className="tag">{issue.level}</div>
-            <div className="txt">{translateIssueMessage(lang, issue.message)}</div>
+            <div className={styles.tag}>{issue.level}</div>
+            <div className={styles.txt}>{translateIssueMessage(lang, issue.message)}</div>
           </div>
         ))}
       </div>
@@ -177,7 +177,7 @@ export function ResultScreen({
             <div className={styles.phaseThumb}>
               <img src={`data:image/jpeg;base64,${rep_frames[ph]}`} alt={phaseLabel(ph)} />
             </div>
-            <div className="cap mono">{phaseLabel(ph).toUpperCase()}</div>
+            <div className={styles.cap}>{phaseLabel(ph).toUpperCase()}</div>
           </div>
         ))}
       </div>
