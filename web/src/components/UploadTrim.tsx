@@ -17,6 +17,7 @@ export function UploadTrim({ onAnalyze, onPrivacyClick }: Props) {
   const [start, setStart] = useState(0);
   const [end, setEnd] = useState(0);
   const [detecting, setDetecting] = useState(false);
+  const [detectFailed, setDetectFailed] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -24,12 +25,14 @@ export function UploadTrim({ onAnalyze, onPrivacyClick }: Props) {
     setFile(f);
     setVideoUrl(URL.createObjectURL(f));
     setDetecting(true);
+    setDetectFailed(false);
     try {
       const win = await autoWindow(f);
       setStart(win.start_sec);
       setEnd(win.end_sec);
     } catch {
-      // 자동 감지 실패 시 전체 구간을 기본값으로 — 사용자가 수동 조정
+      // 자동 감지 실패 시 전체 구간을 기본값으로 — 사용자가 수동 조정 (실패를 안내문으로 알림)
+      setDetectFailed(true);
     } finally {
       setDetecting(false);
     }
@@ -56,7 +59,16 @@ export function UploadTrim({ onAnalyze, onPrivacyClick }: Props) {
       <div className={styles.wrap}>
         <div
           className={`${styles.dropzone} ${dragOver ? styles.dragOver : ""}`}
+          role="button"
+          tabIndex={0}
+          aria-label={t("upload_dropzone")}
           onClick={() => document.getElementById("file-input")?.click()}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              document.getElementById("file-input")?.click();
+            }
+          }}
           onDragOver={(e) => {
             e.preventDefault();
             setDragOver(true);
@@ -96,7 +108,9 @@ export function UploadTrim({ onAnalyze, onPrivacyClick }: Props) {
         </div>
         <div className={styles.controls}>
           <h3 className="tracked"><TrimIcon />{t("trim_title")}</h3>
-          <p className={styles.hint}>{detecting ? t("upload_detecting") : t("trim_hint")}</p>
+          <p className={styles.hint} role="status">
+            {detecting ? t("upload_detecting") : detectFailed ? t("trim_detect_failed") : t("trim_hint")}
+          </p>
 
           <div className={styles.sliderRow}>
             <div className={styles.label}>
