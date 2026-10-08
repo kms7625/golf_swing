@@ -1,41 +1,68 @@
-/* ============================================================
-   AI 골프 스윙 분석기 — "모션 랩" 디자인 시스템
-   그래파이트 배경 + 코퍼/틸 액센트 + 모노스페이스 데이터 타이포.
-   다크가 기본 시안(golf-platform 2단계 결정 유지) + 야외 직사광선용
-   라이트 테마 오버라이드 추가(2026-07-10 상용화 검토 G7 — 다크 단일로는
-   야외 가독성·WCAG 대비 요건을 충족 못함). 전환은 lib/theme.ts.
-   ============================================================ */
+/* Club Lime — dark green, lime and readable sport typography. */
+@font-face {
+  font-family: "Pretendard Variable";
+  src: url("/fonts/PretendardVariable.woff2") format("woff2");
+  font-weight: 45 920;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/fonts/JetBrainsMono-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/fonts/JetBrainsMono-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
 
 :root,
 :root[data-theme="dark"] {
-  --graphite: #14181d;
-  --graphite-2: #1c222a;
-  --graphite-3: #262e38;
-  --steel: #8ca0ac;
-  --copper: #dd8b57;
-  --teal: #5fb8b0;
-  --alert: #e2574c;
-  --ok: #6bbf8a;
-  --text: #dfe4e8;
-
-  --font-display: "Bahnschrift", "Segoe UI", sans-serif;
-  --font-mono: "Cascadia Code", "SF Mono", Consolas, monospace;
+  --graphite: #111610;
+  --graphite-2: #1b2319;
+  --graphite-3: #293427;
+  --steel: #b0baaa;
+  --copper: #c5f26b;
+  --teal: #73dacc;
+  --alert: #ff958b;
+  --ok: #8bdcaa;
+  --text: #f3f7ed;
+  --warn: #ffc879;
+  --border-strong: #85957b;
+  --radius-panel: 20px;
+  --radius-control: 12px;
+  --shadow-panel: none;
+  --media-bg: #080b0a;
+  --media-text: #ffffff;
+  --overlay: rgb(0 0 0 / 64%);
+  --clear: transparent;
+  --font-display: "Pretendard Variable", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Pretendard Variable", monospace;
 
   color-scheme: dark;
 }
 
-/* 라이트(야외) 테마 — 같은 토큰 이름을 고대비 값으로 재정의.
-   본문 대비 AA(4.5:1) 이상 유지: #1c2228 on #f4f2ee ≈ 13:1, steel/copper도 어둡게 보정 */
+/* Identical token roles in daylight; media surfaces remain dark. */
 :root[data-theme="light"] {
-  --graphite: #f4f2ee;
+  --graphite: #f6f8ef;
   --graphite-2: #ffffff;
-  --graphite-3: #d8d3ca;
-  --steel: #5a6a74;
-  --copper: #b05f2c;
-  --teal: #1f7d75;
-  --alert: #c03a30;
-  --ok: #2e7d4f;
-  --text: #1c2228;
+  --graphite-3: #e7edde;
+  --steel: #526047;
+  --copper: #416500;
+  --teal: #006b61;
+  --alert: #b12f38;
+  --ok: #1c703c;
+  --text: #1b2417;
+  --warn: #8a4b00;
+  --border-strong: #657557;
+  --shadow-panel: 0 8px 24px rgb(27 36 23 / 6%);
 
   color-scheme: light;
 }
@@ -56,6 +83,8 @@ body {
   background: var(--graphite);
   color: var(--text);
   font-family: var(--font-display);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
 h1,
@@ -70,6 +99,15 @@ button,
 input,
 select {
   font-family: inherit;
+}
+
+button {
+  border-radius: var(--radius-control);
+  transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+button:enabled:hover {
+  transform: translateY(-2px);
 }
 
 button:focus-visible,
@@ -94,8 +132,12 @@ a:focus-visible {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.001ms !important;
-    transition-duration: 0.001ms !important;
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+  button:enabled:hover {
+    transform: none;
   }
 }
