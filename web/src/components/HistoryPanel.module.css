@@ -7,11 +7,12 @@
 .head {
   display: flex;
   align-items: baseline;
+  flex-wrap: wrap;
   gap: 14px;
 }
 
 .wrap h3 {
-  font-size: 12px;
+  font-size: 14px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--copper);
@@ -19,13 +20,13 @@
 }
 
 .trend {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--ok);
 }
 
 .hint {
   color: var(--steel);
-  font-size: 13px;
+  font-size: 14px;
   margin-bottom: 14px;
 }
 
@@ -34,8 +35,8 @@
   color: var(--graphite);
   border: none;
   padding: 12px 22px;
-  min-height: 44px;
-  font-size: 12px;
+  min-height: 48px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
@@ -43,7 +44,7 @@
 }
 
 .error {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--alert);
   margin-bottom: 10px;
 }
@@ -62,14 +63,17 @@
 
 .rowMain {
   flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 16px;
   background: var(--graphite-2);
   border: 1px solid var(--graphite-3);
   color: var(--text);
-  padding: 12px 16px;
-  min-height: 44px;
+  padding: 18px 20px;
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-panel);
+  min-height: 48px;
   cursor: pointer;
   text-align: left;
 }
@@ -79,7 +83,7 @@
 }
 
 .score {
-  font-size: 20px;
+  font-size: 32px;
   font-weight: 700;
   color: var(--copper);
   min-width: 44px;
@@ -94,12 +98,12 @@
 }
 
 .date {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--text);
 }
 
 .name {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--steel);
   white-space: nowrap;
   overflow: hidden;
@@ -107,14 +111,14 @@
 }
 
 .mini {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--steel);
   white-space: nowrap;
 }
 
 .del {
   background: var(--graphite-2);
-  border: 1px solid var(--graphite-3);
+  border: 1px solid var(--border-strong);
   color: var(--steel);
   min-width: 44px;
   cursor: pointer;
@@ -127,7 +131,7 @@
 
 @media (max-width: 640px) {
   .wrap {
-    padding: 0 16px;
+    padding: 0 20px;
   }
   .mini {
     display: none;
@@ -135,7 +139,9 @@
 }
 
 .trendChart {
-  height: 200px;
+  height: 220px;
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-panel);
   background: var(--graphite-2);
   border: 1px solid var(--graphite-3);
   padding: 10px 6px 4px;
@@ -143,6 +149,7 @@
 }
 
 .metricTrends {
+  border-radius: var(--radius-panel);
   background: var(--graphite-2);
   border: 1px solid var(--graphite-3);
   padding: 14px 16px;
@@ -153,7 +160,7 @@
 }
 
 .metricTrendsTitle {
-  font-size: 10.5px;
+  font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--steel);
@@ -163,8 +170,9 @@
 .metricRow {
   display: flex;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 12px;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .metricLabel {
@@ -180,7 +188,7 @@
 }
 
 .worsened {
-  color: var(--copper);
+  color: var(--warn);
 }
 
 .flat {
@@ -208,7 +216,7 @@
 }
 
 .confirmBox p {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--alert);
   margin-bottom: 10px;
 }
@@ -216,34 +224,35 @@
 .confirmBtns {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .confirmYes {
   background: var(--alert);
-  color: #fff;
+  color: var(--graphite);
   border: none;
   padding: 10px 16px;
   min-height: 40px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   cursor: pointer;
 }
 
 .confirmNo {
   background: var(--graphite-2);
-  border: 1px solid var(--graphite-3);
+  border: 1px solid var(--border-strong);
   color: var(--text);
   padding: 10px 16px;
   min-height: 40px;
-  font-size: 12px;
+  font-size: 14px;
   cursor: pointer;
 }
 
 .delArmed {
-  color: #fff;
+  color: var(--graphite);
   background: var(--alert);
   border-color: var(--alert);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   padding: 0 10px;
   white-space: nowrap;

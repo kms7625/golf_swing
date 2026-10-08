@@ -196,7 +196,7 @@ export function HistoryPanel({ onOpen, onLoginClick }: Props) {
         {rows.map((row) => (
           <div key={row.id} className={styles.row}>
             <button className={styles.rowMain} onClick={() => open(row)} title={t("history_open")}>
-              <span className={`${styles.score} mono tabular`}>{row.score}</span>
+              <span className={`${styles.score} tabular`}>{row.score}</span>
               <span className={styles.meta}>
                 <span className={styles.date}>{fmtDate(row.created_at)}</span>
                 <span className={styles.name}>{row.video_name}</span>
