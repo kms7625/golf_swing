@@ -69,6 +69,19 @@ python -m pytest tests/test_api.py   # 서버 계약만 빠르게
 - 서버 테스트는 임시 SQLite로 격리 실행 — 실 DB(.env)와 섞이지 않습니다
 - `analyzer/`를 의도적으로 변경했다면 `python tests/regen_snapshot.py`로 기준값을 재생성해 함께 커밋
 
+**analyzer 스냅샷의 기준 환경은 배포 Docker 이미지(linux/amd64)다 (2026-10-08).**
+mediapipe 포즈 추정은 플랫폼마다 결과가 달라 회전 지표(어깨/골반 회전·X-Factor)가
+크게 흔들린다 — 같은 코드·영상에서 어깨 최대 회전이 Windows 64.2° / Mac(arm64) 54.3° /
+Docker 72.4°. 그래서 Mac에서 직접 돌리면 `test_ilban_regression`이 실패하는 게 정상이고,
+스냅샷 테스트·기준값 재생성·`web/public/samples/*.json` 재생성은 모두 컨테이너에서 한다:
+
+```bash
+docker build --platform linux/amd64 -f server/Dockerfile -t golf-server:baseline .
+docker run --rm --platform linux/amd64 -v "$PWD":/repo -w /repo golf-server:baseline \
+  sh -c "pip install -q pytest httpx && python -m pytest -q -p no:cacheprovider"
+# 기준값 재생성: 위 명령의 sh -c 부분을 "python tests/regen_snapshot.py"로
+```
+
 ## 참고
 
 - 심층 회귀 검증(3영상 전체·시각 비교)은 여전히 `golf-analysis-quality` 스킬로 수동 수행합니다
