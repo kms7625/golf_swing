@@ -35,11 +35,12 @@
 .errorBanner {
   max-width: 1160px;
   margin: 20px auto 0;
-  padding: 0 40px;
+  padding: 0 20px;
 }
 
 .errorBanner div {
-  background: rgba(226, 87, 76, 0.12);
+  background: var(--graphite-2);
+  border-radius: var(--radius-control);
   border: 1px solid var(--alert);
   color: var(--alert);
   padding: 14px 18px;
