@@ -1,8 +1,8 @@
 .wrap {
   max-width: 760px;
   margin: 40px auto 80px;
-  padding: 0 24px;
-  font-size: 14px;
+  padding: 0 20px;
+  font-size: 16px;
   line-height: 1.7;
 }
 
@@ -17,7 +17,9 @@
 }
 
 .wrap h2 {
-  font-size: 20px;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
   margin-bottom: 6px;
 }
 
@@ -28,7 +30,7 @@
 }
 
 .wrap h3 {
-  font-size: 14px;
+  font-size: 16px;
   color: var(--copper);
   margin: 22px 0 8px;
 }
@@ -40,9 +42,11 @@
 
 .note {
   margin-top: 28px;
-  padding: 14px 16px;
+  padding: 20px;
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-panel);
   background: var(--graphite-2);
   border: 1px solid var(--graphite-3);
   color: var(--steel);
-  font-size: 12.5px;
+  font-size: 14px;
 }
