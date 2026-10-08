@@ -1,15 +1,7 @@
 import type { AnalyzeResponse } from "./types";
 
 /** 결과 공유 카드(1080×1350 PNG) 생성 — 캔버스 로컬 렌더링, 서버 호출 없음.
- * 색은 다크 "Club Lime" 토큰 고정값(공유 이미지는 테마와 무관하게 브랜드 룩 유지). */
-
-const BG = "#111610";
-const PANEL = "#1b2319";
-const LINE = "#293427";
-const COPPER = "#c5f26b";
-const TEAL = "#73dacc";
-const TEXT = "#f3f7ed";
-const STEEL = "#b0baaa";
+ * 색은 현재 Club Lime 테마 토큰을 읽고, 폰트도 화면과 같은 로컬 파일을 사용한다. */
 
 export interface ShareLabels {
   scoreLabel: string; // TOTAL SCORE
@@ -42,6 +34,14 @@ export async function buildShareCard(result: AnalyzeResponse, labels: ShareLabel
     document.fonts.load('400 30px "JetBrains Mono"'),
     document.fonts.load('700 44px "JetBrains Mono"'),
   ]);
+  const palette = getComputedStyle(document.documentElement);
+  const BG = palette.getPropertyValue("--graphite").trim();
+  const PANEL = palette.getPropertyValue("--graphite-2").trim();
+  const LINE = palette.getPropertyValue("--graphite-3").trim();
+  const COPPER = palette.getPropertyValue("--copper").trim();
+  const TEAL = palette.getPropertyValue("--teal").trim();
+  const TEXT = palette.getPropertyValue("--text").trim();
+  const STEEL = palette.getPropertyValue("--steel").trim();
   const W = 1080;
   const H = 1350;
   const canvas = document.createElement("canvas");
