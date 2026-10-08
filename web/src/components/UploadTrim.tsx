@@ -96,9 +96,9 @@ export function UploadTrim({ onAnalyze, onPrivacyClick }: Props) {
           <p className={styles.hint}>{detecting ? t("upload_detecting") : t("trim_hint")}</p>
 
           <div className={styles.sliderRow}>
-            <div className="label">
+            <div className={styles.label}>
               <span>{t("trim_start")}</span>
-              <span className={`val mono tabular`}>{start.toFixed(1)}s</span>
+              <span className={`${styles.val} mono tabular`}>{start.toFixed(1)}s</span>
             </div>
             <input
               type="range"
@@ -115,9 +115,9 @@ export function UploadTrim({ onAnalyze, onPrivacyClick }: Props) {
           </div>
 
           <div className={styles.sliderRow}>
-            <div className="label">
+            <div className={styles.label}>
               <span>{t("trim_end")}</span>
-              <span className="val mono tabular">{end.toFixed(1)}s</span>
+              <span className={`${styles.val} mono tabular`}>{end.toFixed(1)}s</span>
             </div>
             <input
               type="range"
@@ -135,7 +135,7 @@ export function UploadTrim({ onAnalyze, onPrivacyClick }: Props) {
 
           <div className={styles.duration}>
             <span>{t("trim_duration")}</span>
-            <span className="val mono tabular">{(end - start).toFixed(1)}s</span>
+            <span className={`${styles.val} mono tabular`}>{(end - start).toFixed(1)}s</span>
           </div>
 
           <button
