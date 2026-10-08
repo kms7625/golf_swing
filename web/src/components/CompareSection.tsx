@@ -3,6 +3,7 @@ import { getSwing, listSwings } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { useI18n } from "../lib/i18n";
 import { PHASE_ORDER_KO, type AnalyzeResponse, type SwingRow } from "../lib/types";
+import { CompareIcon } from "./icons";
 import styles from "./CompareSection.module.css";
 
 interface Props {
@@ -69,7 +70,7 @@ export function CompareSection({ result, currentSwingId }: Props) {
   return (
     <div className={styles.wrap}>
       <div className={styles.head}>
-        <h3 className="tracked">{t("compare_title")}</h3>
+        <h3 className="tracked"><CompareIcon />{t("compare_title")}</h3>
         <select value={targetKey} onChange={(e) => select(e.target.value as TargetKey)}>
           <option value="">{t("compare_none")}</option>
           <option value="pro">{t("compare_pro")}</option>

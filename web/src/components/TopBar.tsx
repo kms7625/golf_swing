@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useAuth } from "../lib/auth";
 import { useI18n } from "../lib/i18n";
 import { getTheme, toggleTheme, type Theme } from "../lib/theme";
+import { HistoryIcon, MoonIcon, SunIcon, VideoCameraIcon } from "./icons";
 import styles from "./TopBar.module.css";
 
 interface Props {
@@ -23,8 +24,8 @@ export function TopBar({ onBrandClick, onLiveClick, onHistoryClick, onLoginClick
       </button>
       <div className={styles.right}>
         <nav className={styles.nav}>
-          <button onClick={onLiveClick}>{t("nav_live")}</button>
-          <button onClick={onHistoryClick}>{t("nav_history")}</button>
+          <button onClick={onLiveClick}><VideoCameraIcon />{t("nav_live")}</button>
+          <button onClick={onHistoryClick}><HistoryIcon />{t("nav_history")}</button>
         </nav>
         <button
           className={styles.iconBtn}
@@ -32,7 +33,7 @@ export function TopBar({ onBrandClick, onLiveClick, onHistoryClick, onLoginClick
           aria-label={t("theme_toggle")}
           title={t("theme_toggle")}
         >
-          {theme === "dark" ? "☀" : "☾"}
+          {theme === "dark" ? <SunIcon /> : <MoonIcon />}
         </button>
         <div className={styles.langToggle}>
           <button className={lang === "ko" ? styles.active : ""} onClick={() => setLang("ko")}>

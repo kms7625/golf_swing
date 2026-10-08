@@ -11,6 +11,7 @@ import { Waveform } from "./Waveform";
 import { CompareSection } from "./CompareSection";
 import { CoachingPanel } from "./CoachingPanel";
 import { SwingReplay, type ReplaySource } from "./SwingReplay";
+import { BookmarkIcon, ShareIcon, UploadIcon } from "./icons";
 import styles from "./ResultScreen.module.css";
 
 interface Props {
@@ -93,6 +94,7 @@ export function ResultScreen({
         <div className={styles.actions}>
           {isSample && <span className={styles.sampleBadge}>{t("sample_badge")}</span>}
           <button className={styles.shareBtn} onClick={handleShare} disabled={shareState === "making"}>
+            <ShareIcon />
             {shareState === "making"
               ? t("share_making")
               : shareState === "shared"
@@ -106,14 +108,17 @@ export function ResultScreen({
               <span className={styles.savedBadge}>{t("save_done")}</span>
             ) : isLoggedIn ? (
               <button className={styles.saveBtn} onClick={handleSave}>
+                <BookmarkIcon />
                 {t("save_swing")}
               </button>
             ) : (
               <button className={styles.saveBtn} onClick={onLoginClick}>
+                <BookmarkIcon />
                 {t("save_login_required")}
               </button>
             ))}
           <button className={styles.backLink} onClick={onBack}>
+            <UploadIcon />
             {t("result_back")}
           </button>
         </div>

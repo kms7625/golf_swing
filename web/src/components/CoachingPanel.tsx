@@ -4,6 +4,7 @@ import { useAuth } from "../lib/auth";
 import { useI18n } from "../lib/i18n";
 import { MODEL_OPTIONS, type Issue, type Provider, type Summary } from "../lib/types";
 import { Markdown } from "./Markdown";
+import { CoachingIcon } from "./icons";
 import styles from "./CoachingPanel.module.css";
 
 interface Props {
@@ -48,7 +49,7 @@ export function CoachingPanel({ summary, issues, swingId, initialFeedback, onLog
 
   return (
     <div className={styles.wrap}>
-      <h3>{t("coaching_title")}</h3>
+      <h3><CoachingIcon />{t("coaching_title")}</h3>
 
       {!isLoggedIn ? (
         <div className={styles.loginGate}>

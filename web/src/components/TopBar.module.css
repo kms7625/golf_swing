@@ -65,6 +65,10 @@
   border-color: var(--copper);
 }
 
+.iconBtn svg {
+  margin-inline-end: 0;
+}
+
 .authBtn {
   background: var(--clear);
   border: 1px solid var(--copper);

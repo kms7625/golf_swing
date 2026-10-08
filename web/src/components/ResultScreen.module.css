@@ -145,6 +145,17 @@
   align-items: center;
   text-align: center;
 }
+
+.scorePanel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 24px;
+  right: 24px;
+  height: 3px;
+  background: var(--copper);
+  pointer-events: none;
+}
 .scorePanel .label {
   font-size: 11px;
   letter-spacing: 0.12em;
