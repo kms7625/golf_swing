@@ -6,6 +6,7 @@
   grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
   gap: 48px;
   align-items: center;
+  word-break: keep-all;
 }
 
 .eyebrow {
@@ -132,5 +133,6 @@
   .hero h1 { font-size: 38px; }
   .ctaRow { flex-direction: column; }
   .btn { width: 100%; }
-  .panel { min-height: 270px; }
+  /* aspect-ratio + min-height가 함께 걸리면 폭이 270×4/3=360px 아래로 줄지 않아 360px 기기에서 가로 넘침 */
+  .panel { aspect-ratio: auto; min-height: 270px; }
 }
