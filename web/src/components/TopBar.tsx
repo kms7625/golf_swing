@@ -23,8 +23,8 @@ export function TopBar({ onBrandClick, onLiveClick, onHistoryClick, onLoginClick
       </button>
       <div className={styles.right}>
         <nav className={styles.nav}>
-          <a onClick={onLiveClick}>{t("nav_live")}</a>
-          <a onClick={onHistoryClick}>{t("nav_history")}</a>
+          <button onClick={onLiveClick}>{t("nav_live")}</button>
+          <button onClick={onHistoryClick}>{t("nav_history")}</button>
         </nav>
         <button
           className={styles.iconBtn}
