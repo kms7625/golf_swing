@@ -13,6 +13,7 @@ const STRINGS = {
     hero_lede:
       "어깨폭 정규화 좌표계와 7단계 자동 세그먼테이션 알고리즘으로 스윙을 프레임 단위 계측하고, 관절 궤적 데이터를 리포트로 변환합니다.",
     hero_cta_upload: "영상 업로드",
+    hero_visual_alt: "라임과 민트 관절 표시가 있는 골퍼의 백스윙 일러스트",
     hero_cta_sample: "샘플 데이터 보기",
     upload_dropzone: "MP4, MOV, AVI 파일을 드래그하거나 클릭해서 선택하세요",
     upload_detecting: "스윙 구간 자동 감지 중...",
@@ -120,6 +121,7 @@ const STRINGS = {
     hero_lede:
       "Shoulder-width normalized coordinates and a 7-phase auto-segmentation algorithm measure your swing frame by frame and turn joint trajectories into a report.",
     hero_cta_upload: "Upload Video",
+    hero_visual_alt: "Illustration of a golfer in a backswing with lime and mint joint markers",
     hero_cta_sample: "View Sample Data",
     upload_dropzone: "Drag & drop or click to select an MP4, MOV, or AVI file",
     upload_detecting: "Detecting swing window automatically...",

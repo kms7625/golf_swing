@@ -67,10 +67,21 @@
   border-radius: var(--radius-panel);
   box-shadow: var(--shadow-panel);
   position: relative;
-  padding: 24px 24px 52px;
+  min-width: 0;
+  padding: 24px 24px 64px;
+}
+
+.panel::before {
+  content: "";
+  position: absolute;
+  inset: 12px 12px 64px;
+  border-radius: inherit;
+  background: radial-gradient(ellipse at center, color-mix(in srgb, var(--copper) 12%, var(--clear)), var(--clear) 70%);
+  pointer-events: none;
 }
 
 .bracket {
+  pointer-events: none;
   position: absolute;
   width: 18px;
   height: 18px;
@@ -112,12 +123,20 @@
   flex-wrap: wrap;
   gap: 6px;
   color: var(--teal);
+  background: var(--graphite-2);
 }
 
-.skeleton {
-  width: 55%;
-  max-height: 270px;
-  margin: 0 auto;
+.visual {
+  position: absolute;
+  inset: 12px 24px 64px;
+  pointer-events: none;
+}
+
+.visual img {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  object-fit: contain;
   display: block;
 }
 
