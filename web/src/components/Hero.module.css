@@ -3,7 +3,7 @@
   max-width: 1160px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, min(42.1875vh, 405px));
   gap: 48px;
   align-items: center;
   word-break: keep-all;
@@ -63,12 +63,14 @@
 .panel {
   background: var(--graphite-2);
   border: 1px solid var(--graphite-3);
-  aspect-ratio: 4 / 3;
+  /* 75vh × 9/16, capped at 720px × 9/16 by the grid column. */
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  max-height: min(75vh, 720px);
   border-radius: var(--radius-panel);
   box-shadow: var(--shadow-panel);
   position: relative;
   min-width: 0;
-  padding: 24px 24px 64px;
 }
 
 .panel::before {
@@ -128,7 +130,7 @@
 
 .visual {
   position: absolute;
-  inset: 12px 24px 64px;
+  inset: 12px 12px 64px;
   pointer-events: none;
 }
 
@@ -145,6 +147,12 @@
     grid-template-columns: minmax(0, 1fr);
     gap: 36px;
   }
+  .panel {
+    /* Cap both dimensions together so the 70vh limit preserves 9:16. */
+    max-width: 39.375vh;
+    max-height: 70vh;
+    justify-self: center;
+  }
 }
 
 @media (max-width: 640px) {
@@ -152,6 +160,5 @@
   .hero h1 { font-size: 38px; }
   .ctaRow { flex-direction: column; }
   .btn { width: 100%; }
-  /* aspect-ratio + min-height가 함께 걸리면 폭이 270×4/3=360px 아래로 줄지 않아 360px 기기에서 가로 넘침 */
-  .panel { aspect-ratio: auto; min-height: 270px; }
+  /* Keep the 9:16 panel without min-height: a height floor can force overflow at 360px. */
 }

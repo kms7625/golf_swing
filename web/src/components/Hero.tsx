@@ -37,7 +37,7 @@ export function Hero({ onUpload, onViewSample }: Props) {
         <div className={`${styles.bracket} ${styles.bl}`} />
         <div className={`${styles.bracket} ${styles.br}`} />
         <div className={styles.visual}>
-          <img src="/images/hero-swing.webp" width="1152" height="864" alt={t("hero_visual_alt")} />
+          <img src="/images/hero-swing-916.webp" width="936" height="1664" alt={t("hero_visual_alt")} />
         </div>
         <div className={`${styles.readout} mono`}>
           <span>SPINE 29.4°</span>
