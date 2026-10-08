@@ -132,7 +132,7 @@ function PhasePair({ phase, mine, theirs }: { phase: string; mine: string; their
         <img src={`data:image/jpeg;base64,${theirs}`} alt={`${t("compare_target")} — ${phaseLabel(phase)}`} />
         <span className={`${styles.thumbTag} ${styles.thumbTagTarget}`}>{t("compare_target")}</span>
       </div>
-      <div className={`${styles.pairCap} mono`}>{phaseLabel(phase).toUpperCase()}</div>
+      <div className={styles.pairCap}>{phaseLabel(phase).toUpperCase()}</div>
     </div>
   );
 }
