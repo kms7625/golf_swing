@@ -1,0 +1,35 @@
+Use case: ui-mockup
+Asset type: one high fidelity desktop Korean web-app screen for Swing.Lab, UI-05 r1, capturing state.
+Primary request: Generate ONE finished 16:9 landscape interface, exactly 2048x1152 if possible. Full flat screen, no device frame, no montage. All Korean text crisp, clean modern Korean gothic sans serif. This is a new screen matching an approved white/navy/cobalt design system.
+
+Style: pure white background #FFFFFF, deep navy #152040 typography, strong cobalt #2448D8 primary status surface and action, very pale blue #ECF1FF auxiliary backgrounds, thin pale blue dividers, modest small corner radius. Very bold large headings, generous whitespace, aligned content. No lime, copper, teal, black sci-fi dashboard, glows, ornamental gauges or fake code.
+
+Top navigation about 90px tall: large bold "Swing.Lab" left; right "실시간 캠" (active cobalt underline), "내 기록", outlined sun icon with "테마", "KO / EN" with KO underlined, navy outline "로그인" button. Below left page heading "실시간 웹캠 분석" and subtitle "기기에서 관절 움직임을 실시간으로 측정해요."
+
+Two column content: camera pane left at approximately x80 y285 width1056 height792, a 4:3 pane. Right column x1200 width760. Keep everything inside this single first viewport, readable at full screen.
+
+CAMERA PANE:
+Pale blue lightly illustrated practice space. One generic adult golfer in a full-body deep-navy silhouette / simple illustration, never a real person photograph. Golfer in a preparatory or early backswing pose, head, both feet and entire club completely inside frame. Preserve generous headroom. Pose occupies the upper/middle camera area and its feet stay above the bottom HUD so there is NO overlap with the HUD.
+Draw an anatomically aligned visible skeletal overlay: thin vivid cobalt connecting both shoulders, upper arms, elbows, forearms, wrists, sides of torso to hips, hip line, thighs to knees and shins to ankles. Circular joint markers with white centers and cobalt outlines. Every joint sits on corresponding body joint, no extra limbs.
+Camera top left small white badge "관절 인식 중". Camera top right readable small badge "이미지 예시".
+HUD INSIDE lower camera pane: solid nearly opaque white panel, small heading "실시간 각도" and small "예시 수치". Under these, exactly THREE equally sized columns with labels and large navy numbers:
+"상체 기울기" / "32.4°"
+"어깨선 기울기" / "18.0°"
+"골반선 기울기" / "9.0°".
+Never use SPINE, SHOULDER, HIP, X-FACTOR. No good/bad icons on the angle values. These are synthetic current values, not a final result.
+
+RIGHT COLUMN, ordered from top to bottom:
+1. Strong solid cobalt rectangular status surface. Very large white "촬영 중". Small red recording dot beside white "녹화 중". Under it, medium white copy on two readable lines: "스윙이 끝나면 ‘촬영 종료’를 눌러" then "결과를 확인하세요."
+2. White preparation area below with navy heading "촬영 준비", muted caption "직접 확인한 준비 항목". Three neatly spaced rows, each with a cobalt checkbox visibly checked, and these exact navy phrases:
+"머리부터 발끝까지 화면 안에"
+"클럽을 휘두를 공간 확보"
+"준비 자세부터 마무리까지 한 번"
+These checks mean user self-confirmation, not automated quality detection.
+3. Big full-width cobalt button, white stop-square icon and bold white "촬영 종료". Outside the button show a separate navy keyboard focus outline separated by a visible white gap. Never show an active start button beside it, because recording is already in progress.
+4. Short two-line explanatory copy in legible medium navy:
+"종료 후 측정값을 서버로 보내 점수를 계산해요."
+"녹화 영상은 ‘정식 분석’을 누르면 업로드해요."
+5. Smaller white outlined button with left arrow "홈으로". Alongside or immediately below, warning in navy "화면을 나가면 촬영 내용이 사라져요."
+
+Layout priorities: camera and skeleton largest visual subject, right cobalt recording state, clearly visible stop action and human self-checks. Entire head/feet/club visible, no clipping, HUD must not obscure golfer. All five right blocks fit within bottom margin with enough breathing room.
+No final score, no grades, no phase timeline, no elapsed timer, no percent confidence, no pause, no invented extra buttons, no error overlay mixed into recording screen. Brand/language nav may use English but every metric/state/action is Korean. Do not write design notes, file names or revision numbers on the image.

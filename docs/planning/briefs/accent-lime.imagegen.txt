@@ -1,0 +1,91 @@
+=== UI-01 r3 — image_gen edit ===
+references:
+/Users/mose/PycharmProjects/golf_swing/docs/planning/mockups/UI-01_r2a.png
+/Users/mose/PycharmProjects/golf_swing/docs/planning/mockups/UI-03_r1.png
+transparent_background: false
+
+Use case: style-transfer. Asset type: high-fidelity Korean desktop UI mockup, ONE single complete screen, no collage.
+Image 1 is the EDIT TARGET and controls all layout, typography, spacing, sizes, rounded corners, wording and component geometry. Image 2 is a COLOR MOOD reference only: borrow deep green and lime, NEVER its dark page background, layout, typography or uppercase brand.
+Make a narrowly scoped COLOR EDIT of Image 1. Keep its white #FFFFFF page, navigation structure, heavy Korean sans-serif typography, original content hierarchy and all existing element positions. Do not redesign or add features. Output exact 2048x1152 pixels, 16:9 landscape, the same composition proportionally scaled, no crop, frame, browser chrome or watermark.
+Palette: near-black deep green #1B2319 for headings, icons and bold large numbers; muted dark green #485343 for body/helper text; dark olive green #416500 for links, thin outlines, waveforms, active lines and focus rings; lime #C5F26B ONLY as filled surfaces/buttons/highlight backgrounds, with dark #1B2319 text. Pale green #EFF6E3 replaces pale blue supporting surfaces. NEVER lime letters, icons, thin boundaries or lines on white. NEVER white lettering on lime. Recolor cobalt/navy UI to these roles. Keep high text contrast. Secondary buttons stay white with dark green lettering and outlines. Selected KO has dark-green lettering and underline; EN is readable muted dark green. Header exact "Swing.Lab", "실시간 캠", "내 기록", sun icon+"테마", "KO / EN", "로그인", retain each screen's current positions.
+Preserve all exact Korean glyphs; do not introduce explanatory development text. No new information. Preserve status check marks and other shape cues, never color-only states.
+UI-01 r3: Preserve the full two-column asymmetric landing composition of UI-01 r2a: giant heavy two-line left headline, stacked description and two wide buttons, slanted right illustration panel, low horizontal history band.
+Exact headline lines: "골프 스윙을" / "계측 장비처럼 읽는다".
+Exact description: "내 영상으로 스윙의 흐름을 확인하고," / "다음 연습에서 바꿀 점을 찾아보세요."
+Main button: lime fill, dark green upload icon and "영상 업로드", dark green outer focus ring separated from button by visible white gap, same original geometry.
+Secondary button: "샘플 데이터 보기". Helper: "전신이 보이는 한 번의 스윙 영상을 준비해 주세요."
+Make only the requested graphic exception: convert the right photograph to a tasteful flat deep-green anonymous golfer silhouette/editorial illustration, in the SAME follow-through pose and SAME slanted panel, with a light illustrated practice range. No photoreal person. Retain exact "이미지 예시" label, dark green on small pale solid backing.
+History band changes pale blue to pale green #EFF6E3, keeps exact "내 스윙 기록" / "로그인하면 분석 결과를 저장하고 변화를 추적할 수 있습니다." / "내 기록" with arrow.
+No personal score or metrics. All wording and sizes otherwise identical to Image 1.
+
+=== UI-02 r4 — image_gen edit ===
+references:
+/Users/mose/PycharmProjects/golf_swing/docs/planning/mockups/UI-02_r3.png
+/Users/mose/PycharmProjects/golf_swing/docs/planning/mockups/UI-03_r1.png
+transparent_background: false
+
+Use case: style-transfer. Asset type: high-fidelity Korean desktop UI mockup, ONE single complete screen, no collage.
+Image 1 is the EDIT TARGET and controls all layout, typography, spacing, sizes, rounded corners, wording and component geometry. Image 2 is a COLOR MOOD reference only: borrow deep green and lime, NEVER its dark page background, layout, typography or uppercase brand.
+Make a narrowly scoped COLOR EDIT of Image 1. Keep its white #FFFFFF page, navigation structure, heavy Korean sans-serif typography, original content hierarchy and all existing element positions. Do not redesign or add features. Output exact 2048x1152 pixels, 16:9 landscape, the same composition proportionally scaled, no crop, frame, browser chrome or watermark.
+Palette: near-black deep green #1B2319 for headings, icons and bold large numbers; muted dark green #485343 for body/helper text; dark olive green #416500 for links, thin outlines, waveforms, active lines and focus rings; lime #C5F26B ONLY as filled surfaces/buttons/highlight backgrounds, with dark #1B2319 text. Pale green #EFF6E3 replaces pale blue supporting surfaces. NEVER lime letters, icons, thin boundaries or lines on white. NEVER white lettering on lime. Recolor cobalt/navy UI to these roles. Keep high text contrast. Secondary buttons stay white with dark green lettering and outlines. Selected KO has dark-green lettering and underline; EN is readable muted dark green. Header exact "Swing.Lab", "실시간 캠", "내 기록", sun icon+"테마", "KO / EN", "로그인", retain each screen's current positions.
+Preserve all exact Korean glyphs; do not introduce explanatory development text. No new information. Preserve status check marks and other shape cues, never color-only states.
+UI-02 r4: Keep UI-02 r3 layout exactly: title/file row, narrow portrait video on left, large summary and CTA on right, a single full-width unified waveform and filmstrip timeline below. Preserve "분석 구간 선택", "일반.mp4" and focused outlined "파일 변경".
+Large cobalt summary becomes lime #C5F26B with dark green circle/check icon, exact "스윙 구간 자동 감지 완료", "선택 길이", and the SAME very large heavy "6.0s" in dark green. Main CTA becomes lime with dark green thin border and exact dark green label "이 구간으로 분석 시작".
+Keep exact explanation "손목 움직임이 큰 구간을 스윙으로 찾았어요".
+Keep exact privacy sentence "업로드한 영상은 분석 직후 서버에서 즉시 삭제되며, 원본은 보관되지 않습니다." and underlined dark-green link "개인정보처리방침".
+Preserve portrait video 9:16 with anonymous golfer SILHOUETTE and "이미지 예시". Recolor blue illustrative backgrounds pale green. Filmstrip remains one row of the same silhouettes. No actual photograph, no extra video panels.
+Timeline retains play/speaker controls, "0:06 / 0:12", "손목 높이 변화", "예시 데이터", "양 끝 핸들을 움직여 구간을 조정하세요", one waveform, filmstrip, two range handles and a separate current playhead. The detected 3–9 second region is pale lime filled shading, waveform and selected border/handles dark #416500; handle grooves can be white inside the dark handles. Current 6-second playhead line/dot/down triangle are near-black green, same center position. Preserve x positions: start 25%, current 50%, end 75%; twelve-second extent.
+CRITICAL TEXT CORRECTION: the incorrect label in the reference MUST be replaced by the exact five Korean syllables and spacing "자동 감지 구간". Spell: 자 동 [space] 감 지 [space] 구 간. NOT "잔목", NOT "잔묵", NOT "손목 감지 구간". Set it in clearly legible DARK GREEN on pale lime shading, at its existing position above waveform. This is the only text change.
+Retain "현재 6.0s", "시작 3.0s", "끝 9.0s", "선택 길이 6.0s"; tick labels "0:00", "0:03", "0:06", "0:09", "0:12". Do not move or resize any element. No separate extra slider or phase cards.
+
+=== UI-03 r3 — image_gen edit ===
+references:
+/Users/mose/PycharmProjects/golf_swing/docs/planning/mockups/UI-03_r2.png
+/Users/mose/PycharmProjects/golf_swing/docs/planning/mockups/UI-03_r1.png
+transparent_background: false
+
+Use case: style-transfer. Asset type: high-fidelity Korean desktop UI mockup, ONE single complete screen, no collage.
+Image 1 is the EDIT TARGET and controls all layout, typography, spacing, sizes, rounded corners, wording and component geometry. Image 2 is a COLOR MOOD reference only: borrow deep green and lime, NEVER its dark page background, layout, typography or uppercase brand.
+Make a narrowly scoped COLOR EDIT of Image 1. Keep its white #FFFFFF page, navigation structure, heavy Korean sans-serif typography, original content hierarchy and all existing element positions. Do not redesign or add features. Output exact 2048x1152 pixels, 16:9 landscape, the same composition proportionally scaled, no crop, frame, browser chrome or watermark.
+Palette: near-black deep green #1B2319 for headings, icons and bold large numbers; muted dark green #485343 for body/helper text; dark olive green #416500 for links, thin outlines, waveforms, active lines and focus rings; lime #C5F26B ONLY as filled surfaces/buttons/highlight backgrounds, with dark #1B2319 text. Pale green #EFF6E3 replaces pale blue supporting surfaces. NEVER lime letters, icons, thin boundaries or lines on white. NEVER white lettering on lime. Recolor cobalt/navy UI to these roles. Keep high text contrast. Secondary buttons stay white with dark green lettering and outlines. Selected KO has dark-green lettering and underline; EN is readable muted dark green. Header exact "Swing.Lab", "실시간 캠", "내 기록", sun icon+"테마", "KO / EN", "로그인", retain each screen's current positions.
+Preserve all exact Korean glyphs; do not introduce explanatory development text. No new information. Preserve status check marks and other shape cues, never color-only states.
+UI-03 r3: Keep UI-03 r2 centralized progress page layout exactly, same title/file row, same large progress panel, same FIVE stage rows, same bottom back button and three-line explanation. No golfer, image, video, waveform or new actions.
+Title "분석 중..." then "일반.mp4". Replace cobalt progress panel with pale green #EFF6E3 (not a dark panel), keep exact "분석 진행률" and SAME huge bold "30%" in dark #1B2319. Progress bar stays in the same position and width; olive gray #6B775E track with a dark-green thin outline, filled first EXACTLY 30% in lime #C5F26B. Text "진행률은 처리 단계에 따라 표시됩니다." is dark readable #485343.
+Five stages in order, exact:
+1 check-circle + "업로드 완료"
+2 check-circle + "스윙 구간 자르기"
+3 right-pointing icon + "관절 포즈 추적·7단계 구분" + pill "진행 중"
+4 empty circle + "점수 계산" + outlined pill "대기"
+5 empty circle + "완료" + outlined pill "대기".
+Completed circles have lime fill and dark-green CHECK MARKS. Current row has pale-green background, dark-green left line and triangle icon, lime filled "진행 중" pill with dark lettering. Pending labels/circles remain readable dark muted green, not washed out. Preserve all 5 rows and separators.
+Bottom back button stays WHITE/outlined with dark left arrow and exact "뒤로 가기". CRITICAL FOCUS FIX: render a clearly separate thick dark-green OUTER focus ring around the entire button, with a distinct WHITE 5-pixel gap between the normal button boundary and this ring at output scale. Two separated outlines visibly express focus. Preserve original button location and size.
+Keep the three exact adjacent lines, same placement:
+"뒤로 가면 이 결과는 표시하지 않습니다."
+"서버의 분석 처리는 계속됩니다."
+"새 분석을 시작하려면 영상을 다시 선택하세요."
+Do not rename back as cancel, add a cancel function, or replace the 30% stage example with a time estimate.
+
+=== UI-01 r3 — contrast/text correction 2 ===
+reference: /Users/mose/.codex/generated_images/01a11b32-2dde-70a0-9bd8-d9e6f37b5968/exec-fa93ae26-4e7d-4afd-9ff2-d7c4a2238f1a.png
+transparent_background: false
+
+Use case: precise-object-edit. Edit this UI-01 image ONLY to fix header text contrast: change the EN letters and slash in the top navigation to solid near-black deep green #1B2319, just as dark and readable as "내 기록". Do not move them. Keep every other pixel, layout, illustration, all Korean text, all colors, white page and original component geometry unchanged. Single complete 16:9 landscape screen. No redesign or extra text.
+
+=== UI-02 r4 — contrast/text correction 2 ===
+reference: /Users/mose/.codex/generated_images/01a11b32-2dde-70a0-9bd8-d9e6f37b5968/exec-698130b4-3088-4033-8102-484d6698c9bf.png
+transparent_background: false
+
+Use case: precise-object-edit. Make ONLY these two local corrections to this UI-02 image; preserve every other element, position, white page, green/lime palette, 6.0s size, waveform shape and timeline geometry.
+1. Replace the widely tracked label above the waveform with the EXACT naturally typeset Korean string "자동 감지 구간". Normal Korean letter spacing like "손목 높이 변화", no spaces between syllables within words. There must be just two word spaces: after 자동 and after 감지. Dark #1B2319 lettering on the same pale lime shading, same left anchor. Do not alter any other text.
+2. The completion icon at the left of the large lime summary currently has a dark circle and lime check. Change it to a lime-filled circle with a DARK #1B2319 check and dark green circular outline. Lime is used only as filled background, never as the check glyph. Keep the same circle size/location.
+Output ONE complete screen, same framing, no collage, no new features.
+
+=== UI-03 r3 — contrast/text correction 2 ===
+reference: /Users/mose/.codex/generated_images/01a11b32-2dde-70a0-9bd8-d9e6f37b5968/exec-789f5786-e478-48b0-99f1-02f87c7e1f40.png
+transparent_background: false
+
+Use case: precise-object-edit. Make ONLY two contrast corrections to this UI-03 image. Preserve all other pixels and positions, white page, pale green progress panel, huge dark 30%, exact Korean text, five stages, and the existing clear double-outline back button focus.
+1. Change ONLY the unfilled right 70% of the progress bar from light gray-green to solid DARK OLIVE GREEN #416500. It must be clearly DARK forest/olive, approximately as dark as the current-row triangle icon. Keep the first 30% bright lime #C5F26B, keep the same bar shape/length and border. Lime fill against dark track must be unmistakable, contrast greater than 3:1. No gradient.
+2. Change EN and slash in top navigation to solid near-black deep green #1B2319, same dark readability as "내 기록".
+All text and all layout remain unchanged. Single complete 16:9 landscape screen, no new elements.
+

@@ -1,0 +1,24 @@
+Use case: ui-mockup / style-transfer
+Asset type: high-fidelity Korean desktop web app screen, Swing.Lab UI-03 r2.
+Primary request: Regenerate the analysis-in-progress screen in the approved bright cobalt visual language. One full desktop screen, landscape 16:9, target 1920x1080. Flat front-on UI screenshot, no device frame, no perspective.
+Input images, in order:
+1. UI-03_r1.png: STRUCTURE AND WORDING ONLY, edit target. Retain its five ordered processing steps, visible named progress bar with 30%, and back button plus the three consequence sentences. Completely replace its dark green/lime/mint palette, old rounded enclosing dark card and old header styling.
+2. UI-02_r3.png: PRIMARY VISUAL STYLE reference. Match its confident saturated cobalt blue summary surface, very large bold white numeric value, bright white page, dark navy Korean sans-serif, pale blue dividers and modest corner radii. Do not copy its upload video, timeline or waveform.
+3. UI-01_r2a.png: HEADER AND TYPOGRAPHY reference only. Match mixed-case Swing.Lab wordmark and nav structure. Do not use any photograph, golfer or person from it.
+
+Composition: clean spacious centered analysis workspace about 1160px wide under the shared header. White page with dark navy title. A broad cobalt progress panel near the top of this workspace, then a clean five-row vertical processing list underneath on white, then a divider and back action with explanation. Keep the whole interface visible within the frame. No large enclosing dark panel. Avoid cramping, arbitrary extra subtitles, charts, ornaments or illustrations.
+Header: white across full width; left brand "Swing.Lab"; right in this order "실시간 캠", "내 기록", sun icon + "테마", "KO / EN" with KO cobalt and underlined, modest outlined "로그인" button. Header appearance matches refs 2 and 3.
+Main heading: "분석 중..." in large bold navy. Below it outline file icon and "일반.mp4".
+Cobalt progress panel: at left top the exact label "분석 진행률"; top/right a dominant extra-bold white "30%" (numerals approx 110px at the target resolution, largest number on the page). Below label and number is a wide horizontal bar; softly light blue track, white fill for EXACTLY 30 percent of full track width. It has a clear starting edge and precise fill endpoint. Directly below the bar white readable text "진행률은 처리 단계에 따라 표시됩니다.".
+Processing list: precisely FIVE rows in this order, evenly spaced, icons at left, exact Korean labels, state badges at right. First two rows use cobalt check icons and navy text; third highlighted row pale blue background, cobalt left stripe, cobalt current arrow and bold navy text, a solid cobalt pill with white "진행 중"; fourth and fifth navy-gray readable text, empty circles and outlined "대기" pills. These are PROCESSING steps, not seven swing phases; do not number 7 separate steps.
+Row 1: check icon + "업로드 완료"
+Row 2: check icon + "스윙 구간 자르기"
+Row 3: current arrow + "관절 포즈 추적·7단계 구분" + "진행 중"
+Row 4: empty circle + "점수 계산" + "대기"
+Row 5: empty circle + "완료" + "대기"
+Footer within workspace: thin pale blue divider; on left a secondary outlined white button with left arrow + "뒤로 가기", navy text and a clear navy keyboard focus outline separated by white gap. On right, three legible lines, exactly:
+"뒤로 가면 이 결과는 표시하지 않습니다."
+"서버의 분석 처리는 계속됩니다."
+"새 분석을 시작하려면 영상을 다시 선택하세요."
+Use clear Korean sans-serif letterforms, reproduce all Korean text VERBATIM with correct spacing and punctuation. Do not summarize, duplicate, or omit any row or any sentence. Suggested palette: white #FFFFFF, navy #152040, vivid cobalt #2448D8, pale blue #ECF1FF. Numeric and typographic hierarchy as strong as reference 2, restrained borders, generous space.
+Constraints: only one in-progress state at analyzing/30%. No person of any kind, photoreal people, photos, video player, skeleton, golf silhouette, waveform, result scores, ETA, elapsed timer, cancel/pause/resume controls, upload CTA, implementation notes, approval marks, or collage. Do not carry forward dark green, neon lime, mint, glossy cards or HUD styling. Preserve all semantic structure and required text; only redesign visual language. Opaque background.

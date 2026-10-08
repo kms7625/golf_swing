@@ -1,0 +1,43 @@
+Use case: ui-mockup. Asset: ONE high-fidelity desktop UI-02 upload / trim-screen mockup for SWING.LAB, image revision 1, structure revision 2. Edit and recompose the supplied approved UI-01 screenshot into the UI-02 workspace. Preserve its shared top bar, visual language, dark green/lime/mint roles, Korean sans-serif feel, fine borders, rounded cards and buttons. Replace the landing-page content with the file-selected, auto-detection-COMPLETED trim state. Output ONE full desktop screen in true landscape 16:9, target 1536x864. No collage, device frame, browser frame or additional variants. Keep the reference file unchanged.
+
+Input image: approved UI-01 screenshot, editing base and style reference only. Its golfer illustration, large hero copy, instrument readouts and bottom history strip must be replaced. Do not carry their content onto UI-02.
+
+Style: deep green #111610 canvas, dark green #1b2319 cards, off-white #f3f7ed main text, lime #c5f26b primary action/brand/active toggle, mint #73dacc status/numbers/keyboard focus, muted gray-green #b0baaa secondary copy. Crisp flat UI, restrained 20px card corners and 12px button corners, subtle thin borders, readable Pretendard-like Korean type, monospaced time values. No dramatic glow. The page is a calm working screen, not a marketing hero.
+
+Layout at 1536x864: top bar about 76px tall; brand left and controls right exactly as the reference: camera icon + "실시간 캠", history icon + "내 기록", sun icon, "KO" / "EN" segmented toggle with KO active, outlined "로그인" button. Main left/right margins about 160px. Page title at x160 y120: "분석 구간 선택", bold off-white, about 34px, much smaller than the reference hero headline. Under title at y175 show a file icon and "일반.mp4". At right end of this title/file row show a named secondary button "파일 변경" with a thin lime outline, dark fill, and a separated MINT keyboard-focus ring. Show focus on this button ONLY.
+
+Two side-by-side panels begin around y210. Left panel approximately x160 to488, right panel x544 to1376; keep whitespace between them. Both should finish above y795 so all content is visible. Left panel contains a very narrow upright PORTRAIT video image, EXACT 9:16 rectangle, target 288px wide by512px tall; keep this ratio distinct from the outer padded card. The video depicts an anonymous adult golfer with a cap at a driving range, full body and club contained, natural paused phone-video appearance. This is a newly generated illustrative preview, not a real uploaded frame. No face detail needed. NO pose markers, skeleton, motion trails, scores, analysis overlays or hero mascot. Place a minimal video control row BELOW the 9:16 image: play icon, scrub line, exact time "0:01 / 0:08", volume icon. Do not stretch the video to landscape or crop the body/club.
+
+Right panel is a roomy control card with about 32px inner padding. Reading order:
+1. Small check icon plus exact status "스윙 구간 자동 감지 완료" in mint. This is COMPLETED, not loading and not failed.
+2. Exact secondary sentence "자동 감지된 구간을 슬라이더로 조정할 수 있습니다".
+3. Row label "시작" at left and monospaced "1.2s" at right, then its own full-width slider with the thumb at 15%.
+4. Row label "끝" at left and monospaced "4.8s" at right, then its own full-width slider with the thumb at 60%.
+Use TWO separate sliders, not a dual-handle range slider, with lime thumbs and muted dark tracks. Both correspond to a notional 0-to-8-second duration. No numeric-input boxes or extra scale text.
+5. Thin separator followed by "선택 길이" at left and prominent monospaced "3.6s" at right.
+6. A wide FILLED LIME rounded primary button with dark bold exact text "이 구간으로 분석 시작". It is active. It must be clearly more prominent than the file-change button.
+7. Below the primary button, a small shield icon, the full privacy sentence in readable muted text, wrapping across two lines if needed: "업로드한 영상은 분석 직후 서버에서 즉시 삭제되며, 원본은 보관되지 않습니다." Then the underlined mint link "개인정보처리방침". Keep every character and punctuation.
+
+Exact visible strings only:
+"SWING.LAB"
+"실시간 캠"
+"내 기록"
+"KO" "EN"
+"로그인"
+"분석 구간 선택"
+"일반.mp4"
+"파일 변경"
+"스윙 구간 자동 감지 완료"
+"자동 감지된 구간을 슬라이더로 조정할 수 있습니다"
+"시작"
+"1.2s"
+"끝"
+"4.8s"
+"선택 길이"
+"3.6s"
+"이 구간으로 분석 시작"
+"업로드한 영상은 분석 직후 서버에서 즉시 삭제되며, 원본은 보관되지 않습니다."
+"개인정보처리방침"
+"0:01 / 0:08"
+
+The filename and numerical values are mockup data, not real detection results. "파일 변경" and the completed-status sentence are proposed new product copy. Do not print editorial labels such as "신규 문구 후보", "시안", "UI-02", revision numbers or approval marks on the product screen. The theme button's accessible name "밝은/어두운 테마 전환" is nonvisible and should not appear as page copy. Do not add other UI screens, empty dropzone, failure/loading messages, progress steps, success upload banner, retry button, mobile screen, history strip, charts, coaching, payment, arbitrary labels, watermarks or annotations. Render one complete Korean desktop trim screen only.

@@ -1,0 +1,34 @@
+Use case: ui-mockup
+Asset type: one high-fidelity Korean desktop web app screenshot, Swing.Lab UI-04 r1 result screen, FIRST VIEWPORT ONLY.
+Primary request: Generate a new result-screen design in the approved bright cobalt visual language. Exactly one opaque landscape 16:9 image, target 2048x1152 pixels. Flat front-on web UI, no device frame, no perspective, no presentation slide framing. The whole first viewport through all seven thumbnail captions must fit.
+
+Style reference interpreted from inspected UI-01_r2a, UI-02_r3, UI-03_r2: white background, dark navy bold Korean sans-serif headings and mixed-case Swing.Lab wordmark, saturated cobalt blue primary surfaces, very large extra-bold white numeric value, pale blue separators and modest corner radii. Clean confident typography, spacious but purposeful dashboard density. Suggested white #FFFFFF, navy #152040, cobalt #2448D8, pale blue #ECF1FF. Cobalt is the dominant accent. A dark amber warning symbol and dark muted red cross are allowed only for semantic status. No neon lime, green cards, black dashboard, gradients as decoration, glossy surfaces, gauge, radar chart, or HUD.
+
+HEADER about 90 pixels high: left "Swing.Lab" in heavy navy sans-serif. Right in this exact order: "실시간 캠", "내 기록", sun icon with "테마", "KO / EN" with KO blue and underlined, small white navy-outlined "로그인" button.
+BODY horizontal margins about 80px. Main heading at y125: "7단계 스윙 분석". Below at y205: file outline icon + "일반.mp4", metadata "새 분석 · 미저장", small outlined badge "예시 데이터". This is an illustrative fresh unsaved guest result, not the application's sample-result mode.
+
+SUMMARY ROW approximately y265–470: a large cobalt score panel on the left about one quarter of content width, and four equal metric tiles occupying the right three quarters. Score panel text: small "TOTAL SCORE", enormous heavy white "73", below "등급 B". Score is the largest numeral in the whole image. Metric tiles white or very pale blue, navy labels, subtle blue dividers, all four aligned in one horizontal row. Each metric name has a small outlined question-mark help icon immediately beside it. A short explanatory line is always visible beneath the metric name. Values are large and bold. Keep each value, unit and status symbol together on a single line.
+Metric 1 label: "척추각 변화"; explanation: "상체 기울기 변화"; value: "8.2° ⚠" in dark amber with a CLEAR outlined triangle/exclamation status glyph.
+Metric 2 label: "X-FACTOR"; explanation: "어깨·골반 최대각 차"; value: "17.0° ✕" in dark red. Retain exactly the uppercase metric name, numeric angle with degree symbol, and cross status; do not replace it with a reference-only badge.
+Metric 3 label: "어깨 최대 회전"; explanation: "영상 속 어깨선 최대각"; value: "72.0°" in navy. This tile has NO status icon or judgment; do not add a check mark or warning.
+Metric 4 label: "감지 페이즈"; explanation: "찾아낸 스윙 단계 수"; value: "7 / 7 ✓" in cobalt. This is a detected-phase count, not accuracy.
+
+DIAGNOSIS section approximately y505–805: heading "항목별 진단". Five readable full-width text rows beneath, about 46 pixels each, with very subtle dividers. Keep all sentences verbatim, do not crop, paraphrase, duplicate or omit. The first two rows have a small dark amber "⚠ warning" badge at left, last three have a small cobalt "✓ good" badge at left. These are the existing separate diagnostic classifications; preserve them even though X-FACTOR tile above has a red cross.
+Row 1: "척추각 변화량 8.2° — 약간의 상체 흔들림. 7° 이내 유지를 목표로 하세요."
+Row 2: "X-Factor 17.0° — 어깨-골반 꼬임 부족. 백스윙 시 어깨를 더 회전하세요."
+Row 3: "어드레스 무릎 굴곡 적절 (좌 158.0° / 우 160.0°) ✓"
+Row 4: "백스윙 톱 왼팔 직선성 양호 (155.0°) ✓"
+Row 5: "어깨 회전 충분 (72.0°) ✓"
+
+SEVEN REPRESENTATIVE FRAMES section near bottom y850–1110: heading "7단계 대표 장면" and a discreet "이미지 예시" note. Exactly SEVEN equal rectangular thumbnails across ONE row, showing different phases of a full-body anonymous golfer with a golf club. Entire people must be dark navy flat silhouettes, without a face, realistic skin, clothing details or photographic identity, on plain pale blue backgrounds. Distinct sensible sequential poses: address at ground, backswing rising, backswing top high, downswing falling, impact at ground, follow-through rising, finish held. Keep all seven visible. Each thumbnail has its own small legible "이미지 예시" label in a corner; each has the correct Korean phase caption UNDER the thumbnail. Captions from left to right, exactly:
+"어드레스", "백스윙", "백스윙 톱", "다운스윙", "임팩트", "팔로우스루", "피니시".
+
+Text accuracy is essential. Use clear Korean sans-serif letterforms, correct degree symbols, true warning triangle and cross/check glyphs, all required punctuation and spacing. The title and score should stand out, diagnostic messages remain comfortably legible, and the seven silhouettes should be large enough to see their different positions.
+The actual application has more sections BELOW this viewport; do NOT render them or a table of their roles in this image. Specifically no waveform, playback player/controls, compare table, AI coaching panel, save/share buttons, footer navigation, decision-needed note, implementation notes, research claims, or approval labels in this first viewport. No extra metric, extra toolbar, popup, second screen, collage, long full-page screenshot, or tiny thumbnail versions of lower sections. Stop the viewport after the seven captions with a small bottom margin.
+
+---
+SECOND CALL — targeted diagnostic-label correction only
+Mode: built-in image_gen edit, opaque background.
+Input edit target: /Users/mose/.codex/generated_images/01a11b43-1712-7ec1-9df6-7526bd91808c/exec-913ff419-9329-4844-9e1d-ded1ad5bee89.png
+Prompt:
+Edit only the small status badge column on the left of the five diagnosis rows under "항목별 진단". Keep all other content, numbers, Korean wording, layout, colors, header, score tiles, the four metric help texts, the seven silhouette thumbnails and captions exactly as in the input. The existing first two amber triangle icons must each have the small legible lowercase word "warning" immediately to their right; the existing last three blue check icons must each have the small legible lowercase word "good" immediately to their right. Widen only the badge column enough to fit these words and shift the diagnostic sentences slightly right within their existing rows so nothing overlaps. Keep all five full Korean diagnostic sentences verbatim, including every number, degree symbol, punctuation and final check mark. Do not recolor metrics, alter any silhouette, add any other section, remove a help icon, or change total score 73 and grade B. Exactly one desktop result viewport. Preserve opaque background and the complete current canvas without cropping any content.

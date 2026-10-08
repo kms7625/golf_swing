@@ -1,0 +1,32 @@
+Use case: ui-mockup
+Asset type: a single finished desktop Korean Swing.Lab interface, not a collage.
+Primary request: ONE 16:9 landscape screen at exactly 2048x1152 if possible. Full flat screenshot, no device frame, no perspective. Match an approved visual system: white #FFFFFF background, bold deep navy #152040 Korean gothic typography, saturated cobalt #2448D8 primary controls, pale blue #ECF1FF surfaces, thin pale-blue dividers, small corner radii, generous whitespace. Crisp readable Korean. No lime, teal, copper, science-fiction ornaments or invented features.
+Navigation: bold Swing.Lab left; right 실시간 캠, 내 기록, sun icon with 테마, KO / EN (KO underlined), outlined authentication button. Do not put revision numbers, design annotations or file paths on the screen.
+
+Representative state: public Korean privacy policy, first viewport at document top, not a modal. This is a readable long-document page; do not squeeze all policy text into the screen.
+Nav authentication button 로그인.
+Below nav a left arrow with visible outlined "돌아가기" button, then large bold "개인정보처리방침". Exact version line "버전 2026-07-10 · 시행일: 서비스 정식 오픈일".
+Two-column reading layout: narrow left table of contents around 26% width, spacious right article about 68% width. Broad margins. Thin vertical separator. Left top title "목차". Exactly these six numbered section titles, full spelling and order, wrapping long titles:
+"1. 수집하는 개인정보"
+"2. 처리 목적"
+"3. 제3자 제공 (외부 AI 제공사)"
+"4. 보관 기간 및 파기"
+"5. 정보주체의 권리"
+"6. 안전성 확보 조치"
+First item selected with pale-blue background, cobalt text and small cobalt left bar. Other items navy.
+Article:
+Large heading "1. 수집하는 개인정보".
+A clear three-column table with pale-blue header:
+"항목" | "수집 시점" | "비고"
+Four rows with exact copy:
+"이메일 주소" | "회원가입" | "계정 식별용"
+"비밀번호" | "회원가입" | "단방향 해시 · 원문 미보관"
+"스윙 영상" | "분석 요청" | "일시 처리 후 즉시 삭제 — 서버에 저장하지 않음"
+"분석 결과" | "회원이 \"결과 저장\" 선택 시" | "점수·관절각 통계·구간 정보·대표 장면 이미지 7장 (영상 원본 아님)"
+Wrap text within cells for readable medium-large Korean font. The last row may span 2–3 lines. Never abbreviate or invent retention durations.
+Below adequate whitespace, heading "2. 처리 목적", then three numbered paragraphs verbatim:
+"1. 스윙 분석 결과 제공"
+"2. 회원의 분석 기록 보관·변화 추이 표시 (회원이 저장을 선택한 결과에 한함)"
+"3. AI 코칭 리포트 생성"
+At bottom of viewport show the next section heading "3. 제3자 제공 (외부 AI 제공사)" to indicate more content below. A slim scrollbar on right should be at the top. Do not fabricate its body to fit; the first viewport is sections 1–2 plus the next heading.
+No agreeing checkbox, no consent or submit button, no promotional privacy claims or invented email, no finalized effective date. Absolutely DO NOT show any reassurance about upload drafts, selected file or selected range being retained after returning. No code paths, algorithms, internal development checklist, legal certification marks or new legal text. No people.

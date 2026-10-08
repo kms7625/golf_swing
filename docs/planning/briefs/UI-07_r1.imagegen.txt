@@ -1,0 +1,24 @@
+Use case: ui-mockup
+Asset type: a single finished desktop Korean Swing.Lab interface, not a collage.
+Primary request: ONE 16:9 landscape screen at exactly 2048x1152 if possible. Full flat screenshot, no device frame, no perspective. Match an approved visual system: white #FFFFFF background, bold deep navy #152040 Korean gothic typography, saturated cobalt #2448D8 primary controls, pale blue #ECF1FF surfaces, thin pale-blue dividers, small corner radii, generous whitespace. Crisp readable Korean. No lime, teal, copper, science-fiction ornaments or invented features.
+Navigation: bold Swing.Lab left; right 실시간 캠, 내 기록, sun icon with 테마, KO / EN (KO underlined), outlined authentication button. Do not put revision numbers, design annotations or file paths on the screen.
+
+Representative state: LOGIN dialog on top of the first landing screen. ONE modal, centered. No signup second screen.
+Background beneath full-screen translucent navy scrim: recognizable landing screen, top nav ends in 로그인. Hero left with large Korean headline "골프 스윙을" / "계측 장비처럼 읽는다", cobalt "영상 업로드", outlined "샘플 데이터 보기". Right a generic dark-navy golfer SILHOUETTE with a club on a pale-blue illustrated practice backdrop, small "이미지 예시" label at image lower right. Bottom pale-blue strip titled "내 스윙 기록". Do NOT use realistic person photography. No focused background controls. Background should be subdued enough to clearly mark it inactive, but landing structure recognizable.
+Dialog: white rectangular card about 650px wide and 720px tall in a 2048x1152 viewport, modest 12px corners, crisp visible border and soft substantial shadow. Generous inner padding. Dialog visually dominates, text crisp and large.
+Top: bold title "로그인" left. At top right an X icon with visible text "닫기", clearly an accessible close control.
+Below title exactly "로그인하면 분석 결과를 저장하고" then "변화를 추적할 수 있습니다."
+Form:
+Persistent bold label "이메일". Empty white rectangular input under it, no placeholder and no real email. Show a dark caret at input left. Input has its ordinary border PLUS an unmistakable separate cobalt keyboard focus ring outside a white gap.
+Persistent label "비밀번호 (8자 이상)". Empty unfocused input. No actual password, dots, credentials or tokens.
+Wide cobalt filled primary button "로그인".
+Below with ample space, centered link "계정이 없나요? 가입하기" where 가입하기 is cobalt.
+Nothing more inside dialog. No social providers, forgot password, remember me, consent checkbox, privacy link, password-reveal feature, loading or error. This is the initial empty login state with focus on EMAIL, not on the submit button. Keep background/dialog boundaries and focused/unfocused fields visually unambiguous.
+
+--- CALL 2: BACKGROUND-ONLY CORRECTION ---
+Reference: /Users/mose/.codex/generated_images/01a11b6c-aa03-7973-a692-c0463fafd704/exec-a7f01003-5abb-4873-8f64-c72ec3b1f3c3.png
+Use case: precise-object-edit
+Edit the supplied Swing.Lab login screenshot. Change ONLY the dimmed landing-page background behind the modal. Preserve the white login modal pixel-composition, position, all its Korean text, empty fields, email caret and focus ring, close control, submit and signup link. Preserve nav and full-screen navy scrim, and preserve the generic navy golfer silhouette with 이미지 예시. Keep the single desktop 16:9 composition.
+The background must match the approved landing layout, with NO statistics cards or invented claims. At the bottom, remove all four statistics cards (총 업로드 수, 분석한 스윙, 평균 스윙 점수, 최근 업로드) entirely. Replace that entire bottom region with ONE flat pale-blue strip containing left title "내 스윙 기록", below it exactly "로그인하면 분석 결과를 저장하고 변화를 추적할 수 있습니다.", and on its far right an outlined "내 기록 →" button. No numbers, no analytics.
+On background left keep existing large headline. Replace the unapproved description below it with the approved exact two lines "내 영상으로 스윙의 흐름을 확인하고," / "다음 연습에서 바꿀 점을 찾아보세요.". Keep its natural occlusion behind the modal. Keep video upload and sample buttons; arrange them vertically as a broad cobalt "영상 업로드" above a broad outlined "샘플 데이터 보기", with portions hidden behind the modal as appropriate. Replace the unapproved line under buttons with "전신이 보이는 한 번의 스윙 영상을 준비해 주세요."
+Do not add any new copy, metrics, people, panels or features. The modal is the invariant and remains the primary clear foreground element. This is one login screenshot, not a collage.

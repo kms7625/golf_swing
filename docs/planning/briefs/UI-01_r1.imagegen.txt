@@ -1,0 +1,28 @@
+Use case: ui-mockup. Create exactly ONE high-fidelity desktop web first-screen mockup for SWING.LAB, UI-01 image revision 1, structure revision 2. No collage, no alternative screens. Edit/recompose the supplied existing screen into a landscape 16:9 desktop layout; target 1440x810 pixels. The task also named 1440x900 as a desktop layout reference, but that is 16:10; prioritize true 16:9 output.
+Input image 1 is the current UI screenshot and edit/layout/style reference. Input image 2 is the supporting golfer character asset; preserve that character's identity, faceless head, clothing, full body, backswing pose, club, lime/mint joints, and motion arc. Keep the original source files unchanged.
+Style: existing Club Lime. Deep green canvas #111610, dark green panel #1b2319, off-white main text #f3f7ed, lime primary action #c5f26b, mint data/focus #73dacc, muted gray-green secondary copy #b0baaa. Clean sports instrumentation interface, readable Korean sans-serif similar to Pretendard, monospaced instrument data. Flat crisp UI, restrained corner radii, no device/browser frame, no cinematic glow or extra decoration.
+Layout: full-width top bar about 76px tall. Left brand SWING.LAB (SWING off-white, .LAB lime). Right, in order: small camera icon plus "실시간 캠", history icon plus "내 기록", sun theme icon, KO/EN segmented toggle with KO active, outlined "로그인" button.
+Main area centered with about 120px side margins at 1440px desktop width. Left content about 650px wide. Right portrait golfer panel exactly 9:16 (rough target 324px wide by 576px high), substantial gap about 100px. Place main left content near vertical center of panel. Main reading order: eyebrow, bold two-line headline, full paragraph, primary and secondary buttons side by side. Main headline first line "골프 스윙을", second line "계측 장비처럼 읽는다", keep second line together with suitable large type about 56px. Paragraph around 3 lines, preserve every character.
+Buttons: PRIMARY "영상 업로드" with upload icon, filled lime, dark text, generously sized named button, at least ~48px high. Depict visible keyboard focus on THIS BUTTON ONLY: mint outer outline separated from lime fill by a dark gap, not merely a shadow. SECONDARY "샘플 데이터 보기" with play icon, dark fill, thin outline, lime text, less prominent. The intended first action is the user's own video upload; sample is secondary. Do not replace the buttons with a dropzone or decorative text.
+Right panel: full-body supplied character with club and motion arc fully contained, no clipping. Portrait panel ratio must remain 9:16. Small "샘플 데이터" badge at upper left of panel marks example data. At bottom of panel reserve an independent text row with EXACT "SPINE 29.4°", "SHOULDER 64.2°", "FRAME 0187/0266", mint monospaced type. These are separate UI/HTML readout elements in the intended implementation, not labels printed on the character asset. Keep character art away from the readout area.
+Bottom: slim unobtrusive history/login strip within this same first screen: small title "내 스윙 기록", supporting sentence "로그인하면 분석 결과를 저장하고 변화를 추적할 수 있습니다.", small secondary "로그인" button. No real user records, no account deletion.
+Exact text to render, verbatim Korean with punctuation preserved:
+"SWING.LAB"
+"실시간 캠"
+"내 기록"
+"KO" "EN"
+"로그인"
+"Biomechanics · Motion Tracking" (preserve this capitalization and middle dot; do not uppercase it)
+"골프 스윙을"
+"계측 장비처럼 읽는다"
+"어깨폭 정규화 좌표계와 7단계 자동 세그먼테이션 알고리즘으로 스윙을 프레임 단위 계측하고, 관절 궤적 데이터를 리포트로 변환합니다."
+"영상 업로드"
+"샘플 데이터 보기"
+"샘플 데이터"
+"SPINE 29.4°"
+"SHOULDER 64.2°"
+"FRAME 0187/0266"
+"내 스윙 기록"
+"로그인하면 분석 결과를 저장하고 변화를 추적할 수 있습니다."
+"로그인"
+Nonvisible implementation labels only, DO NOT draw as extra copy: theme control accessible name "밝은/어두운 테마 전환"; golfer alt text "라임과 민트 관절 표시가 있는 골퍼의 백스윙 일러스트". No extra slogans, labels, watermark, approval marks, IDs, annotations or numbers beyond the listed copy. No other UI screens, dashboard charts, upload trim controls, modals, scores, mobile variants or additional characters. Generate this one complete first-screen mockup only.

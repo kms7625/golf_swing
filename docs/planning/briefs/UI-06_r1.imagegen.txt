@@ -1,0 +1,24 @@
+Use case: ui-mockup
+Asset type: a single finished desktop Korean Swing.Lab interface, not a collage.
+Primary request: ONE 16:9 landscape screen at exactly 2048x1152 if possible. Full flat screenshot, no device frame, no perspective. Match an approved visual system: white #FFFFFF background, bold deep navy #152040 Korean gothic typography, saturated cobalt #2448D8 primary controls, pale blue #ECF1FF surfaces, thin pale-blue dividers, small corner radii, generous whitespace. Crisp readable Korean. No lime, teal, copper, science-fiction ornaments or invented features.
+Navigation: bold Swing.Lab left; right 실시간 캠, 내 기록, sun icon with 테마, KO / EN (KO underlined), outlined authentication button. Do not put revision numbers, design annotations or file paths on the screen.
+
+Representative state: logged-in history, four saved records and growth chart, an inline deletion confirmation open for the oldest record. This is ONE coherent history screen. No people or photos.
+Nav: 내 기록 active cobalt underline, authentication button 로그아웃.
+Heading: "내 스윙 기록"; below "연습 계정 · 예시 데이터". On the right a cobalt button "새 영상 분석".
+Two main columns: left about 58% width titled "저장된 기록 · 4개"; right about 38% width for charts and metric changes. Light borders, not many heavy nested cards.
+LEFT LIST: four spacious horizontal rows newest first. Each row has a large navy score with 점, date/time, bold filename, independent outlined "보기" button and quiet "삭제" action:
+81점 / 10/08 18:30 / 스윙_1008.mp4
+77점 / 10/05 18:20 / 스윙_1005.mp4
+79점 / 10/02 18:10 / 스윙_1002.mp4
+73점 / 09/28 18:00 / 스윙_0928.mp4
+Directly below the fourth row expand a pale-blue inline confirmation, not a floating modal, no dimming. Exact title "이 기록을 삭제할까요?" Then bold "스윙_0928.mp4", then "09/28 18:00 · 73점". Body "저장된 분석 결과가 삭제되며 되돌릴 수 없습니다." Two visibly separate buttons: outlined navy "취소" and a restrained dark-red outlined "기록 삭제". Give 취소 a separate navy focus outline with white gap. No countdown, no second click on the original delete action, no undo promise. Confirmation remains inside the left list column without obstructing the chart.
+RIGHT: Title "내 성장 그래프", compact "처음보다 +8점", small "예시 데이터". A readable cobalt single-series score line chart with 0, 50, 100 vertical scale labelled "점수". Exactly four chronological x labels and values:
+09/28 = 73; 10/02 = 79; 10/05 = 77; 10/08 = 81.
+Show dots with the value above each dot. Connect with a shallow rise, slight dip, then rise. Entire vertical axis 0–100, never exaggerate by making 73 to 81 fill the chart height.
+Below chart title "지표별 추이 (처음 → 최근)". Three rows in the same neutral navy color, never green/red assessment:
+"척추각 변화" / "8.2° → 6.2°" / "2.0° 감소"
+"X-FACTOR" / "38.0° → 42.0°" / "4.0° 증가"
+"어깨 최대 회전" / "68.0° → 72.0°" / "4.0° 증가"
+Under them exact readable two-line note: "증감은 변화량이며," / "좋고 나쁨의 판정이 아닙니다."
+Bottom full-width thin divider, modest "계정 관리" and quieter separate action "회원 탈퇴 (모든 기록 삭제)". Deletion must not be confused with new analysis. No search, filters, subscription, fake analytics, grades, extra graph series or calendar controls. All essential items fit in the viewport with generous outer margins.
