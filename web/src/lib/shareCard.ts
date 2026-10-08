@@ -1,15 +1,15 @@
 import type { AnalyzeResponse } from "./types";
 
 /** 결과 공유 카드(1080×1350 PNG) 생성 — 캔버스 로컬 렌더링, 서버 호출 없음.
- * 색은 다크 "모션 랩" 토큰 고정값(공유 이미지는 테마와 무관하게 브랜드 룩 유지). */
+ * 색은 다크 "Club Lime" 토큰 고정값(공유 이미지는 테마와 무관하게 브랜드 룩 유지). */
 
-const BG = "#14181d";
-const PANEL = "#1c222a";
-const LINE = "#262e38";
-const COPPER = "#dd8b57";
-const TEAL = "#5fb8b0";
-const TEXT = "#dfe4e8";
-const STEEL = "#8ca0ac";
+const BG = "#111610";
+const PANEL = "#1b2319";
+const LINE = "#293427";
+const COPPER = "#c5f26b";
+const TEAL = "#73dacc";
+const TEXT = "#f3f7ed";
+const STEEL = "#b0baaa";
 
 export interface ShareLabels {
   scoreLabel: string; // TOTAL SCORE
@@ -37,6 +37,11 @@ function loadImage(b64: string): Promise<HTMLImageElement | null> {
 }
 
 export async function buildShareCard(result: AnalyzeResponse, labels: ShareLabels): Promise<Blob> {
+  await Promise.all([
+    document.fonts.load('800 150px "Pretendard Variable"'),
+    document.fonts.load('400 30px "JetBrains Mono"'),
+    document.fonts.load('700 44px "JetBrains Mono"'),
+  ]);
   const W = 1080;
   const H = 1350;
   const canvas = document.createElement("canvas");
@@ -49,13 +54,13 @@ export async function buildShareCard(result: AnalyzeResponse, labels: ShareLabel
 
   // 상단 브랜드 + 날짜
   ctx.fillStyle = TEXT;
-  ctx.font = "700 44px Bahnschrift, 'Segoe UI', sans-serif";
+  ctx.font = "700 44px 'Pretendard Variable', system-ui, sans-serif";
   ctx.fillText("SWING", 60, 96);
   const sw = ctx.measureText("SWING").width;
   ctx.fillStyle = COPPER;
   ctx.fillText(".LAB", 60 + sw, 96);
   ctx.fillStyle = STEEL;
-  ctx.font = "400 30px Consolas, monospace";
+  ctx.font = "400 30px 'JetBrains Mono', monospace";
   const date = new Date().toLocaleDateString();
   ctx.fillText(date, W - 60 - ctx.measureText(date).width, 92);
 
@@ -79,7 +84,7 @@ export async function buildShareCard(result: AnalyzeResponse, labels: ShareLabel
       ctx.drawImage(img, sx, sy, sw2, sh, 0, imgTop, W, imgH);
     }
   }
-  // 코너 브래킷 장식 (모션 랩 시그니처) — 좌상/우하 L자
+  // 코너 브래킷 장식 (Club Lime 시그니처) — 좌상/우하 L자
   ctx.strokeStyle = COPPER;
   ctx.lineWidth = 6;
   ctx.beginPath();
@@ -100,13 +105,13 @@ export async function buildShareCard(result: AnalyzeResponse, labels: ShareLabel
   ctx.strokeRect(60, py, 400, 330);
 
   ctx.fillStyle = STEEL;
-  ctx.font = "700 26px Bahnschrift, 'Segoe UI', sans-serif";
+  ctx.font = "700 26px 'Pretendard Variable', system-ui, sans-serif";
   ctx.fillText(labels.scoreLabel.toUpperCase(), 100, py + 64);
   ctx.fillStyle = COPPER;
-  ctx.font = "700 150px Consolas, monospace";
+  ctx.font = "800 150px 'Pretendard Variable', system-ui, sans-serif";
   ctx.fillText(String(result.score), 100, py + 220);
   ctx.fillStyle = TEXT;
-  ctx.font = "700 40px Bahnschrift, 'Segoe UI', sans-serif";
+  ctx.font = "700 40px 'Pretendard Variable', system-ui, sans-serif";
   ctx.fillText(`${labels.gradeLabel} ${gradeOf(result.score)}`, 100, py + 290);
 
   // 지표 3종
@@ -122,10 +127,10 @@ export async function buildShareCard(result: AnalyzeResponse, labels: ShareLabel
     ctx.strokeStyle = LINE;
     ctx.strokeRect(500, my, 520, 100);
     ctx.fillStyle = STEEL;
-    ctx.font = "700 24px Bahnschrift, 'Segoe UI', sans-serif";
+    ctx.font = "700 24px 'Pretendard Variable', system-ui, sans-serif";
     ctx.fillText(k.toUpperCase(), 530, my + 42);
     ctx.fillStyle = TEAL;
-    ctx.font = "700 44px Consolas, monospace";
+    ctx.font = "700 44px 'JetBrains Mono', monospace";
     ctx.fillText(v, 530, my + 88);
   });
 
@@ -136,7 +141,7 @@ export async function buildShareCard(result: AnalyzeResponse, labels: ShareLabel
   ctx.lineTo(W - 60, H - 90);
   ctx.stroke();
   ctx.fillStyle = STEEL;
-  ctx.font = "400 26px Consolas, monospace";
+  ctx.font = "400 26px 'JetBrains Mono', monospace";
   ctx.fillText("AI GOLF SWING ANALYSIS", 60, H - 40);
 
   return new Promise((resolve, reject) => {
