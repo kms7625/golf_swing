@@ -3,7 +3,7 @@
 }
 
 .wrap h3 {
-  font-size: 11.5px;
+  font-size: 14px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--copper);
@@ -12,12 +12,14 @@
 
 .hint {
   color: var(--steel);
-  font-size: 12px;
+  font-size: 14px;
   margin-bottom: 12px;
 }
 
 .videoBox {
-  background: #000;
+  background: var(--media-bg);
+  border-radius: var(--radius-panel) var(--radius-panel) 0 0;
+  overflow: hidden;
   border: 1px solid var(--graphite-3);
   display: flex;
   justify-content: center;
@@ -31,7 +33,8 @@
 
 .timeline {
   position: relative;
-  height: 26px;
+  height: 32px;
+  border-radius: 0 0 var(--radius-control) var(--radius-control);
   background: var(--graphite-2);
   border: 1px solid var(--graphite-3);
   border-top: none;
@@ -70,7 +73,7 @@
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
-  margin-top: 10px;
+  margin-top: 16px;
 }
 
 .playBtn {
@@ -79,7 +82,7 @@
   border: none;
   padding: 10px 18px;
   min-height: 44px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
@@ -90,21 +93,22 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-wrap: wrap;
 }
 
 .speedLabel {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--steel);
   margin-right: 4px;
 }
 
 .speedBtn {
   background: var(--graphite-2);
-  border: 1px solid var(--graphite-3);
+  border: 1px solid var(--border-strong);
   color: var(--steel);
   padding: 8px 12px;
   min-height: 40px;
-  font-size: 12px;
+  font-size: 14px;
   cursor: pointer;
 }
 
@@ -130,7 +134,7 @@
   color: var(--text);
   padding: 8px 12px;
   min-height: 40px;
-  font-size: 12px;
+  font-size: 14px;
   cursor: pointer;
 }
 
