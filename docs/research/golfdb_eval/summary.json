@@ -1,0 +1,32 @@
+{
+  "clips_total": 246,
+  "clips_evaluated": 246,
+  "clips_failed": 0,
+  "per_event": {
+    "Address": {
+      "n": 245,
+      "pce": 0.004,
+      "median_abs_err_frames": 17,
+      "within_5_frames": 0.033
+    },
+    "Top": {
+      "n": 245,
+      "pce": 0.29,
+      "median_abs_err_frames": 2,
+      "within_5_frames": 0.89
+    },
+    "Impact": {
+      "n": 245,
+      "pce": 0.873,
+      "median_abs_err_frames": 1,
+      "within_5_frames": 0.906
+    },
+    "Finish": {
+      "n": 245,
+      "pce": 0.024,
+      "median_abs_err_frames": 11,
+      "within_5_frames": 0.135
+    }
+  },
+  "pce_top_impact": 0.582
+}
