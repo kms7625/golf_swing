@@ -4,7 +4,7 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 12px 24px;
-  padding: 16px max(24px, calc((100vw - 1320px) / 2));
+  padding: 16px max(24px, 3.5vw, calc((100vw - 1760px) / 2));
   border-bottom: 1px solid var(--border);
   background: var(--graphite-2);
 }
