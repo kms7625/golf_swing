@@ -1,4 +1,4 @@
-/* Club Lime — dark green, lime and readable sport typography. */
+/* Approved cobalt light palette; the dark palette is an unapproved inference. */
 @font-face {
   font-family: "Pretendard Variable";
   src: url("/fonts/PretendardVariable.woff2") format("woff2");
@@ -24,20 +24,25 @@
 }
 
 :root,
-:root[data-theme="dark"] {
-  --graphite: #111610;
-  --graphite-2: #1b2319;
-  --graphite-3: #293427;
-  --steel: #b0baaa;
-  --copper: #c5f26b;
-  --teal: #73dacc;
-  --alert: #ff958b;
-  --ok: #8bdcaa;
-  --text: #f3f7ed;
-  --warn: #ffc879;
-  --border-strong: #85957b;
-  --radius-panel: 20px;
-  --radius-control: 12px;
+:root[data-theme="light"] {
+  --graphite: #ffffff;
+  --graphite-2: #ffffff;
+  --graphite-3: #ecf1ff;
+  --steel: #4b5d80;
+  --copper: #2448d8;
+  --teal: #2448d8;
+  --alert: #b42332;
+  --ok: #2448d8;
+  --text: #152040;
+  --warn: #875000;
+  --border-strong: #70809e;
+  --border: #d5dff5;
+  --focus: #152040;
+  --feature-bg: #2448d8;
+  --feature-text: #ffffff;
+  --feature-track: #152e9a;
+  --radius-panel: 10px;
+  --radius-control: 8px;
   --shadow-panel: none;
   --media-bg: #080b0a;
   --media-text: #ffffff;
@@ -46,25 +51,29 @@
   --font-display: "Pretendard Variable", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", "Pretendard Variable", monospace;
 
-  color-scheme: dark;
+  color-scheme: light;
 }
 
-/* Identical token roles in daylight; media surfaces remain dark. */
-:root[data-theme="light"] {
-  --graphite: #f6f8ef;
-  --graphite-2: #ffffff;
-  --graphite-3: #e7edde;
-  --steel: #526047;
-  --copper: #416500;
-  --teal: #006b61;
-  --alert: #b12f38;
-  --ok: #1c703c;
-  --text: #1b2417;
-  --warn: #8a4b00;
-  --border-strong: #657557;
-  --shadow-panel: 0 8px 24px rgb(27 36 23 / 6%);
+/* Same roles for UI-05–08 compatibility. Dark is not visually approved. */
+:root[data-theme="dark"] {
+  --graphite: #10182d;
+  --graphite-2: #15213b;
+  --graphite-3: #233353;
+  --steel: #b3c2e2;
+  --copper: #a2b8ff;
+  --teal: #a2b8ff;
+  --alert: #ff9ba6;
+  --ok: #a2b8ff;
+  --text: #f4f7ff;
+  --warn: #ffd08a;
+  --border-strong: #91a5cc;
+  --border: #384d76;
+  --focus: #cad7ff;
+  --feature-bg: #294dcf;
+  --feature-text: #ffffff;
+  --feature-track: #172f8b;
 
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 * {
@@ -114,8 +123,20 @@ button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 a:focus-visible {
-  outline: 2px solid var(--teal);
-  outline-offset: 2px;
+  outline: 3px solid var(--focus);
+  outline-offset: 4px;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 .mono {
