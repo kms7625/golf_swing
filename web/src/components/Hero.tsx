@@ -27,7 +27,7 @@ export function Hero({ onUpload, onViewSample, onHistory }: Props) {
           <p className={styles.hint}>{t("hero_recording_hint")}</p>
         </div>
         <figure className={styles.panel}>
-          <img src="/images/hero-photo.webp" width="732" height="675" alt={t("hero_cobalt_alt")} />
+          <img src="/images/hero-photo.webp" width="1536" height="1024" alt={t("hero_cobalt_alt")} />
           <figcaption>{t("image_example")}</figcaption>
         </figure>
       </div>
