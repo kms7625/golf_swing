@@ -93,6 +93,13 @@ class SwingPhaseDetector:
             for t in range(lo+2, hi-4):
                 j = t-lo
                 if sm[j] > np.min(sm[max(0,j-radius):min(len(sm),j+radius+1)]): continue
+                # Flat top (hands pause): use the last frame before the descent.
+                # Measuring from the plateau's first frame can push impact past
+                # the 1.25 s window (pexels_8065880 on Mac, 2026-10-12).
+                base = sm[j]
+                while t+1 < hi-4 and sm[t+1-lo] <= base + .05*scale:
+                    t += 1
+                j = t-lo
                 before = max(lo, int(np.searchsorted(ts, ts[t]-3.0)))
                 # Choi 2014, REPORT L4: downswing ~0.3 s. A 1.25 s ceiling
                 # tolerates slow media, without reaching the next swing or a cut.
