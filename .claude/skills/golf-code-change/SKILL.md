@@ -58,21 +58,30 @@ Section 0~8에서 분리됨)는 실제 버그를 겪으며 얻은 불변식의 �
   - `ref_db` 해당 지표 샘플 n≥2일 때만 동적 임계값(mean+1σ/2σ) 사용, 그 외엔 하드코딩 기본값(척추각 7/12°, X-Factor 20~80°, 무릎 165°, 팔꿈치 140°, 어깨 60°)으로 폴백
   - 기본값을 바꾸면 `reference_db.json`이 비어 있는 현재 상태에서 즉시 전체 판정 기준이 바뀜 — 영향 범위 큼
 
-### A7. frame_data ↔ annotated_frames 1:1 대응
-- [ ] `process_video()`의 `if results.pose_landmarks:` 블록 내부에서 `frame_data.append()`와 `annotated_frames.append()` 중 하나만 조건부로 바꾸려 하는가?
-  - 근거: analyzer/pipeline.py L.253-351 (두 리스트가 같은 블록에서 함께 append됨, `preview_indices`는 사실상 전체 인덱스)
-  - 인덱스가 어긋나면 UI의 "7단계 대표 프레임" 표시(ui/tab_analysis.py L.238-269 부근, 2026-07-04 UI 분리로 app_v2.py에서 이동)가 엉뚱한 프레임을 보여줌
+### A7. frame_data ↔ annotated_frames 원본 프레임 키 (2026-10-12 승인 변경)
+- [ ] 각 `frame_data` 항목의 `frame`과 annotated 항목의 `frame`이 동일한 원본 프레임 좌표계를 사용하는가?
+  - annotated 항목은 `{frame: 원본 번호, local_idx, phase, image: RGB 배열}`. 두 목록 순번이 같다는 가정 금지.
+  - 트림 offset은 양쪽에 함께 적용하고 `time`은 분석 구간 기준 초를 유지한다.
+  - 대표 이미지는 정확한 키로만 조회한다. 인접 키/목록 끝으로 대체하지 않는다.
+  - 선택된 단일 사이클 밖의 지표·이미지는 결과 집계에서 제외한다.
+  - 각도 gate 탈락으로 frame_data가 없는 단계도 annotated의 phase·frame으로 이미지를 고른다. 각도를 만들거나 복사하여 대표 사진을 확보하지 않는다.
 
 ### A8. 임팩트/다운스윙 대표 프레임 선택 로직 (UI/서버 코드 안에 있지만 분석 불변식)
 - [ ] 임팩트=첫 프레임, 다운스윙=85% 지점, 나머지=중간 프레임 선택 규칙을 건드리는가?
   - 근거: ui/tab_analysis.py L.262(임팩트=첫 프레임), L.264(다운스윙=85%), L.266(나머지=중간) — 물리적으로 UI 코드 안에 있지만 CLAUDE.md가 "Representative Frame Selection" 알고리즘으로 문서화한 로직 — analyzer/ 패키지로 옮기지 않고 UI 쪽에 의도적으로 남아있음
   - **2026-07-05 web/ 추가로 복제 지점이 3곳으로 늘어남**: `ui/tab_analysis.py`(Streamlit), `server/serialization.py`의 `extract_representative_frames()`(웹 API), CLAUDE.md 문서. 규칙을 바꾸려면 **세 곳 모두** 동시 수정 — 하나만 고치면 Streamlit과 웹의 대표 프레임이 서로 달라진다
   - 임팩트는 순간적 접촉이라 중간 프레임을 쓰면 이미 지나간 순간을 보여줌
+  - 2026-10-12 승인: 해당 단계의 원본 항목(frame_data + annotated의 phase 보완)에서 규칙대로 고른 뒤 원본 `frame` 키로 이미지 조회.
+    단계 경계는 겹치지 않는 inclusive 범위이고 임팩트 시작은 임팩트 라벨 소유다.
+    대표 이미지의 원본 번호가 단계 원본 경계 안에 있음을 테스트한다.
 
-### A9. Adaptive 샘플링 임계값
-- [ ] `process_video()`의 프레임 샘플링 규칙(≤180 매 프레임, ≤540 최대 2프레임 간격, 이후 200프레임 상한)을 변경하려 하는가?
-  - 근거: analyzer/pipeline.py L.206-217
-  - 주석: "다운스윙(0.3~0.5초)이 최소 10프레임 이상 확보되어야 임팩트 감지 가능" — 상한을 너무 낮추면 다운스윙 프레임 수 부족으로 impact_idx 정밀도 하락
+### A9. 원본 fps·시간 기준 샘플링 (2026-10-12 승인 변경)
+- [ ] 선택 구간 ≤600프레임은 매 프레임 분석하는가? 이후 간격은 `ceil(total/600)`이다.
+  - 30fps 20초까지 원본 fps. preview 최대 변 480px로 메모리를 제한한다.
+  - 단계 신호의 이동평균은 약 0.10초의 홀수 창, 경계에서는 유효 범위만 평균한다(A4).
+  - 손목 결측은 ≤0.2초만 보간하고 컷·긴 결측을 건너 연결하지 않는다.
+  - 다운스윙 약 0.3초(REPORT L4)는 시간 근거이며 "최소 10개 필수"라는 성능 보증이 아니다.
+  - 상한 변경 시 동일 Docker에서 10초/30fps 시간·메모리 및 Top/Impact 회귀를 다시 측정한다.
 
 ---
 

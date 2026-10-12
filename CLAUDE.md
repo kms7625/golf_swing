@@ -261,6 +261,16 @@ invariant — see golf-code-change A8:
 - **다운스윙 (downswing)**: uses the frame at the 85% point (skips the initial plateau, shows the actual drop)
 - All other phases: uses the **middle** frame
 
+Lookup uses the selected phase entry's **source `frame` ID**, never its list
+position or `local_idx`. Annotated entries carry `frame`, `local_idx`, `phase`, and `image` (RGB).
+Their phase metadata supplements `frame_data` when no valid joint angles exist;
+`server/serialization.py` and Streamlit build `images_by_frame` and look up that exact ID.
+There is no nearest/list-tail fallback that could display an image outside the phase.
+Ranges in `phase_boundaries_frames` are inclusive and disjoint; event phases own their
+starting frame. `phase_boundaries_sec` uses seconds relative to the analyzed segment,
+while source IDs include the trim offset when provided. Keep these two UI implementations
+and this description synchronized (A8, approved 2026-10-12).
+
 ### LLM Integration (`analyzer/coach_llm.py`)
 
 `get_llm_feedback()` supports Gemini (`google.genai`), Claude (`anthropic`), GPT (`openai`).
