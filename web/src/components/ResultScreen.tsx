@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import type { AnalyzeResponse } from "../lib/types";
 import { PHASE_ORDER_KO } from "../lib/types";
 import { getStatus, statusIcon } from "../lib/status";
 import { useAuth } from "../lib/auth";
-import { useI18n } from "../lib/i18n";
+import { useI18n, type StringKey } from "../lib/i18n";
 import { translateIssueMessage } from "../lib/issueMessages";
 import { saveSwing } from "../lib/api";
 import { buildShareCard, shareOrDownload } from "../lib/shareCard";
@@ -35,6 +35,21 @@ export function grade(score: number): string {
   if (score >= 70) return "B";
   if (score >= 55) return "C";
   return "D";
+}
+
+function MetricHelp({ metric, help }: { metric: StringKey; help: StringKey }) {
+  const { t } = useI18n();
+  const id = useId();
+  const [open, setOpen] = useState(false);
+  return (
+    <span onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
+      <button type="button" className={styles.help} title={t(help)}
+        aria-label={`${t(metric)}: ${t(help)}`} aria-describedby={open ? id : undefined}
+        onFocus={() => setOpen(true)} onBlur={() => setOpen(false)}
+        onClick={() => setOpen(true)} onKeyDown={(e) => { if (e.key === "Escape") setOpen(false); }}>?</button>
+      {open && <span id={id} className={styles.tooltip} role="tooltip">{t(help)}</span>}
+    </span>
+  );
 }
 
 export function ResultScreen({
@@ -89,45 +104,18 @@ export function ResultScreen({
 
   return (
     <div className={styles.wrap}>
-      <div className={styles.header}>
-        <span className={styles.sectionTitle}>{t("result_phases_title")}</span>
-        <div className={styles.actions}>
-          {isSample && <span className={styles.sampleBadge}>{t("sample_badge")}</span>}
-          <button className={styles.shareBtn} onClick={handleShare} disabled={shareState === "making"}>
-            <ShareIcon />
-            {shareState === "making"
-              ? t("share_making")
-              : shareState === "shared"
-                ? t("share_shared")
-                : shareState === "downloaded"
-                  ? t("share_downloaded")
-                  : t("share")}
-          </button>
-          {!isSample &&
-            (savedId !== null ? (
-              <span className={styles.savedBadge}>{t("save_done")}</span>
-            ) : isLoggedIn ? (
-              <button className={styles.saveBtn} onClick={handleSave}>
-                <BookmarkIcon />
-                {t("save_swing")}
-              </button>
-            ) : (
-              <button className={styles.saveBtn} onClick={onLoginClick}>
-                <BookmarkIcon />
-                {t("save_login_required")}
-              </button>
-            ))}
-          <button className={styles.backLink} onClick={onBack}>
-            <UploadIcon />
-            {t("result_back")}
-          </button>
+      <header className={styles.header}>
+        <h1 className={styles.sectionTitle}>{t("result_phases_title")}</h1>
+        <div className={styles.source}>
+          {videoName && <span className={styles.filename}>{videoName}</span>}
+          <span className={styles.sampleBadge}>
+            {isSample ? t("sample_badge") : savedId !== null ? t("result_saved") : t("result_fresh")}
+          </span>
         </div>
-      </div>
+      </header>
 
       <div className={styles.resultGrid}>
-        <div className={`${styles.panel} ${styles.scorePanel}`}>
-          <div className={`${styles.bracket} ${styles.tl}`} />
-          <div className={`${styles.bracket} ${styles.br}`} />
+        <div className={styles.scorePanel}>
           <div className={`${styles.label} tracked`}>{t("result_score_label")}</div>
           <div className={`${styles.num} tabular`}>{score}</div>
           <div className={`${styles.grade} tracked`}>
@@ -136,23 +124,39 @@ export function ResultScreen({
         </div>
         <div className={styles.statStrip}>
           <div className={styles.statTile}>
-            <div className={`${styles.k} tracked`}>{t("result_metric_spine")}</div>
+            <div className={styles.k}>
+              {t("result_metric_spine")}
+              <MetricHelp metric="result_metric_spine" help="result_spine_help" />
+            </div>
+            <p className={styles.description}>{t("result_spine_desc")}</p>
             <div className={`${styles.v} ${styles[spineStatus]} tabular mono`}>
               {summary.spine_angle_delta}° {statusIcon(spineStatus)}
             </div>
           </div>
           <div className={styles.statTile}>
-            <div className={`${styles.k} tracked`}>{t("result_metric_xfactor")}</div>
+            <div className={styles.k}>
+              {t("result_metric_xfactor")}
+              <MetricHelp metric="result_metric_xfactor" help="result_xfactor_help" />
+            </div>
+            <p className={styles.description}>{t("result_xfactor_desc")}</p>
             <div className={`${styles.v} ${styles[xfactorStatus]} tabular mono`}>
               {summary.x_factor}° {statusIcon(xfactorStatus)}
             </div>
           </div>
           <div className={styles.statTile}>
-            <div className={`${styles.k} tracked`}>{t("result_metric_shoulder")}</div>
+            <div className={styles.k}>
+              {t("result_metric_shoulder")}
+              <MetricHelp metric="result_metric_shoulder" help="result_shoulder_help" />
+            </div>
+            <p className={styles.description}>{t("result_shoulder_desc")}</p>
             <div className={`${styles.v} tabular mono`}>{summary.shoulder_rotation_max}°</div>
           </div>
           <div className={styles.statTile}>
-            <div className={`${styles.k} tracked`}>{t("result_metric_phases")}</div>
+            <div className={styles.k}>
+              {t("result_metric_phases")}
+              <MetricHelp metric="result_metric_phases" help="result_phases_help" />
+            </div>
+            <p className={styles.description}>{t("result_phases_desc")}</p>
             <div className={`${styles.v} ${styles[phaseStatus]} tabular mono`}>
               {phaseCount} / 7 {statusIcon(phaseStatus)}
             </div>
@@ -160,11 +164,31 @@ export function ResultScreen({
         </div>
       </div>
 
+      <h2 className={styles.subheading}>{t("result_issues_title")}</h2>
       <div className={styles.issues}>
         {issues.map((issue, i) => (
           <div key={i} className={`${styles.issue} ${styles[issue.level]}`}>
-            <div className={styles.tag}>{issue.level}</div>
+            <div className={styles.tag}>
+              <span aria-hidden="true">{statusIcon(issue.level === "good" ? "ok" : issue.level === "warning" ? "warn" : "crit")}</span>
+              {t(`issue_${issue.level}`)}
+            </div>
             <div className={styles.txt}>{translateIssueMessage(lang, issue.message)}</div>
+          </div>
+        ))}
+      </div>
+
+      <h2 className={styles.subheading}>{t("result_scenes_title")}</h2>
+      <div className={styles.phaseRow}>
+        {PHASE_ORDER_KO.map((ph) => (
+          <div key={ph} className={styles.phaseCell}>
+            <div className={styles.phaseThumb}>
+              {rep_frames[ph] ? (
+                <img src={`data:image/jpeg;base64,${rep_frames[ph]}`} alt={phaseLabel(ph)} />
+              ) : (
+                <p>{t(summary.phases_detected.includes(ph) ? "result_scene_missing" : "result_phase_missing")}</p>
+              )}
+            </div>
+            <div className={styles.cap}>{phaseLabel(ph)}</div>
           </div>
         ))}
       </div>
@@ -175,19 +199,6 @@ export function ResultScreen({
           <Waveform wristY={wrist_y_history} phaseBoundaries={phase_boundaries} />
         </div>
       </div>
-
-      <div className={styles.phaseRow}>
-        {PHASE_ORDER_KO.filter((ph) => rep_frames[ph]).map((ph) => (
-          <div key={ph} className={styles.phaseCell}>
-            <div className={styles.phaseThumb}>
-              <img src={`data:image/jpeg;base64,${rep_frames[ph]}`} alt={phaseLabel(ph)} />
-            </div>
-            <div className={styles.cap}>{phaseLabel(ph).toUpperCase()}</div>
-          </div>
-        ))}
-      </div>
-
-      {saveError && <div className={styles.saveError}>{saveError}</div>}
 
       {replay && (
         <SwingReplay
@@ -207,6 +218,37 @@ export function ResultScreen({
         initialFeedback={initialFeedback}
         onLoginClick={onLoginClick}
       />
+      {saveError && <div className={styles.saveError} role="alert">{saveError}</div>}
+      <div className={styles.actions}>
+        <button className={styles.shareBtn} onClick={handleShare} disabled={shareState === "making"}>
+          <ShareIcon />
+          {shareState === "making"
+            ? t("share_making")
+            : shareState === "shared"
+              ? t("share_shared")
+              : shareState === "downloaded"
+                ? t("share_downloaded")
+                : t("share")}
+        </button>
+        {!isSample &&
+          (savedId !== null ? (
+            <span className={styles.savedBadge}>{t("save_done")}</span>
+          ) : isLoggedIn ? (
+            <button className={styles.saveBtn} onClick={handleSave}>
+              <BookmarkIcon />
+              {t("save_swing")}
+            </button>
+          ) : (
+            <button className={styles.saveBtn} onClick={onLoginClick}>
+              <BookmarkIcon />
+              {t("save_login_required")}
+            </button>
+          ))}
+        <button className={styles.backLink} onClick={onBack}>
+          <UploadIcon />
+          {t("result_back")}
+        </button>
+      </div>
     </div>
   );
 }
