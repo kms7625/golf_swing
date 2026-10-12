@@ -1,68 +1,33 @@
-.wrap {
-  max-width: 480px;
-  margin: 120px auto;
-  padding: 32px;
-  background: var(--graphite-2);
-  border: 1px solid var(--graphite-3);
-  border-radius: var(--radius-panel);
-  box-shadow: var(--shadow-panel);
-}
-
-.wrap h2 {
-  font-size: 28px;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  margin-bottom: 24px;
-  text-align: center;
-}
-
-.barTrack {
-  height: 12px;
-  border-radius: var(--radius-control);
-  background: var(--graphite-3);
-  overflow: hidden;
-}
-
-.barFill {
-  height: 100%;
-  background: var(--copper);
-  transition: width 0.6s ease;
-}
-
-.pct {
-  margin-top: 8px;
-  font-size: 13px;
-  color: var(--steel);
-  text-align: right;
-}
-
-.steps {
-  list-style: none;
-  margin: 24px 0 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  font-size: 14px;
-}
-
-.mark {
-  display: inline-block;
-  width: 22px;
-}
-
-.doneStep {
-  color: var(--ok);
-}
-
-.activeStep {
-  color: var(--text);
-}
-
-.pendingStep {
-  color: var(--steel);
-}
-
+.wrap { max-width: 1000px; margin: 0 auto; padding: 36px 40px 64px; }
+.wrap h1 { font-size: clamp(34px, 4vw, 48px); font-weight: 850; letter-spacing: -0.04em; }
+.filename { font-size: 18px; font-weight: 650; overflow-wrap: anywhere; margin: 4px 0 20px; }
+.card { padding: 24px 32px; border-radius: var(--radius-panel); background: var(--feature-bg); color: var(--feature-text); }
+.summary { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.summary h2 { font-size: 22px; }
+.pct { font-size: 80px; font-weight: 850; line-height: 1.1; }
+.barTrack { height: 16px; border-radius: 12px; background: var(--feature-track); overflow: hidden; margin: 14px 0; }
+.barFill { height: 100%; background: var(--feature-text); transition: width 0.6s ease; }
+.card p { font-size: 16px; }
+.steps { padding: 0; margin: 16px 0 24px; list-style: none; }
+.steps li { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; align-items: center; gap: 14px; min-height: 64px; padding: 10px 18px; border-bottom: 1px solid var(--border); font-size: 20px; font-weight: 650; }
+.mark { font-size: 30px; color: var(--copper); }
+.pendingStep .mark { color: var(--steel); }
+.activeStep { background: var(--graphite-3); border-left: 5px solid var(--copper); border-radius: var(--radius-control); }
+.state { padding: 5px 14px; font-size: 14px; font-weight: 600; border: 1px solid var(--border-strong); border-radius: 30px; }
+.activeStep .state { background: var(--feature-bg); color: var(--feature-text); border-color: var(--feature-bg); }
+.doneStep .state { border-color: var(--clear); color: var(--steel); }
+.footer { display: flex; align-items: center; gap: 32px; border-top: 1px solid var(--border); padding-top: 24px; }
+.footer button { flex-shrink: 0; padding: 14px 24px; min-height: 52px; background: var(--clear); border: 1px solid var(--text); color: var(--text); font-size: 18px; font-weight: 700; cursor: pointer; }
+.footer button:focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; }
+.hint { padding-left: 24px; border-left: 1px solid var(--border-strong); color: var(--steel); font-size: 14px; }
 @media (max-width: 640px) {
-  .wrap { margin: 48px 20px; padding: 24px; }
+  .wrap { padding: 28px 20px 48px; }
+  .card { padding: 20px; }
+  .summary h2 { font-size: 17px; }
+  .pct { font-size: 56px; }
+  .steps li { grid-template-columns: 24px minmax(0, 1fr) auto; gap: 8px; padding: 12px 8px; font-size: 16px; }
+  .mark { font-size: 22px; }
+  .state { font-size: 12px; padding: 4px 8px; }
+  .footer { align-items: flex-start; flex-direction: column; gap: 20px; }
+  .hint { padding-left: 14px; }
 }
