@@ -1,12 +1,13 @@
-.wrap { max-width: 1440px; margin: 0 auto; padding: 40px 40px 32px; }
+.page { width: 100%; }
+.wrap { padding: 0 max(24px, calc((100vw - 1320px) / 2)) 32px; }
+/* 승인 시안 UI-01 r2a: 사진이 메뉴 바로 아래부터 화면 오른쪽 끝까지, 왼쪽 가장자리는 비스듬히 */
 .hero {
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-  gap: 32px;
-  align-items: center;
-  min-height: 510px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: stretch;
+  min-height: clamp(560px, 64vh, 720px);
 }
-.copy { padding: 24px 0; }
+.copy { align-self: center; padding: 48px 32px 48px max(24px, calc((100vw - 1320px) / 2)); }
 .hero h1 {
   font-size: clamp(38px, 4.3vw, 64px);
   line-height: 1.18;
@@ -30,21 +31,23 @@
 .btnGhost { background: var(--clear); color: var(--text); }
 .btnGhost:hover { background: var(--graphite-3); }
 .hint { color: var(--steel); font-size: 15px; margin-top: 22px; }
-.panel { position: relative; margin: 0; width: 100%; min-width: 0; }
-.panel img { display: block; width: 100%; height: auto; border-radius: var(--radius-panel); }
+.panel { position: relative; margin: 0; min-width: 0; clip-path: polygon(13% 0, 100% 0, 100% 100%, 0 100%); }
+.panel img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; object-position: 40% 50%; }
 .panel figcaption { position: absolute; bottom: 12px; right: 12px; padding: 4px 10px; border-radius: 4px; background: var(--graphite-2); color: var(--steel); font-size: 12px; }
-.history { display: flex; justify-content: space-between; align-items: center; gap: 24px; padding: 26px 32px; background: var(--graphite-3); border-radius: var(--radius-panel); margin-top: 32px; }
+.history { display: flex; justify-content: space-between; align-items: center; gap: 24px; padding: 26px 32px; background: var(--graphite-3); border-radius: var(--radius-panel); margin-top: 24px; }
 .history h2 { font-size: 28px; font-weight: 800; margin-bottom: 6px; }
 .history p { color: var(--steel); font-size: 15px; }
 .history .btn { flex-shrink: 0; }
 @media (max-width: 900px) {
   .hero { grid-template-columns: 1fr; min-height: 0; }
-  .panel { max-width: 640px; justify-self: center; }
+  .copy { padding: 32px 40px 24px; }
+  .panel { clip-path: none; }
+  .panel img { position: static; height: auto; }
 }
 @media (max-width: 640px) {
-  .wrap { padding: 24px 20px; }
+  .wrap { padding: 0 20px 24px; }
+  .copy { padding: 24px 20px; }
   .hero { gap: 24px; }
-  .copy { padding: 0; }
   .hero h1 { font-size: 38px; }
   .lede { font-size: 17px; }
   .hint { font-size: 14px; }

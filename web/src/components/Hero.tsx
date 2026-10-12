@@ -11,7 +11,7 @@ interface Props {
 export function Hero({ onUpload, onViewSample, onHistory }: Props) {
   const { t } = useI18n();
   return (
-    <main className={styles.wrap}>
+    <main className={styles.page}>
       <div className={styles.hero}>
         <div className={styles.copy}>
           <h1>{t("hero_title_1")}<br />{t("hero_title_2")}</h1>
@@ -31,12 +31,14 @@ export function Hero({ onUpload, onViewSample, onHistory }: Props) {
           <figcaption>{t("image_example")}</figcaption>
         </figure>
       </div>
+      <div className={styles.wrap}>
       <section className={styles.history}>
         <div><h2>{t("history_title")}</h2><p>{t("history_login_hint")}</p></div>
         <button className={`${styles.btn} ${styles.btnGhost}`} onClick={onHistory}>
           {t("nav_history")} <span aria-hidden="true">→</span>
         </button>
       </section>
+      </div>
     </main>
   );
 }
