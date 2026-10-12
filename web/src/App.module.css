@@ -46,3 +46,16 @@
   padding: 14px 18px;
   font-size: 13px;
 }
+
+.errorBanner button {
+  margin-top: 12px;
+  min-height: 44px;
+  padding: 10px 20px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--feature-bg);
+  color: var(--feature-text);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}

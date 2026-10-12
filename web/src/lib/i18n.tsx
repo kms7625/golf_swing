@@ -4,6 +4,8 @@ export type Lang = "ko" | "en";
 
 const STRINGS = {
   ko: {
+    swing_not_found: "스윙 동작을 찾지 못했어요. 구간을 다시 선택해 주세요.",
+    reselect_swing: "구간 다시 선택",
     hero_intro: "내 영상으로 스윙의 흐름을 확인하고, 다음 연습에서 바꿀 점을 찾아보세요.",
     hero_recording_hint: "전신이 보이는 한 번의 스윙 영상을 준비해 주세요.",
     hero_cobalt_alt: "야외 연습장에서 백스윙 정점에 있는 골퍼의 뒷모습",
@@ -159,6 +161,8 @@ const STRINGS = {
     live_full_analysis: "📋 이 영상으로 정식 분석 (대표 장면·저장·비교 가능)",
   },
   en: {
+    swing_not_found: "We couldn’t find a swing. Please select the segment again.",
+    reselect_swing: "Select segment again",
     hero_intro: "See the flow of your swing in your own video, and find what to change at your next practice.",
     hero_recording_hint: "Prepare a video of one swing with your whole body in view.",
     hero_cobalt_alt: "A golfer seen from behind at the top of the backswing on an outdoor driving range",

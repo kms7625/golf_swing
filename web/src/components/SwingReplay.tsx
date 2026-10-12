@@ -14,6 +14,7 @@ export interface ReplaySource {
 interface Props {
   source: ReplaySource;
   phaseBoundaries: Record<string, [number, number]>;
+  phaseBoundariesSec?: Record<string, [number, number]>;
   fps: number;
   effSample: number;
 }
@@ -25,7 +26,7 @@ function idxToSec(idx: number, fps: number, effSample: number): number {
   return (idx * effSample) / Math.max(fps, 1);
 }
 
-export function SwingReplay({ source, phaseBoundaries, fps, effSample }: Props) {
+export function SwingReplay({ source, phaseBoundaries, phaseBoundariesSec, fps, effSample }: Props) {
   const { t, phaseLabel } = useI18n();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(false);
@@ -99,6 +100,8 @@ export function SwingReplay({ source, phaseBoundaries, fps, effSample }: Props) 
     if (videoRef.current) videoRef.current.playbackRate = r;
   }
 
+  const seconds = (ph: string): [number, number] => phaseBoundariesSec?.[ph]
+    ?? [idxToSec(phaseBoundaries[ph][0], fps, effSample), idxToSec(phaseBoundaries[ph][1], fps, effSample)];
   const phases = PHASE_ORDER_KO.filter((ph) => phaseBoundaries[ph]);
 
   return (
@@ -112,9 +115,9 @@ export function SwingReplay({ source, phaseBoundaries, fps, effSample }: Props) 
 
       <div className={styles.timeline}>
         {phases.map((ph) => {
-          const [lo, hi] = phaseBoundaries[ph];
-          const left = (idxToSec(lo, fps, effSample) / span) * 100;
-          const width = ((idxToSec(hi, fps, effSample) - idxToSec(lo, fps, effSample)) / span) * 100;
+          const [lo, hi] = seconds(ph);
+          const left = (lo / span) * 100;
+          const width = ((hi - lo) / span) * 100;
           return (
             <div
               key={ph}
@@ -165,7 +168,7 @@ export function SwingReplay({ source, phaseBoundaries, fps, effSample }: Props) 
             key={ph}
             className={styles.chip}
             style={{ borderColor: PHASE_COLORS[ph] }}
-            onClick={() => seekRel(idxToSec(phaseBoundaries[ph][0], fps, effSample))}
+            onClick={() => seekRel(seconds(ph)[0])}
           >
             <span className={styles.chipDot} style={{ background: PHASE_COLORS[ph] }} />
             {phaseLabel(ph)}

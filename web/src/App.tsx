@@ -18,7 +18,7 @@ const LiveCapture = lazy(() =>
   import("./components/LiveCapture").then((m) => ({ default: m.LiveCapture }))
 );
 
-type Stage = "landing" | "trim" | "analyzing" | "result" | "live" | "history" | "privacy";
+type Stage = "landing" | "trim" | "analyzing" | "result" | "live" | "history" | "privacy" | "analysis-error";
 
 const POLL_MS = 1500;
 
@@ -82,6 +82,7 @@ function App() {
     stopPolling();
     const request = requestRef.current;
     setStage("analyzing");
+    setResult(null);
     setError(null);
     setJobStage("uploaded");
     setJobProgress(0);
@@ -113,7 +114,7 @@ function App() {
             stopPolling();
             clearReplay();
             setError(job.error ?? t("error_generic"));
-            setStage("trim");
+            setStage("analysis-error");
           } else {
             // Schedule only after completion: slow requests never overlap.
             pollRef.current = window.setTimeout(poll, POLL_MS);
@@ -123,7 +124,7 @@ function App() {
           stopPolling();
           clearReplay();
           setError(e instanceof Error ? e.message : t("error_generic"));
-          setStage("trim");
+          setStage("analysis-error");
         }
       }
       pollRef.current = window.setTimeout(poll, POLL_MS);
@@ -132,7 +133,7 @@ function App() {
       stopPolling();
       clearReplay();
       setError(e instanceof Error ? e.message : t("error_generic"));
-      setStage("trim");
+      setStage("analysis-error");
     }
   }
 
@@ -178,7 +179,8 @@ function App() {
 
       {error && (
         <div className={styles.errorBanner}>
-          <div>{error}</div>
+          <div role="alert">{error === "스윙 동작을 찾지 못했어요. 구간을 다시 선택해 주세요." ? t("swing_not_found") : error}</div>
+          {stage === "analysis-error" && <button onClick={() => { setError(null); setStage("trim"); }}>{t("reselect_swing")}</button>}
         </div>
       )}
 
@@ -186,7 +188,11 @@ function App() {
         <Hero onUpload={() => navigate("trim")} onViewSample={handleViewSample} onHistory={() => navigate("history")} />
       )}
 
-      {stage === "trim" && <UploadTrim onAnalyze={handleAnalyze} onPrivacyClick={() => setStage("privacy")} />}
+      {["trim", "analyzing", "analysis-error"].includes(stage) && (
+        <div hidden={stage !== "trim"}>
+          <UploadTrim onAnalyze={handleAnalyze} onPrivacyClick={() => setStage("privacy")} />
+        </div>
+      )}
 
       {stage === "analyzing" && <AnalyzeProgress stage={jobStage} progress={jobProgress} filename={videoName} onBack={() => navigate("trim")} />}
 

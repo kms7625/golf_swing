@@ -196,7 +196,8 @@ export function ResultScreen({
       <div className={styles.chartWrap}>
         <h3 className="tracked">{t("result_chart_title")}</h3>
         <div className={styles.chartPanel}>
-          <Waveform wristY={wrist_y_history} phaseBoundaries={phase_boundaries} />
+          <Waveform wristY={wrist_y_history} phaseBoundaries={phase_boundaries}
+            wristTimesSec={result.wrist_times_sec} phaseBoundariesSec={result.phase_boundaries_sec} />
         </div>
       </div>
 
@@ -204,6 +205,7 @@ export function ResultScreen({
         <SwingReplay
           source={replay}
           phaseBoundaries={phase_boundaries}
+          phaseBoundariesSec={result.phase_boundaries_sec}
           fps={result.fps}
           effSample={result.eff_sample}
         />

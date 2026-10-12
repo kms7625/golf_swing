@@ -56,7 +56,10 @@ export interface AnalyzeResponse {
   frame_data: FrameDatum[];
   fps: number;
   eff_sample: number;
-  wrist_y_history: number[];
+  wrist_y_history: (number | null)[];
+  wrist_times_sec?: number[];
+  phase_boundaries_sec?: Record<string, [number, number]>;
+  phase_boundaries_frames?: Record<string, [number, number]>;
   phase_boundaries: Record<string, [number, number]>;
   rep_frames: Record<string, string>;
 }
