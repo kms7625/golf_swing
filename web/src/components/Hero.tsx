@@ -5,46 +5,38 @@ import styles from "./Hero.module.css";
 interface Props {
   onUpload: () => void;
   onViewSample: () => void;
+  onHistory: () => void;
 }
 
-export function Hero({ onUpload, onViewSample }: Props) {
+export function Hero({ onUpload, onViewSample, onHistory }: Props) {
   const { t } = useI18n();
-
   return (
-    <div className={styles.hero}>
-      <div>
-        <p className={`${styles.eyebrow} tracked`}>{t("hero_eyebrow")}</p>
-        <h1>
-          {t("hero_title_1")}
-          <br />
-          {t("hero_title_2")}
-        </h1>
-        <p className={styles.lede}>{t("hero_lede")}</p>
-        <div className={styles.ctaRow}>
-          <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={onUpload}>
-            <UploadIcon />
-            {t("hero_cta_upload")}
-          </button>
-          <button className={`${styles.btn} ${styles.btnGhost}`} onClick={onViewSample}>
-            <PlayIcon />
-            {t("hero_cta_sample")}
-          </button>
+    <main className={styles.wrap}>
+      <div className={styles.hero}>
+        <div className={styles.copy}>
+          <h1>{t("hero_title_1")}<br />{t("hero_title_2")}</h1>
+          <p className={styles.lede}>{t("hero_intro")}</p>
+          <div className={styles.ctaRow}>
+            <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={onUpload}>
+              <UploadIcon />{t("hero_cta_upload")}
+            </button>
+            <button className={`${styles.btn} ${styles.btnGhost}`} onClick={onViewSample}>
+              <PlayIcon />{t("hero_cta_sample")}
+            </button>
+          </div>
+          <p className={styles.hint}>{t("hero_recording_hint")}</p>
         </div>
+        <figure className={styles.panel}>
+          <img src="/images/hero-cobalt.webp" width="1536" height="1024" alt={t("hero_cobalt_alt")} />
+          <figcaption>{t("image_example")}</figcaption>
+        </figure>
       </div>
-      <div className={styles.panel}>
-        <div className={`${styles.bracket} ${styles.tl}`} />
-        <div className={`${styles.bracket} ${styles.tr}`} />
-        <div className={`${styles.bracket} ${styles.bl}`} />
-        <div className={`${styles.bracket} ${styles.br}`} />
-        <div className={styles.visual}>
-          <img src="/images/hero-swing-916.webp" width="936" height="1664" alt={t("hero_visual_alt")} />
-        </div>
-        <div className={`${styles.readout} mono`}>
-          <span>SPINE 29.4°</span>
-          <span>SHOULDER 64.2°</span>
-          <span>FRAME 0187/0266</span>
-        </div>
-      </div>
-    </div>
+      <section className={styles.history}>
+        <div><h2>{t("history_title")}</h2><p>{t("history_login_hint")}</p></div>
+        <button className={`${styles.btn} ${styles.btnGhost}`} onClick={onHistory}>
+          {t("nav_history")} <span aria-hidden="true">→</span>
+        </button>
+      </section>
+    </main>
   );
 }
