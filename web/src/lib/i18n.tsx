@@ -6,7 +6,7 @@ const STRINGS = {
   ko: {
     hero_intro: "내 영상으로 스윙의 흐름을 확인하고, 다음 연습에서 바꿀 점을 찾아보세요.",
     hero_recording_hint: "전신이 보이는 한 번의 스윙 영상을 준비해 주세요.",
-    hero_cobalt_alt: "야외 연습장에서 스윙을 마친 골퍼의 비실사 일러스트",
+    hero_cobalt_alt: "야외 연습장에서 백스윙 정점에 있는 골퍼의 뒷모습",
     image_example: "이미지 예시",
     theme_label: "테마",
     trim_change_file: "파일 변경",
@@ -161,7 +161,7 @@ const STRINGS = {
   en: {
     hero_intro: "See the flow of your swing in your own video, and find what to change at your next practice.",
     hero_recording_hint: "Prepare a video of one swing with your whole body in view.",
-    hero_cobalt_alt: "Stylized illustration of a golfer finishing a swing at an outdoor practice range",
+    hero_cobalt_alt: "A golfer seen from behind at the top of the backswing on an outdoor driving range",
     image_example: "Illustration",
     theme_label: "Theme",
     trim_change_file: "Change file",
