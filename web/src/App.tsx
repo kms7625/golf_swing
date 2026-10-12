@@ -1,4 +1,4 @@
-import { lazy, Suspense, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { TopBar } from "./components/TopBar";
 import { Hero } from "./components/Hero";
 import { UploadTrim } from "./components/UploadTrim";
@@ -36,6 +36,14 @@ function App() {
   const [openedFeedback, setOpenedFeedback] = useState<string | undefined>(undefined);
   const [replay, setReplay] = useState<ReplaySource | undefined>(undefined);
   const pollRef = useRef<number | null>(null);
+  const requestRef = useRef(0);
+  const activeJobRef = useRef<string | null>(null);
+
+  useEffect(() => () => {
+    requestRef.current += 1;
+    activeJobRef.current = null;
+    if (pollRef.current !== null) window.clearTimeout(pollRef.current);
+  }, []);
 
   function clearReplay() {
     setReplay((prev) => {
@@ -45,8 +53,10 @@ function App() {
   }
 
   function stopPolling() {
+    requestRef.current += 1;
+    activeJobRef.current = null;
     if (pollRef.current !== null) {
-      window.clearInterval(pollRef.current);
+      window.clearTimeout(pollRef.current);
       pollRef.current = null;
     }
   }
@@ -61,19 +71,35 @@ function App() {
     setOpenedFeedback(undefined);
   }
 
+  function navigate(next: Stage) {
+    stopPolling();
+    clearReplay();
+    setError(null);
+    setStage(next);
+  }
+
   async function handleAnalyze(file: File, startSec?: number, endSec?: number) {
+    stopPolling();
+    const request = requestRef.current;
     setStage("analyzing");
     setError(null);
     setJobStage("uploaded");
-    setJobProgress(5);
+    setJobProgress(0);
     setVideoName(file.name);
     clearReplay();
     setReplay({ url: URL.createObjectURL(file), startSec: startSec ?? 0, endSec });
     try {
       const { job_id } = await analyzeAsync(file, startSec, endSec);
-      pollRef.current = window.setInterval(async () => {
+      if (request !== requestRef.current) return;
+      activeJobRef.current = job_id;
+      setJobProgress(5);
+      const isCurrent = () => request === requestRef.current && activeJobRef.current === job_id;
+      async function poll() {
+        if (!isCurrent()) return;
         try {
           const job = await getJob(job_id);
+          // A navigation or newer job invalidates both successful and failed responses.
+          if (!isCurrent()) return;
           setJobStage(job.stage);
           setJobProgress(job.progress);
           if (job.status === "done" && job.result) {
@@ -85,38 +111,55 @@ function App() {
             setStage("result");
           } else if (job.status === "error") {
             stopPolling();
+            clearReplay();
             setError(job.error ?? t("error_generic"));
             setStage("trim");
+          } else {
+            // Schedule only after completion: slow requests never overlap.
+            pollRef.current = window.setTimeout(poll, POLL_MS);
           }
         } catch (e) {
+          if (!isCurrent()) return;
           stopPolling();
+          clearReplay();
           setError(e instanceof Error ? e.message : t("error_generic"));
           setStage("trim");
         }
-      }, POLL_MS);
+      }
+      pollRef.current = window.setTimeout(poll, POLL_MS);
     } catch (e) {
+      if (request !== requestRef.current) return;
+      stopPolling();
+      clearReplay();
       setError(e instanceof Error ? e.message : t("error_generic"));
       setStage("trim");
     }
   }
 
   async function handleViewSample() {
+    stopPolling();
+    const request = requestRef.current;
     try {
       const res = await fetch("/samples/il-ban.json");
       const data: AnalyzeResponse = await res.json();
+      if (request !== requestRef.current) return;
       clearReplay();
+      setVideoName("일반.mp4");
       setResult(data);
       setIsSample(true);
       setOpenedSwingId(undefined);
       setOpenedFeedback(undefined);
       setStage("result");
     } catch (e) {
+      if (request !== requestRef.current) return;
       setError(e instanceof Error ? e.message : t("error_generic"));
     }
   }
 
-  function handleOpenSaved(payload: AnalyzeResponse, swingId: number, feedback: string) {
+  function handleOpenSaved(payload: AnalyzeResponse, swingId: number, feedback: string, filename: string) {
+    stopPolling();
     clearReplay();
+    setVideoName(filename);
     setResult(payload);
     setIsSample(false);
     setOpenedSwingId(swingId);
@@ -128,8 +171,8 @@ function App() {
     <>
       <TopBar
         onBrandClick={goLanding}
-        onLiveClick={() => setStage("live")}
-        onHistoryClick={() => setStage("history")}
+        onLiveClick={() => navigate("live")}
+        onHistoryClick={() => navigate("history")}
         onLoginClick={() => setShowAuth(true)}
       />
 
@@ -140,15 +183,12 @@ function App() {
       )}
 
       {stage === "landing" && (
-        <>
-          <Hero onUpload={() => setStage("trim")} onViewSample={handleViewSample} />
-          <HistoryPanel onOpen={handleOpenSaved} onLoginClick={() => setShowAuth(true)} />
-        </>
+        <Hero onUpload={() => navigate("trim")} onViewSample={handleViewSample} onHistory={() => navigate("history")} />
       )}
 
       {stage === "trim" && <UploadTrim onAnalyze={handleAnalyze} onPrivacyClick={() => setStage("privacy")} />}
 
-      {stage === "analyzing" && <AnalyzeProgress stage={jobStage} progress={jobProgress} />}
+      {stage === "analyzing" && <AnalyzeProgress stage={jobStage} progress={jobProgress} filename={videoName} onBack={() => navigate("trim")} />}
 
       {stage === "result" && result && (
         <ResultScreen

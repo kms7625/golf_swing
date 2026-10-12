@@ -7,7 +7,7 @@ import type { AnalyzeResponse, SwingRow } from "../lib/types";
 import styles from "./HistoryPanel.module.css";
 
 interface Props {
-  onOpen: (result: AnalyzeResponse, swingId: number, feedback: string) => void;
+  onOpen: (result: AnalyzeResponse, swingId: number, feedback: string, filename: string) => void;
   onLoginClick: () => void;
 }
 
@@ -121,7 +121,7 @@ export function HistoryPanel({ onOpen, onLoginClick }: Props) {
   async function open(row: SwingRow) {
     try {
       const detail = await getSwing(row.id);
-      onOpen(detail.payload, detail.id, detail.feedback);
+      onOpen(detail.payload, detail.id, detail.feedback, row.video_name);
     } catch (e) {
       setError(e instanceof Error ? e.message : t("error_generic"));
     }
