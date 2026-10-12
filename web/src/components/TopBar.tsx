@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAuth } from "../lib/auth";
 import { useI18n } from "../lib/i18n";
 import { getTheme, toggleTheme, type Theme } from "../lib/theme";
-import { HistoryIcon, MoonIcon, SunIcon, VideoCameraIcon } from "./icons";
+import { MoonIcon, SunIcon } from "./icons";
 import styles from "./TopBar.module.css";
 
 interface Props {
@@ -18,14 +18,14 @@ export function TopBar({ onBrandClick, onLiveClick, onHistoryClick, onLoginClick
   const [theme, setTheme] = useState<Theme>(getTheme());
 
   return (
-    <div className={styles.bar}>
+    <header className={styles.bar}>
       <button className={styles.brand} onClick={onBrandClick}>
-        SWING<span className={`mono ${styles.accent}`}>.LAB</span>
+        Swing.Lab
       </button>
       <div className={styles.right}>
         <nav className={styles.nav}>
-          <button onClick={onLiveClick}><VideoCameraIcon />{t("nav_live")}</button>
-          <button onClick={onHistoryClick}><HistoryIcon />{t("nav_history")}</button>
+          <button onClick={onLiveClick}>{t("nav_live")}</button>
+          <button onClick={onHistoryClick}>{t("nav_history")}</button>
         </nav>
         <button
           className={styles.iconBtn}
@@ -33,13 +33,14 @@ export function TopBar({ onBrandClick, onLiveClick, onHistoryClick, onLoginClick
           aria-label={t("theme_toggle")}
           title={t("theme_toggle")}
         >
-          {theme === "dark" ? <SunIcon /> : <MoonIcon />}
+          {theme === "light" ? <SunIcon /> : <MoonIcon />}{t("theme_label")}
         </button>
         <div className={styles.langToggle}>
-          <button className={lang === "ko" ? styles.active : ""} onClick={() => setLang("ko")}>
+          <button aria-pressed={lang === "ko"} className={lang === "ko" ? styles.active : ""} onClick={() => setLang("ko")}>
             KO
           </button>
-          <button className={lang === "en" ? styles.active : ""} onClick={() => setLang("en")}>
+          <span aria-hidden="true">/</span>
+          <button aria-pressed={lang === "en"} className={lang === "en" ? styles.active : ""} onClick={() => setLang("en")}>
             EN
           </button>
         </div>
@@ -53,6 +54,6 @@ export function TopBar({ onBrandClick, onLiveClick, onHistoryClick, onLoginClick
           </button>
         )}
       </div>
-    </div>
+    </header>
   );
 }
