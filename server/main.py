@@ -20,7 +20,7 @@ from analyzer.pipeline import process_video, auto_detect_swing_window, trim_vide
 from analyzer.scoring import compute_summary, compute_score
 from analyzer.coach_llm import get_llm_feedback
 from analyzer.reference_db import load_ref_db
-from analyzer.phase_detector import SwingPhaseDetector
+from analyzer.phase_detector import SwingPhaseDetector, SwingNotFoundError, NO_SWING_MESSAGE
 
 import jobs
 from ratelimit import rate_limited
@@ -89,16 +89,19 @@ def _cleanup(*paths):
                 pass
 
 
-def _run_analysis(analyze_path: str, sample_rate: int, job_id: Optional[str] = None) -> dict:
+def _run_analysis(analyze_path: str, sample_rate: int, job_id: Optional[str] = None, source_start_sec: float = 0.0) -> dict:
     """공통 분석 경로 — 동기(/analyze)와 비동기(/analyze-async) 양쪽에서 사용.
 
     응답 포맷은 기존 /analyze와 동일하게 유지한다 (golf-ui-ux B5: web/public/samples/*.json 호환).
     """
     if job_id:
         jobs.set_stage(job_id, "analyzing", 30)
-    frame_data, annotated_frames, traj_pts, fps, phase_det, eff_sample = process_video(
-        analyze_path, sample_rate, analyze_path=analyze_path
-    )
+    try:
+        frame_data, annotated_frames, traj_pts, fps, phase_det, eff_sample = process_video(
+            analyze_path, sample_rate, analyze_path=analyze_path, source_start_sec=source_start_sec
+        )
+    except SwingNotFoundError:
+        raise HTTPException(status_code=422, detail=NO_SWING_MESSAGE)
     if job_id:
         jobs.set_stage(job_id, "scoring", 85)
     summary = compute_summary(frame_data)
@@ -116,6 +119,9 @@ def _run_analysis(analyze_path: str, sample_rate: int, job_id: Optional[str] = N
         "fps": fps,
         "eff_sample": eff_sample,
         "wrist_y_history": phase_det.wrist_y_history,
+        "wrist_times_sec": phase_det.wrist_times_sec,
+        "phase_boundaries_sec": phase_det.phase_boundaries_sec,
+        "phase_boundaries_frames": phase_det.phase_boundaries_frames,
         "phase_boundaries": {ph: list(bounds) for ph, bounds in phase_det.phase_boundaries.items()},
         "rep_frames": rep_frames,
     })
@@ -140,7 +146,7 @@ async def analyze(
             trim_path = trim_video(tmp_path, start_sec, end_sec)
             analyze_path = trim_path
 
-        return _run_analysis(analyze_path, sample_rate)
+        return _run_analysis(analyze_path, sample_rate, source_start_sec=start_sec if trim_path else 0.0)
     except HTTPException:
         raise
     except Exception:
@@ -170,7 +176,7 @@ async def analyze_async(
                 jobs.set_stage(job_id, "trimming", 15)
                 trim_path = trim_video(tmp_path, start_sec, end_sec)
                 analyze_path = trim_path
-            result = _run_analysis(analyze_path, sample_rate, job_id=job_id)
+            result = _run_analysis(analyze_path, sample_rate, job_id=job_id, source_start_sec=start_sec if trim_path else 0.0)
             jobs.finish(job_id, result)
         finally:
             _cleanup(tmp_path, trim_path)
@@ -184,6 +190,8 @@ async def job_status(job_id: str):
     job = jobs.get_job(job_id)
     if job is None:
         raise HTTPException(status_code=404, detail="작업을 찾을 수 없습니다. 다시 분석을 시작해주세요.")
+    if job["status"] == "error" and job["error"] == NO_SWING_MESSAGE:
+        raise HTTPException(status_code=422, detail=NO_SWING_MESSAGE)
     return job
 
 
@@ -192,7 +200,10 @@ async def auto_window(file: UploadFile = File(...), _rl: None = Depends(rate_lim
     tmp_path = None
     try:
         tmp_path = _save_upload_to_temp(file)
-        start_sec, end_sec = auto_detect_swing_window(tmp_path)
+        try:
+            start_sec, end_sec = auto_detect_swing_window(tmp_path)
+        except SwingNotFoundError:
+            raise HTTPException(status_code=422, detail=NO_SWING_MESSAGE)
         return {"start_sec": start_sec, "end_sec": end_sec}
     except HTTPException:
         raise
@@ -218,6 +229,8 @@ async def detect_phases(body: DetectPhasesRequest, _rl: None = Depends(rate_limi
     for i, wy in enumerate(body.wrist_y):
         detector.update(i, wy, wy)
     boundaries = detector.detect_all_phases()
+    if not boundaries:
+        raise HTTPException(status_code=422, detail=NO_SWING_MESSAGE)
     return to_jsonable({ph: list(bounds) for ph, bounds in boundaries.items()})
 
 
@@ -248,6 +261,8 @@ async def score_live(body: ScoreLiveRequest, _rl: None = Depends(rate_limited("l
     for i, wy in enumerate(body.wrist_y):
         detector.update(i, wy, wy)
     boundaries = detector.detect_all_phases()
+    if not boundaries:
+        raise HTTPException(status_code=422, detail=NO_SWING_MESSAGE)
 
     frame_data = []
     for i, fr in enumerate(body.frames):

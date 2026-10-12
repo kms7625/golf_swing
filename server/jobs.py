@@ -79,10 +79,15 @@ def run_in_thread(job_id: str, target: Callable[[], None]) -> None:
     def _wrap():
         try:
             target()
-        except Exception:  # noqa: BLE001 — 상세는 서버 로그로, 클라이언트에는 일반 메시지
+        except Exception as exc:  # noqa: BLE001 — 상세는 서버 로그로, 클라이언트에는 일반 메시지
             import logging
 
             logging.getLogger("golf.jobs").exception("job %s failed", job_id)
-            fail(job_id, "분석 중 오류가 발생했습니다. 영상 형식을 확인하고 다시 시도해주세요.")
+            from fastapi import HTTPException
+            from analyzer.phase_detector import NO_SWING_MESSAGE
+            message = (NO_SWING_MESSAGE if isinstance(exc, HTTPException)
+                       and exc.status_code == 422 and exc.detail == NO_SWING_MESSAGE
+                       else "분석 중 오류가 발생했습니다. 영상 형식을 확인하고 다시 시도해주세요.")
+            fail(job_id, message)
 
     threading.Thread(target=_wrap, daemon=True).start()

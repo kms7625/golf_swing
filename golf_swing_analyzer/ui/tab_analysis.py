@@ -141,6 +141,7 @@ def render(sample_rate, ref_db):
                 with st.spinner(f"✂️ {start_sec:.1f}초 ~ {end_sec:.1f}초 구간 추출 중..."):
                     trim_path = trim_video(tmp_path, start_sec, end_sec)
                     st.session_state.trim_path = trim_path
+                    st.session_state.trim_start_sec = start_sec
                 st.success(f"✅ 구간 적용 완료! ({sel_duration:.1f}초) — 위 영상 미리보기가 업데이트됩니다.")
                 st.rerun()
 
@@ -171,8 +172,15 @@ def render(sample_rate, ref_db):
 
         if analyze_btn:
             prog = st.progress(0, "🦴 관절 포인트 추출 중...")
-            frame_data, annotated_frames, traj_pts, fps, phase_det, eff_sample = \
-                process_video(analyze_path, sample_rate, analyze_path=analyze_path)
+            from analyzer.phase_detector import SwingNotFoundError
+            try:
+                frame_data, annotated_frames, traj_pts, fps, phase_det, eff_sample = \
+                    process_video(analyze_path, sample_rate, analyze_path=analyze_path,
+                                  source_start_sec=st.session_state.get("trim_start_sec", 0.0) if is_trimmed else 0.0)
+            except SwingNotFoundError as exc:
+                prog.empty()
+                st.error(str(exc))
+                return
             prog.progress(70, "📐 각도 계산 & 페이즈 세그먼테이션...")
             summary = compute_summary(frame_data)
             prog.progress(90, "🏅 스코어 산정...")
@@ -247,25 +255,26 @@ def render(sample_rate, ref_db):
                 phase_order = ["어드레스","백스윙","백스윙 톱","다운스윙","임팩트","팔로우스루","피니시"]
                 phase_frame_map = {}  # phase → annotated frame index
 
-                # annotated_frames는 frame_data와 1:1 대응
-                # (preview_indices = 전체 저장으로 변경됨)
-                # frame_data[i] ↔ annotated_frames[i] 직접 매핑
+                images_by_frame = {entry["frame"]: entry["image"] for entry in frames}
+                entries = {entry["frame"]: entry for entry in fd}
+                entries.update({entry["frame"]: entry for entry in frames if "phase" in entry})
                 for ph in phase_order:
-                    ph_fd = [(i, f) for i, f in enumerate(fd) if f.get("phase") == ph]
+                    ph_fd = sorted((f for f in entries.values() if f.get("phase") == ph), key=lambda f: f["frame"])
                     if not ph_fd:
                         continue
                     # 페이즈별 대표 프레임 위치 선택
                     # 임팩트: 첫 프레임 (순간적 접촉)
-                    # 다운스윙: 75% 지점 (초반 플래토 구간 제외, 실제 급강하 구간 표시)
+                    # 다운스윙: 85% 지점 (초반 플래토 구간 제외, 실제 급강하 구간 표시)
                     # 나머지: 중간 프레임
                     if ph == "임팩트":
-                        rep_i = ph_fd[0][0]
+                        representative = ph_fd[0]
                     elif ph == "다운스윙":
-                        rep_i = ph_fd[min(len(ph_fd)-1, int(len(ph_fd)*0.85))][0]
+                        representative = ph_fd[min(len(ph_fd)-1, int(len(ph_fd)*0.85))]
                     else:
-                        rep_i = ph_fd[len(ph_fd)//2][0]
-                    ann_idx = min(rep_i, len(frames) - 1)
-                    phase_frame_map[ph] = frames[ann_idx]
+                        representative = ph_fd[len(ph_fd)//2]
+                    source_frame = representative["frame"]
+                    if source_frame in images_by_frame:
+                        phase_frame_map[ph] = images_by_frame[source_frame]
 
                 detected_phases = [ph for ph in phase_order if ph in phase_frame_map]
                 cols = st.columns(len(detected_phases))

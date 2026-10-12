@@ -14,8 +14,8 @@ def to_jsonable(obj):
         return [to_jsonable(v) for v in obj]
     if isinstance(obj, (np.integer,)):
         return int(obj)
-    if isinstance(obj, (np.floating,)):
-        return float(obj)
+    if isinstance(obj, (float, np.floating)):
+        return float(obj) if np.isfinite(obj) else None
     if isinstance(obj, np.ndarray):
         return to_jsonable(obj.tolist())
     return obj
@@ -33,18 +33,24 @@ def extract_representative_frames(frame_data, annotated_frames):
     나머지: 중간 프레임
     """
     phase_frame_map = {}
+    images_by_frame = {entry["frame"]: entry["image"] for entry in annotated_frames}
+    # Phase-only pose frames remain displayable when the angle gate fails.
+    # Never synthesize joint angles just to obtain a representative image.
+    entries = {entry["frame"]: entry for entry in frame_data}
+    entries.update({entry["frame"]: entry for entry in annotated_frames if "phase" in entry})
     for ph in PHASE_ORDER:
-        ph_fd = [(i, f) for i, f in enumerate(frame_data) if f.get("phase") == ph]
+        ph_fd = sorted((f for f in entries.values() if f.get("phase") == ph), key=lambda f: f["frame"])
         if not ph_fd:
             continue
         if ph == "임팩트":
-            rep_i = ph_fd[0][0]
+            representative = ph_fd[0]
         elif ph == "다운스윙":
-            rep_i = ph_fd[min(len(ph_fd) - 1, int(len(ph_fd) * 0.85))][0]
+            representative = ph_fd[min(len(ph_fd) - 1, int(len(ph_fd) * 0.85))]
         else:
-            rep_i = ph_fd[len(ph_fd) // 2][0]
-        ann_idx = min(rep_i, len(annotated_frames) - 1)
-        phase_frame_map[ph] = annotated_frames[ann_idx]
+            representative = ph_fd[len(ph_fd) // 2]
+        source_frame = representative["frame"]
+        if source_frame in images_by_frame:
+            phase_frame_map[ph] = images_by_frame[source_frame]
     return phase_frame_map
 
 
