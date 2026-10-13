@@ -1,0 +1,7 @@
+INFO: Created TensorFlow Lite XNNPACK delegate for CPU.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+W0000 00:00:1791869884.151598      22 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1791869884.183851      22 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1791869884.320703      17 landmark_projection_calculator.cc:186] Using NORM_RECT without IMAGE_DIMENSIONS is only supported for the square ROI. Provide IMAGE_DIMENSIONS or use PROJECTION_MATRIX.
+baseline written: /work/tests/snapshots/ilban_baseline.json
+{"video": "일반.mp4", "sample_rate": 3, "score": 45, "phases": ["다운스윙", "백스윙", "백스윙 톱", "어드레스", "임팩트", "팔로우스루", "피니시"], "summary": {"spine_angle_delta": 9.1, "x_factor": -23.8, "shoulder_rotation_max": 33.9, "total_frames": 95}}
