@@ -1,4 +1,5 @@
 import numpy as np
+from .phase_parameters import CALIBRATED_PARAMETERS
 
 PHASES = ["어드레스", "백스윙", "백스윙 톱", "다운스윙", "임팩트", "팔로우스루", "피니시"]
 NO_SWING_MESSAGE = "스윙 동작을 찾지 못했어요. 구간을 다시 선택해 주세요."
@@ -15,8 +16,9 @@ class SwingPhaseDetector:
     local_to_hist continues to map pose-only local_idx to history; source frame IDs
     and seconds are separate coordinates, never substitutes for that mapping.
     """
-    def __init__(self, fps=30.0):
+    def __init__(self, fps=30.0, params=None):
         self.fps = fps
+        self.params = CALIBRATED_PARAMETERS if params is None else params
         self.wrist_y_history = []
         self.frame_phases = []
         self.phase_boundaries = {}
@@ -76,6 +78,7 @@ class SwingPhaseDetector:
         return wy, segments
 
     def candidates(self):
+        p = self.params
         wy, segments = self._segments()
         ts = np.asarray(self.wrist_times_sec)
         candidates = []
@@ -83,7 +86,7 @@ class SwingPhaseDetector:
             if hi-lo < 8: continue
             dt = float(np.median(np.diff(ts[lo:hi])))
             # ~0.10 s positional smoothing, odd width, independent of clip length.
-            k = max(1, round(.10 / dt)) | 1
+            k = max(1, round(p.smooth_sec / dt)) | 1
             sm = self._smooth(wy[lo:hi], k)
             radius = max(1, round(.12 / dt))
             scale = max(float(np.median(self.body_scales[lo:hi])), 1e-6)
@@ -97,13 +100,13 @@ class SwingPhaseDetector:
                 # Measuring from the plateau's first frame can push impact past
                 # the 1.25 s window (pexels_8065880 on Mac, 2026-10-12).
                 base = sm[j]
-                while t+1 < hi-4 and sm[t+1-lo] <= base + .05*scale:
+                while t+1 < hi-4 and sm[t+1-lo] <= base + p.plateau_ratio*scale:
                     t += 1
                 j = t-lo
-                before = max(lo, int(np.searchsorted(ts, ts[t]-3.0)))
+                before = max(lo, int(np.searchsorted(ts, ts[t]-p.address_window_sec)))
                 # Choi 2014, REPORT L4: downswing ~0.3 s. A 1.25 s ceiling
                 # tolerates slow media, without reaching the next swing or a cut.
-                end = min(hi-2, int(np.searchsorted(ts, ts[t]+1.25, side='right')))
+                end = min(hi-2, int(np.searchsorted(ts, ts[t]+p.impact_window_sec, side='right')))
                 if end <= t+2 or before >= t-1: continue
                 impact = t+1+int(np.argmax(wy[t+1:end]))  # A2: raw Y argmax
                 amplitude = wy[impact]-sm[j]
@@ -119,13 +122,13 @@ class SwingPhaseDetector:
                 if min(amplitude, rise) < min_amp or impact <= t+2: continue
                 # A real descent must turn upwards into follow-through, rather
                 # than joining two unrelated troughs/return-to-rest movements.
-                finish_end = min(hi-1, int(np.searchsorted(ts, ts[impact]+2.0, side='right'))-1)
+                finish_end = min(hi-1, int(np.searchsorted(ts, ts[impact]+p.finish_window_sec, side='right'))-1)
                 if finish_end <= impact+2: continue
                 follow = impact+1+int(np.argmin(sm[impact+1-lo:finish_end+1-lo]))
                 if wy[impact]-sm[follow-lo] < min_amp * .5: continue
                 # Onset: last sustained address level before the rise, not the
                 # initial value of an arbitrarily padded video.
-                threshold = sm[addr_peak-lo] - rise*.10
+                threshold = sm[addr_peak-lo] - rise*p.onset_fraction
                 onset = addr_peak
                 for q in range(addr_peak+1, t):
                     if sm[q-lo] < threshold:
@@ -143,6 +146,40 @@ class SwingPhaseDetector:
                                        segment=(lo,hi), amplitude=amplitude/scale))
         return candidates
 
+    def _event_boundaries(self, chosen):
+        """Apply event definitions after ranking; preserve the raw impact argmax.
+
+        A stationary wrist is only a Finish proxy: it cannot observe club release.
+        No qualifying hold falls back to the existing follow-through minimum.
+        """
+        p = self.params
+        start, onset, top, impact, follow, end = [chosen[k] for k in
+                                               ('start','onset','top','impact','follow','end')]
+        ts = np.asarray(self.wrist_times_sec)
+        if p.top_offset_sec:
+            top = min(impact-3, max(onset+1, int(np.searchsorted(ts, ts[top]+p.top_offset_sec))))
+        if p.address_offset_sec:
+            onset = min(top-1, max(start+1, int(np.searchsorted(ts, ts[onset]+p.address_offset_sec))))
+        if p.finish_mode != 'minimum':
+            wy, _ = self._segments()
+            lo, hi = chosen['segment']
+            dt = float(np.median(np.diff(ts[lo:hi])))
+            sm = self._smooth(wy[lo:hi], max(1, round(p.smooth_sec/dt)) | 1)
+            scale = max(float(np.median(self.body_scales[lo:hi])), 1e-6)
+            speed = np.abs(np.gradient(sm, ts[lo:hi])) / scale
+            for q in range(follow, end+1):
+                stop = int(np.searchsorted(ts, ts[q]+p.finish_hold_sec))
+                if stop > end or stop <= q:
+                    continue
+                if np.all(speed[q-lo:stop+1-lo] <= p.finish_speed_ratio):
+                    follow = q
+                    if p.finish_mode == 'settled_end':
+                        while stop < end and speed[stop+1-lo] <= p.finish_speed_ratio:
+                            stop += 1
+                        follow = stop
+                    break
+        return start, onset, top, impact, follow, end
+
     def detect_all_phases(self):
         self.phase_boundaries = {}
         self.phase_boundaries_frames = {}
@@ -156,8 +193,7 @@ class SwingPhaseDetector:
         chosen = min((c for c in candidates if c['strength'] >= peak*.95),
                      key=lambda c: (c['top'], -c['strength']))
         self.selected_cycle = chosen
-        start, onset, top, impact, follow, end = [chosen[k] for k in
-                                               ('start','onset','top','impact','follow','end')]
+        start, onset, top, impact, follow, end = self._event_boundaries(chosen)
         # Event phases own their starting frame; all ranges are inclusive and
         # disjoint. Fixed time widths cannot consume the entire downswing.
         ts = self.wrist_times_sec

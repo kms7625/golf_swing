@@ -12,9 +12,9 @@
     "피니시"
   ],
   "summary": {
-    "spine_angle_delta": 9.0,
+    "spine_angle_delta": 9.1,
     "x_factor": -23.8,
     "shoulder_rotation_max": 33.9,
-    "total_frames": 93
+    "total_frames": 95
   }
 }
