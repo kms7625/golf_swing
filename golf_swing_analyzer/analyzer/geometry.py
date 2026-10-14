@@ -53,6 +53,27 @@ def calc_hip_rotation(norm):
     return round(np.degrees(np.arctan2(abs(r[1] - l[1]), abs(r[0] - l[0]) + 1e-8)), 1)
 
 
+def calc_world_rotation_headings(world_landmarks, visibility_threshold=0.5):
+    """Directed 11→12 / 23→24 headings about camera +Y, in degrees.
+
+    World coordinates are metres, NOT normalized image x/y/z. XZ is the
+    assumed horizontal plane (requires a level camera, no gravity calibration).
+    Both segments must be valid: never subtract angles from different methods.
+    """
+    if world_landmarks is None or len(world_landmarks) < 25:
+        return None, "missing_world"
+    points = np.array([[lm.x, lm.y, lm.z, lm.visibility]
+                       for lm in (world_landmarks[i] for i in (11, 12, 23, 24))])
+    if not np.isfinite(points).all():
+        return None, "nonfinite_world"
+    if np.any(points[:, 3] <= visibility_threshold):
+        return None, "low_world_visibility"
+    lines = points[[1, 3], :3] - points[[0, 2], :3]
+    if np.any(np.linalg.norm(lines[:, [0, 2]], axis=1) < 1e-4):
+        return None, "degenerate_projection"
+    return np.degrees(np.arctan2(-lines[:, 2], lines[:, 0])).tolist(), None
+
+
 def calc_knee_angle(norm, side):
     hip_i, knee_i, ankle_i = (23, 25, 27) if side == 'left' else (24, 26, 28)
     return angle_from_three_points(
