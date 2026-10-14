@@ -1,6 +1,7 @@
 import numpy as np
 
 from .reference_db import get_ref_stats
+from .rotation import rotation_summary
 
 
 def compute_summary(frame_data):
@@ -48,7 +49,7 @@ def compute_summary(frame_data):
     else:
         spine_delta_swing = spine_delta  # 폴백
 
-    return {
+    summary = {
         "total_frames":          len(frame_data),
         "spine_angle_avg":       avg("spine_angle"),
         "spine_angle_delta":     spine_delta_swing,   # 어드레스~임팩트 구간만
@@ -66,6 +67,15 @@ def compute_summary(frame_data):
         "phases_detected":       list(phase_groups.keys()),
         "phase_stats":           phase_stats,
     }
+    summary.update(rotation_summary(frame_data))
+    if "x_factor_method" in summary:
+        world = summary["x_factor_method"] == "world_3d_top"
+        for ph, frames in phase_groups.items():
+            for name, key in (("shoulder_rot", "shoulder_rotation"), ("hip_rot", "hip_rotation")):
+                vals = [f[key + ("_3d" if world else "_2d")] for f in frames
+                        if f.get(key + ("_3d" if world else "_2d")) is not None]
+                phase_stats[ph][name] = round(float(np.mean(vals)), 1) if vals else None
+    return summary
 
 
 def compute_score(summary, ref_db=None):
