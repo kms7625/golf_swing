@@ -1,52 +1,17 @@
-.wrap {
-  max-width: 760px;
-  margin: 40px auto 80px;
-  padding: 0 20px;
-  font-size: 16px;
-  line-height: 1.7;
-}
-
-.back {
-  background: none;
-  border: none;
-  color: var(--teal);
-  font-size: 13px;
-  cursor: pointer;
-  padding: 8px 0;
-  margin-bottom: 16px;
-}
-
-.wrap h2 {
-  font-size: 28px;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  margin-bottom: 6px;
-}
-
-.version {
-  color: var(--steel);
-  font-size: 12px;
-  margin-bottom: 24px;
-}
-
-.wrap h3 {
-  font-size: 16px;
-  color: var(--copper);
-  margin: 22px 0 8px;
-}
-
-.wrap ul {
-  margin: 0;
-  padding-left: 20px;
-}
-
-.note {
-  margin-top: 28px;
-  padding: 20px;
-  border-radius: var(--radius-panel);
-  box-shadow: var(--shadow-panel);
-  background: var(--graphite-2);
-  border: 1px solid var(--graphite-3);
-  color: var(--steel);
-  font-size: 14px;
-}
+.wrap { max-width: 1320px; margin: 0 auto; padding: 32px 40px 64px; overflow-wrap: anywhere; }
+.back { min-height: 44px; padding: 10px 18px; margin-bottom: 24px; background: var(--clear); border: 1px solid var(--copper); color: var(--copper); font-size: 15px; font-weight: 700; cursor: pointer; }
+.wrap h1 { font-size: clamp(30px, 4vw, 44px); letter-spacing: -0.04em; margin-bottom: 12px; }
+.version, .purpose { color: var(--steel); font-size: 14px; margin-bottom: 12px; }
+.layout { display: grid; grid-template-columns: minmax(200px, 1fr) minmax(0, 3fr); gap: 32px; margin: 28px 0; }
+.toc { align-self: start; position: sticky; top: 24px; border-right: 1px solid var(--border); padding-right: 24px; }
+.toc h2 { font-size: 22px; margin-bottom: 16px; }
+.toc a { display: block; padding: 14px 16px; color: var(--text); text-decoration: none; border-left: 4px solid var(--clear); border-radius: var(--radius-control); font-weight: 700; }
+.toc a[aria-current] { color: var(--copper); background: var(--graphite-3); border-color: var(--copper); }
+.body { min-width: 0; font-size: 16px; line-height: 1.8; }
+.body section { margin-bottom: 36px; }
+.body h2 { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.03em; margin-bottom: 16px; scroll-margin-top: 24px; }
+.body ul { margin: 0; padding: 20px 20px 20px 40px; border: 1px solid var(--border); border-radius: var(--radius-panel); }
+.body li + li { margin-top: 12px; }
+.note { padding: 20px; background: var(--graphite-3); border-radius: var(--radius-panel); color: var(--steel); font-size: 14px; }
+.wrap [tabindex]:focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; }
+@media (max-width: 640px) { .wrap { padding: 24px 20px 48px; } .layout { grid-template-columns: 1fr; gap: 24px; } .toc { position: static; padding: 0 0 20px; border-right: 0; border-bottom: 1px solid var(--border); } .body { font-size: 15px; } }
