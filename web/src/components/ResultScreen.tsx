@@ -138,17 +138,22 @@ export function ResultScreen({
               {t("result_metric_xfactor")}
               <MetricHelp metric="result_metric_xfactor" help="result_xfactor_help" />
             </div>
-            <p className={styles.description}>{t("result_xfactor_desc")}</p>
+            <p className={styles.description}>{t(summary.x_factor_method === "world_3d_top" ? "result_xfactor_3d_desc" : "result_xfactor_desc")}</p>
             <div className={`${styles.v} ${styles[xfactorStatus]} tabular mono`}>
               {summary.x_factor}° {statusIcon(xfactorStatus)}
             </div>
+            {summary.x_factor_method && <p className={styles.description}>
+              {t(summary.x_factor_method === "world_3d_top" ? "result_rotation_3d" : "result_rotation_fallback")}
+            </p>}
+            {(summary.rotation_world_valid_ratio ?? 0) > 0 && (summary.rotation_fallback_frames ?? 0) > 0 &&
+              <p className={styles.description}>{t("result_rotation_partial")}</p>}
           </div>
           <div className={styles.statTile}>
             <div className={styles.k}>
               {t("result_metric_shoulder")}
-              <MetricHelp metric="result_metric_shoulder" help="result_shoulder_help" />
+              <MetricHelp metric="result_metric_shoulder" help={summary.x_factor_method === "world_3d_top" ? "result_shoulder_3d_help" : "result_shoulder_help"} />
             </div>
-            <p className={styles.description}>{t("result_shoulder_desc")}</p>
+            <p className={styles.description}>{t(summary.x_factor_method === "world_3d_top" ? "result_shoulder_3d_desc" : "result_shoulder_desc")}</p>
             <div className={`${styles.v} tabular mono`}>{summary.shoulder_rotation_max}°</div>
           </div>
           <div className={styles.statTile}>

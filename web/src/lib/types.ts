@@ -27,6 +27,13 @@ export interface Summary {
   hip_rotation_avg: number;
   hip_rotation_max: number;
   x_factor: number;
+  x_factor_2d?: number;
+  x_factor_3d?: number | null;
+  x_factor_method?: "world_3d_top" | "legacy_2d";
+  x_factor_frame?: number | null;
+  x_factor_fallback_reason?: string | null;
+  rotation_world_valid_ratio?: number;
+  rotation_fallback_frames?: number;
   left_knee_avg: number;
   right_knee_avg: number;
   left_elbow_avg: number;
@@ -43,6 +50,12 @@ export interface FrameDatum {
   spine_angle: number;
   shoulder_rotation: number;
   hip_rotation: number;
+  shoulder_rotation_2d?: number;
+  hip_rotation_2d?: number;
+  shoulder_rotation_3d?: number | null;
+  hip_rotation_3d?: number | null;
+  rotation_method?: "world_3d" | "legacy_2d";
+  rotation_fallback_reason?: string | null;
   left_knee: number;
   right_knee: number;
   left_elbow: number;

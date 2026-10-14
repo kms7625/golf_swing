@@ -5,8 +5,10 @@ import tempfile
 from .mp_setup import mp_pose
 from .geometry import (
     normalize_landmarks, calc_spine_angle, calc_shoulder_rotation,
-    calc_hip_rotation, calc_knee_angle, calc_elbow_angle, visibility_ok
+    calc_hip_rotation, calc_knee_angle, calc_elbow_angle, visibility_ok,
+    calc_world_rotation_headings
 )
+from .rotation import apply_world_rotations
 from .smoothing import MovingAverageFilter
 from .phase_detector import SwingPhaseDetector, SwingNotFoundError
 from .phase_parameters import BASELINE_PARAMETERS
@@ -125,7 +127,10 @@ def get_thumbnail_frames(video_path, n=10):
     return thumbs
 
 
-def process_video(video_path, sample_rate=3, analyze_path=None, source_start_sec=0.0):
+def process_video(video_path, sample_rate=3, analyze_path=None, source_start_sec=0.0,
+                  rotation_method="world_3d"):
+    if rotation_method not in ("world_3d", "legacy_2d"):
+        raise ValueError("rotation_method must be world_3d or legacy_2d")
     cap          = cv2.VideoCapture(video_path)
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     fps          = cap.get(cv2.CAP_PROP_FPS) or 30.0
@@ -207,6 +212,8 @@ def process_video(video_path, sample_rate=3, analyze_path=None, source_start_sec
                                       body_scale=body_scale)
 
                 if visible:
+                    world = getattr(results, "pose_world_landmarks", None)
+                    headings, world_reason = calc_world_rotation_headings(world.landmark if world else None)
                     raw = {
                         "frame":              source_offset + frame_idx,
                         "local_idx":          local_idx,
@@ -219,6 +226,8 @@ def process_video(video_path, sample_rate=3, analyze_path=None, source_start_sec
                         "left_elbow":         calc_elbow_angle(norm, 'left'),
                         "right_elbow":        calc_elbow_angle(norm, 'right'),
                         "shoulder_width_px":  round(shoulder_width, 1),
+                        "world_rotation_headings": headings,
+                        "world_rotation_reason": world_reason,
                     }
 
                     # 슬라이드 8: 이동 평균 필터 적용
@@ -252,6 +261,8 @@ def process_video(video_path, sample_rate=3, analyze_path=None, source_start_sec
                         interp["time"]      = frame_idx / fps
                         interp["phase"]     = "보간"
                         interp["local_idx"] = local_idx
+                        interp["world_rotation_headings"] = None
+                        interp["world_rotation_reason"] = "interpolated_2d"
                         frame_data.append(interp)
 
                 # Bounded preview resolution; source ID, never list position.
@@ -294,6 +305,8 @@ def process_video(video_path, sample_rate=3, analyze_path=None, source_start_sec
     frame_data = [f for f in frame_data if f["phase"] in phase_detector.phase_boundaries]
     if not frame_data:
         raise SwingNotFoundError()
+    apply_world_rotations(frame_data, phase_detector.phase_boundaries_frames["백스윙 톱"][0],
+                          method=rotation_method)
     for entry in annotated_frames:
         entry["phase"] = phase_detector.get_phase_for_frame(entry["local_idx"])
     annotated_frames = [f for f in annotated_frames if f["phase"] in phase_detector.phase_boundaries]

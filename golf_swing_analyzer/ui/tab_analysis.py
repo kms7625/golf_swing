@@ -229,6 +229,12 @@ def render(sample_rate, ref_db):
             with c2:
                 s = get_status(summary['x_factor'], 35, 55, 20, 60)
                 render_metric_card("X-Factor", summary['x_factor'], "°", s)
+                if summary.get("x_factor_method") == "world_3d_top":
+                    st.caption("3D 추정 · 어드레스 대비 톱의 수평면 회전 차")
+                elif summary.get("x_factor_method"):
+                    st.caption("2D 폴백 · 3D 기준 자세 또는 톱의 신뢰도 부족")
+                if summary.get("rotation_world_valid_ratio", 0) and summary.get("rotation_fallback_frames", 0):
+                    st.caption("일부 프레임은 2D 폴백 · 회전 차트에 측정 방식이 섞일 수 있습니다")
             with c3:
                 render_metric_card("어깨 회전", summary['shoulder_rotation_max'], "°")
             with c4:
