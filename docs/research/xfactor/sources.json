@@ -1,0 +1,14 @@
+{
+  "baseline": "3bdf45d",
+  "feature_sha256": {
+    "geometry.py": "3d6dfbc315160f58853d22e368adb2c22fb7ec0e31aec6ce7485f874dae88c34",
+    "pipeline.py": "276f49a4576adc6eeec0c805367346fad686de33d6a6bb006783c8157aa540c3",
+    "rotation.py": "e45fddf8540cf6ac0d3d0b7f1477cf0eb024937accd4982bfecc141ab335289a",
+    "scoring.py": "c4523efd5f62234339a5a8758f9d8306ee322350a2430aee2285d1e15430f31f",
+    "phase_detector.py": "6ee3f6b1bd61a3a008181c58c13d8c6faeebad2c786c0b5ce312e3bda221688e",
+    "smoothing.py": "3f0ef825b83053d3d79268d3e1e72a23bcbb8693b46eaac0aa7e839a81571f02",
+    "video_signal.py": "08673ce7e2baa70fb96664e5e13ddee43bdbdac9ae541e3133c6b5ffbe9b693a"
+  },
+  "A6_score_function_unchanged": true,
+  "phase_detector_unchanged": true
+}

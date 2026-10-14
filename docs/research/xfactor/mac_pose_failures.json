@@ -1,0 +1,37 @@
+[
+  {
+    "name": "pro",
+    "annotation": {},
+    "error": "RuntimeError('Service \"kGpuService\", required by node posedetectioncpu__ImageToTensorCalculator, was not provided and cannot be created: Could not create an NSOpenGLPixelFormat')"
+  },
+  {
+    "name": "pexels_8065880",
+    "annotation": {},
+    "error": "RuntimeError('Service \"kGpuService\", required by node posedetectioncpu__ImageToTensorCalculator, was not provided and cannot be created: Could not create an NSOpenGLPixelFormat')"
+  },
+  {
+    "name": "pexels_6541855",
+    "annotation": {},
+    "error": "RuntimeError('Service \"kGpuService\", required by node posedetectioncpu__ImageToTensorCalculator, was not provided and cannot be created: Could not create an NSOpenGLPixelFormat')"
+  },
+  {
+    "name": "il-ban",
+    "annotation": {},
+    "error": "RuntimeError('Service \"kGpuService\", required by node posedetectioncpu__ImageToTensorCalculator, was not provided and cannot be created: Could not create an NSOpenGLPixelFormat')"
+  },
+  {
+    "name": "pexels_35546329",
+    "annotation": {},
+    "error": "RuntimeError('Service \"kGpuService\", required by node posedetectioncpu__ImageToTensorCalculator, was not provided and cannot be created: Could not create an NSOpenGLPixelFormat')"
+  },
+  {
+    "name": "pexels_34883764",
+    "annotation": {},
+    "error": "RuntimeError('Service \"kGpuService\", required by node posedetectioncpu__ImageToTensorCalculator, was not provided and cannot be created: Could not create an NSOpenGLPixelFormat')"
+  },
+  {
+    "name": "pro2",
+    "annotation": {},
+    "error": "RuntimeError('Service \"kGpuService\", required by node posedetectioncpu__ImageToTensorCalculator, was not provided and cannot be created: Could not create an NSOpenGLPixelFormat')"
+  }
+]
