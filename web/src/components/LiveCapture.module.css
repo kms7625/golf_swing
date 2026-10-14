@@ -27,147 +27,28 @@
 .transfer { grid-area: transfer; color: var(--steel); font-size: 14px; }
 .transfer p + p { margin-top: 8px; }
 .error { color: var(--alert); }
-.result {
-  margin-top: 32px;
+.result { margin-top: 32px; }
+.result h3 { font-size: 18px; margin: 24px 0 12px; }
+.scoreRow { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 16px; margin-bottom: 18px; }
+.scoreBox { background: var(--feature-bg); color: var(--feature-text); padding: 24px; border-radius: var(--radius-panel); text-align: center; }
+.label, .scoreGrade { font-size: 12px; }
+.scoreNum { font-size: 80px; font-weight: 800; letter-spacing: -0.05em; line-height: 1.2; }
+.liveStats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.liveStat { padding: 18px; background: var(--graphite-2); border: 1px solid var(--border); border-radius: var(--radius-panel); }
+.liveStatK { font-size: 13px; color: var(--steel); margin-bottom: 6px; }
+.liveStatV { font-size: 24px; font-weight: 700; overflow-wrap: anywhere; }
+.ok { color: var(--ok); } .warn { color: var(--warn); } .crit { color: var(--alert); }
+.issueList { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+.issueRow { display: flex; gap: 12px; padding: 16px; background: var(--graphite-2); border: 1px solid var(--border); border-radius: var(--radius-control); font-size: 14px; }
+.issueTag { font-weight: 700; min-width: 70px; }
+.critical .issueTag { color: var(--alert); } .warning .issueTag { color: var(--warn); } .good .issueTag { color: var(--ok); }
+.fullAnalysisBtn { display: block; width: 100%; margin-bottom: 18px; }
+@media (max-width: 760px) {
+  .wrap { padding: 24px 20px 48px; }
+  .captureGrid { grid-template-columns: 1fr; grid-template-areas: "video" "controls" "recognition" "angles" "state" "prepare" "transfer"; }
+  .statePanel { padding: 20px; }
+  .scoreRow { grid-template-columns: 1fr; }
+  .issueRow { flex-direction: column; gap: 6px; }
 }
 
-.result h3 {
-  color: var(--copper);
-  font-size: 12px;
-  margin-bottom: 10px;
-}
-
-.scoreRow {
-  display: grid;
-  grid-template-columns: 200px minmax(0, 1fr);
-  gap: 16px;
-  margin-bottom: 18px;
-}
-
-.scoreBox {
-  background: var(--graphite-2);
-  border: 1px solid var(--graphite-3);
-  padding: 24px;
-  border-radius: var(--radius-panel);
-  text-align: center;
-}
-
-.scoreBox .label {
-  font-size: 12px;
-  color: var(--steel);
-  margin-bottom: 8px;
-}
-
-.scoreNum {
-  font-size: 80px;
-  font-weight: 800;
-  letter-spacing: -0.05em;
-  color: var(--copper);
-  line-height: 1;
-}
-
-.scoreGrade {
-  margin-top: 8px;
-  font-size: 12px;
-  color: var(--steel);
-}
-
-.liveStats {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-}
-
-.liveStat {
-  background: var(--graphite-2);
-  border: 1px solid var(--graphite-3);
-  padding: 18px 14px;
-  border-radius: var(--radius-control);
-}
-
-.liveStatK {
-  font-size: 12px;
-  color: var(--steel);
-  margin-bottom: 6px;
-}
-
-.liveStatV {
-  font-size: 24px;
-  overflow-wrap: anywhere;
-  font-weight: 700;
-}
-
-.liveStatV.ok {
-  color: var(--ok);
-}
-
-.liveStatV.warn {
-  color: var(--warn);
-}
-
-.liveStatV.crit {
-  color: var(--alert);
-}
-
-.issueList {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 18px;
-}
-
-.issueRow {
-  display: flex;
-  gap: 12px;
-  align-items: baseline;
-  background: var(--graphite-2);
-  border: 1px solid var(--graphite-3);
-  padding: 16px;
-  border-radius: var(--radius-control);
-  font-size: 13px;
-}
-
-.issueTag {
-  font-size: 12px;
-  font-weight: 700;
-  min-width: 64px;
-}
-
-.issueRow.critical .issueTag {
-  color: var(--alert);
-}
-
-.issueRow.warning .issueTag {
-  color: var(--warn);
-}
-
-.issueRow.good .issueTag {
-  color: var(--ok);
-}
-
-@media (max-width: 640px) {
-  .wrap { padding: 32px 20px; }
-  .readout { left: 10px; right: 10px; bottom: 10px; }
-  .scoreRow {
-    grid-template-columns: 1fr;
-  }
-}
-
-.fullAnalysisBtn {
-  display: block;
-  width: 100%;
-  background: var(--copper);
-  color: var(--graphite);
-  border: none;
-  padding: 14px 18px;
-  min-height: 48px;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  cursor: pointer;
-  margin-bottom: 18px;
-}
-
-.fullAnalysisBtn:hover {
-  border: 1px solid var(--border-strong);
-}
+.completed { grid-template-columns: 1fr; grid-template-areas: "state" "controls" "transfer"; }
