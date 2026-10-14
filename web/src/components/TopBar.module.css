@@ -54,3 +54,5 @@
   .nav button, .iconBtn, .langToggle button { font-size: 13px; }
   .authBtn { padding: 8px 16px; font-size: 13px; }
 }
+
+.nav button[aria-current="page"] { color: var(--copper); text-decoration: underline; text-underline-offset: 10px; text-decoration-thickness: 3px; }

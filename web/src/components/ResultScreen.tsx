@@ -18,6 +18,7 @@ interface Props {
   result: AnalyzeResponse;
   isSample: boolean;
   onBack: () => void;
+  onHistoryBack?: () => void;
   /** 분석에 사용한 파일명 — 저장 시 기록 */
   videoName?: string;
   /** 히스토리에서 열었을 때의 스윙 id (이미 저장된 결과) */
@@ -26,7 +27,7 @@ interface Props {
   initialFeedback?: string;
   /** 새 분석 직후에만 존재 — 원본 영상 objectURL+구간 (저장/샘플 결과에는 없음) */
   replay?: ReplaySource;
-  onLoginClick: () => void;
+  onLoginClick: (purpose?: "save" | "coaching") => void;
 }
 
 export function grade(score: number): string {
@@ -56,6 +57,7 @@ export function ResultScreen({
   result,
   isSample,
   onBack,
+  onHistoryBack,
   videoName,
   swingId,
   initialFeedback,
@@ -105,6 +107,7 @@ export function ResultScreen({
   return (
     <div className={styles.wrap}>
       <header className={styles.header}>
+        {onHistoryBack && <button className={styles.backLink} onClick={onHistoryBack}>← {t("history_back")}</button>}
         <h1 className={styles.sectionTitle}>{t("result_phases_title")}</h1>
         <div className={styles.source}>
           {videoName && <span className={styles.filename}>{videoName}</span>}
@@ -224,7 +227,7 @@ export function ResultScreen({
         issues={issues}
         swingId={savedId ?? undefined}
         initialFeedback={initialFeedback}
-        onLoginClick={onLoginClick}
+        onLoginClick={() => onLoginClick("coaching")}
       />
       {saveError && <div className={styles.saveError} role="alert">{saveError}</div>}
       <div className={styles.actions}>
@@ -247,7 +250,7 @@ export function ResultScreen({
               {t("save_swing")}
             </button>
           ) : (
-            <button className={styles.saveBtn} onClick={onLoginClick}>
+            <button className={styles.saveBtn} onClick={() => onLoginClick("save")}>
               <BookmarkIcon />
               {t("save_login_required")}
             </button>

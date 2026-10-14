@@ -3,7 +3,7 @@ import { TopBar } from "./components/TopBar";
 import { Hero } from "./components/Hero";
 import { UploadTrim } from "./components/UploadTrim";
 import { ResultScreen } from "./components/ResultScreen";
-import { AuthModal } from "./components/AuthModal";
+import { AuthModal, type AuthPurpose } from "./components/AuthModal";
 import { HistoryPanel } from "./components/HistoryPanel";
 import { AnalyzeProgress } from "./components/AnalyzeProgress";
 import { PrivacyPolicy } from "./components/PrivacyPolicy";
@@ -18,7 +18,7 @@ const LiveCapture = lazy(() =>
   import("./components/LiveCapture").then((m) => ({ default: m.LiveCapture }))
 );
 
-type Stage = "landing" | "trim" | "analyzing" | "result" | "live" | "history" | "privacy" | "analysis-error";
+type Stage = "landing" | "trim" | "analyzing" | "result" | "live" | "history" | "analysis-error";
 
 const POLL_MS = 1500;
 
@@ -29,6 +29,11 @@ function App() {
   const [isSample, setIsSample] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showAuth, setShowAuth] = useState(false);
+  const [authPurpose, setAuthPurpose] = useState<AuthPurpose>("general");
+  const [showPrivacy, setShowPrivacy] = useState(false);
+  const [liveSession, setLiveSession] = useState(0);
+  const privacyReturnRef = useRef<{ element: HTMLElement | null; scroll: number } | null>(null);
+  const historyReturnRef = useRef<{ element: HTMLElement | null; scroll: number } | null>(null);
   const [jobStage, setJobStage] = useState<JobStage>("uploaded");
   const [jobProgress, setJobProgress] = useState(5);
   const [videoName, setVideoName] = useState("");
@@ -62,6 +67,8 @@ function App() {
   }
 
   function goLanding() {
+    setShowPrivacy(false);
+    setShowAuth(false);
     stopPolling();
     clearReplay();
     setStage("landing");
@@ -72,6 +79,8 @@ function App() {
   }
 
   function navigate(next: Stage) {
+    setShowPrivacy(false);
+    setShowAuth(false);
     stopPolling();
     clearReplay();
     setError(null);
@@ -157,7 +166,8 @@ function App() {
     }
   }
 
-  function handleOpenSaved(payload: AnalyzeResponse, swingId: number, feedback: string, filename: string) {
+  function handleOpenSaved(payload: AnalyzeResponse, swingId: number, feedback: string, filename: string, returnFocus?: HTMLElement) {
+    historyReturnRef.current = { element: returnFocus ?? document.activeElement as HTMLElement, scroll: window.scrollY };
     stopPolling();
     clearReplay();
     setVideoName(filename);
@@ -168,14 +178,43 @@ function App() {
     setStage("result");
   }
 
+  function openAuth(purpose: AuthPurpose = "general") {
+    setAuthPurpose(purpose);
+    setShowAuth(true);
+  }
+
+  function openPrivacy() {
+    privacyReturnRef.current = { element: document.activeElement as HTMLElement, scroll: window.scrollY };
+    setShowPrivacy(true);
+    window.scrollTo(0, 0);
+  }
+
+  function closePrivacy() {
+    setShowPrivacy(false);
+    requestAnimationFrame(() => {
+      privacyReturnRef.current?.element?.focus({ preventScroll: true });
+      window.scrollTo(0, privacyReturnRef.current?.scroll ?? 0);
+    });
+  }
+
+  function returnToHistory() {
+    navigate("history");
+    requestAnimationFrame(() => {
+      historyReturnRef.current?.element?.focus({ preventScroll: true });
+      window.scrollTo(0, historyReturnRef.current?.scroll ?? 0);
+    });
+  }
+
   return (
     <>
       <TopBar
         onBrandClick={goLanding}
         onLiveClick={() => navigate("live")}
         onHistoryClick={() => navigate("history")}
-        onLoginClick={() => setShowAuth(true)}
+        onLoginClick={() => { setShowPrivacy(false); openAuth(); }}
+        activeScreen={stage === "live" || stage === "history" ? stage : undefined}
       />
+      <div hidden={showPrivacy}>
 
       {error && (
         <div className={styles.errorBanner}>
@@ -190,7 +229,7 @@ function App() {
 
       {["trim", "analyzing", "analysis-error"].includes(stage) && (
         <div hidden={stage !== "trim"}>
-          <UploadTrim onAnalyze={handleAnalyze} onPrivacyClick={() => setStage("privacy")} />
+          <UploadTrim onAnalyze={handleAnalyze} onPrivacyClick={openPrivacy} />
         </div>
       )}
 
@@ -201,31 +240,38 @@ function App() {
           result={result}
           isSample={isSample}
           onBack={goLanding}
+          onHistoryBack={openedSwingId !== undefined ? returnToHistory : undefined}
           videoName={videoName}
           swingId={openedSwingId}
           initialFeedback={openedFeedback}
           replay={replay}
-          onLoginClick={() => setShowAuth(true)}
+          onLoginClick={openAuth}
         />
       )}
 
       {stage === "live" && (
-        <Suspense fallback={<div className={styles.analyzing}><div className={styles.spinner} /></div>}>
+        <Suspense fallback={<div className={styles.analyzing} role="status"><div className={styles.spinner} />{t("live_screen_loading")}</div>}>
           <LiveCapture
+            key={liveSession}
             onBack={goLanding}
-            onLoginClick={() => setShowAuth(true)}
+            onLoginClick={() => openAuth("coaching")}
+            onUpload={() => navigate("trim")}
+            onRetry={() => setLiveSession((session) => session + 1)}
             onAnalyzeVideo={(file) => handleAnalyze(file)}
           />
         </Suspense>
       )}
 
-      {stage === "history" && (
-        <HistoryPanel onOpen={handleOpenSaved} onLoginClick={() => setShowAuth(true)} />
+      {(stage === "history" || (stage === "result" && openedSwingId !== undefined)) && (
+        <div hidden={stage !== "history"}>
+          <HistoryPanel onOpen={handleOpenSaved} onLoginClick={() => openAuth("history")} onNewAnalysis={() => navigate("trim")} />
+        </div>
       )}
+      </div>
 
-      {stage === "privacy" && <PrivacyPolicy onBack={() => setStage("trim")} />}
+      {showPrivacy && <PrivacyPolicy onBack={closePrivacy} />}
 
-      {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+      {showAuth && <AuthModal purpose={authPurpose} suspended={showPrivacy} onPrivacyClick={openPrivacy} onClose={() => setShowAuth(false)} />}
     </>
   );
 }
