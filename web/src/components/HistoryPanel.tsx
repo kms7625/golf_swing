@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { deleteAccount, deleteSwing, getSwing, listSwings } from "../lib/api";
 import { useAuth } from "../lib/auth";
@@ -7,8 +7,9 @@ import type { AnalyzeResponse, SwingRow } from "../lib/types";
 import styles from "./HistoryPanel.module.css";
 
 interface Props {
-  onOpen: (result: AnalyzeResponse, swingId: number, feedback: string, filename: string) => void;
+  onOpen: (result: AnalyzeResponse, swingId: number, feedback: string, filename: string, returnFocus?: HTMLElement) => void;
   onLoginClick: () => void;
+  onNewAnalysis: () => void;
 }
 
 function fmtDate(iso: string): string {
@@ -31,7 +32,7 @@ function TrendChart({ rows }: { rows: SwingRow[] }) {
             axisLine={false}
             tickLine={false}
           />
-          <YAxis hide domain={[0, 100]} />
+          <YAxis width={32} domain={[0, 100]} ticks={[0, 50, 100]} tick={{ fontSize: 12, fill: "var(--steel)" }} axisLine={false} tickLine={false} />
           <Tooltip
             isAnimationActive={false}
             contentStyle={{
@@ -57,35 +58,35 @@ function TrendChart({ rows }: { rows: SwingRow[] }) {
   );
 }
 
-/** 지표별 처음→최근 변화 — 지표마다 개선 방향이 달라 색은 방향 의미에 맞게 */
+/** 변화량만 표시하며 개선/악화 판정을 추가하지 않는다. */
 function MetricTrends({ rows }: { rows: SwingRow[] }) {
   const { t } = useI18n();
   const first = rows[rows.length - 1];
   const last = rows[0];
-  const items: { label: string; from: number; to: number; betterWhenLower: boolean }[] = [
-    { label: t("result_metric_spine"), from: first.spine_angle_delta, to: last.spine_angle_delta, betterWhenLower: true },
-    { label: t("result_metric_xfactor"), from: first.x_factor, to: last.x_factor, betterWhenLower: false },
-    { label: t("result_metric_shoulder"), from: first.shoulder_rotation_max, to: last.shoulder_rotation_max, betterWhenLower: false },
+  const items: { label: string; from: number; to: number }[] = [
+    { label: t("result_metric_spine"), from: first.spine_angle_delta, to: last.spine_angle_delta },
+    { label: t("result_metric_xfactor"), from: first.x_factor, to: last.x_factor },
+    { label: t("result_metric_shoulder"), from: first.shoulder_rotation_max, to: last.shoulder_rotation_max },
   ];
   return (
     <div className={styles.metricTrends}>
       <div className={styles.metricTrendsTitle}>{t("trend_metrics")}</div>
       {items.map((m) => {
         const diff = m.to - m.from;
-        const improved = m.betterWhenLower ? diff < 0 : diff > 0;
         const flat = Math.abs(diff) < 0.05;
         return (
           <div key={m.label} className={styles.metricRow}>
             <span className={styles.metricLabel}>{m.label}</span>
             <span className={`mono tabular ${styles.metricVals}`}>
               {m.from}° → {m.to}°{" "}
-              <span className={flat ? styles.flat : improved ? styles.improved : styles.worsened}>
-                {flat ? "—" : diff > 0 ? "▲" : "▼"}
+              <span className={styles.change}>
+                {flat ? "—" : `${diff > 0 ? "+" : "−"}${Math.abs(diff).toFixed(1)}°`}
               </span>
             </span>
           </div>
         );
       })}
+      <p className={styles.hint}>{t("trend_neutral_hint")}</p>
     </div>
   );
 }
@@ -119,9 +120,10 @@ export function HistoryPanel({ onOpen, onLoginClick }: Props) {
   }, [isLoggedIn]);
 
   async function open(row: SwingRow) {
+    const trigger = document.activeElement as HTMLElement;
     try {
       const detail = await getSwing(row.id);
-      onOpen(detail.payload, detail.id, detail.feedback, row.video_name);
+      onOpen(detail.payload, detail.id, detail.feedback, row.video_name, trigger);
     } catch (e) {
       setError(e instanceof Error ? e.message : t("error_generic"));
     }
