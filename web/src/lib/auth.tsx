@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
-import { authLogin, authRegister } from "./api";
+import { authGoogle } from "./api";
 
 /** 토큰·이메일은 localStorage에 보관 — 게스트 흐름(분석·샘플)은 로그인 없이 그대로 동작한다. */
 
@@ -13,8 +13,7 @@ export function getToken(): string | null {
 interface AuthContextValue {
   email: string | null;
   isLoggedIn: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: (credential: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -29,13 +28,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setEmail(mail);
   }
 
-  async function login(mail: string, password: string) {
-    const res = await authLogin(mail, password);
-    store(res.token, res.email);
-  }
-
-  async function register(mail: string, password: string) {
-    const res = await authRegister(mail, password);
+  async function loginWithGoogle(credential: string) {
+    const res = await authGoogle(credential);
     store(res.token, res.email);
   }
 
@@ -46,7 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ email, isLoggedIn: email !== null, login, register, logout }}>
+    <AuthContext.Provider value={{ email, isLoggedIn: email !== null, loginWithGoogle, logout }}>
       {children}
     </AuthContext.Provider>
   );
