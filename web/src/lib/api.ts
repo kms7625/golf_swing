@@ -121,20 +121,11 @@ export async function coaching(params: {
 
 // ---------------------------------------------------------------- 인증
 
-export async function authRegister(email: string, password: string): Promise<AuthResponse> {
-  const res = await fetch(`${API_BASE}/auth/register`, {
+export async function authGoogle(credential: string): Promise<AuthResponse> {
+  const res = await fetch(`${API_BASE}/auth/google`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
-  });
-  return handle<AuthResponse>(res);
-}
-
-export async function authLogin(email: string, password: string): Promise<AuthResponse> {
-  const res = await fetch(`${API_BASE}/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ credential }),
   });
   return handle<AuthResponse>(res);
 }

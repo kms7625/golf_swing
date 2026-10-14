@@ -24,7 +24,8 @@ from analyzer.phase_detector import SwingPhaseDetector, SwingNotFoundError, NO_S
 
 import jobs
 from ratelimit import rate_limited
-from auth import create_token, get_current_user, get_optional_user, hash_password, validate_credentials, verify_password
+import auth
+from auth import GOOGLE_PASSWORD_MARK, create_token, get_current_user, get_optional_user, verify_google_credential
 from db import get_db, init_db
 from models import Swing, User
 from serialization import to_jsonable, extract_representative_frames, frame_to_base64_jpeg
@@ -285,44 +286,31 @@ async def score_live(body: ScoreLiveRequest, _rl: None = Depends(rate_limited("l
 
 # ---------------------------------------------------------------- 인증 (G2)
 
-class AuthRequest(BaseModel):
-    email: str
-    password: str
+class GoogleAuthRequest(BaseModel):
+    credential: str
 
 
-@app.post("/auth/register")
-async def register(
-    body: AuthRequest,
+@app.post("/auth/google")
+async def google_login(
+    body: GoogleAuthRequest,
     db: Session = Depends(get_db),
     _rl: None = Depends(rate_limited("auth", 10, 60)),
 ):
-    email = body.email.strip().lower()
-    problem = validate_credentials(email, body.password)
-    if problem:
-        raise HTTPException(status_code=400, detail=problem)
-    if db.scalar(select(User).where(User.email == email)) is not None:
-        raise HTTPException(status_code=409, detail="이미 가입된 이메일입니다.")
-    user = User(email=email, password_hash=hash_password(body.password))
-    db.add(user)
-    try:
-        db.commit()
-    except IntegrityError:
-        # select 검사와 insert 사이 동시 가입 레이스 — unique 제약이 최종 심판
-        db.rollback()
-        raise HTTPException(status_code=409, detail="이미 가입된 이메일입니다.")
-    return {"token": create_token(user), "email": user.email}
-
-
-@app.post("/auth/login")
-async def login(
-    body: AuthRequest,
-    db: Session = Depends(get_db),
-    _rl: None = Depends(rate_limited("auth", 10, 60)),
-):
-    email = body.email.strip().lower()
+    """Google 로그인 — 같은 이메일의 기존 계정이 있으면 그 계정으로, 없으면 새로 만든다."""
+    if not auth.GOOGLE_CLIENT_ID:
+        raise HTTPException(status_code=503, detail="Google 로그인이 아직 설정되지 않았습니다.")
+    email = verify_google_credential(body.credential)
+    if email is None:
+        raise HTTPException(status_code=401, detail="Google 로그인 확인에 실패했습니다.")
     user = db.scalar(select(User).where(User.email == email))
-    if user is None or not verify_password(body.password, user.password_hash):
-        raise HTTPException(status_code=401, detail="이메일 또는 비밀번호가 올바르지 않습니다.")
+    if user is None:
+        user = User(email=email, password_hash=GOOGLE_PASSWORD_MARK)
+        db.add(user)
+        try:
+            db.commit()
+        except IntegrityError:
+            db.rollback()
+            user = db.scalar(select(User).where(User.email == email))
     return {"token": create_token(user), "email": user.email}
 
 

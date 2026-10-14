@@ -1,13 +1,11 @@
-"""인증 — 이메일+비밀번호 자체 계정, JWT 발급/검증.
+"""인증 — Google 로그인 전용, JWT 발급/검증.
 
-외부 IdP 없이 동작하는 자체 완결 구성(pbkdf2 해시 + PyJWT).
-Supabase Auth로 갈아탈 경우 이 모듈만 교체하면 된다.
+이메일+비밀번호 가입은 무료 코칭 횟수를 노린 계정 양산을 막기 위해 제거했다(2026-10-14).
+Google ID 토큰을 PyJWT로 검증하고, 자체 JWT를 발급한다.
 JWT_SECRET 미설정 시 서버 재시작마다 세션이 무효화되도록 랜덤 시크릿을 쓴다
 (prod에서는 반드시 env로 고정할 것 — .env.example 참조).
 """
-import hashlib
 import os
-import re
 import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Optional
@@ -24,34 +22,25 @@ JWT_SECRET = os.environ.get("JWT_SECRET") or secrets.token_hex(32)
 JWT_ALGO = "HS256"
 TOKEN_TTL_DAYS = int(os.environ.get("TOKEN_TTL_DAYS", "30"))
 
-_PBKDF2_ITER = 240_000
-_EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-
 _bearer = HTTPBearer(auto_error=False)
 
+# Google 로그인 — GOOGLE_CLIENT_ID가 비어 있으면 비활성. ID 토큰은 Google 공개키(JWKS)로 PyJWT가 검증한다.
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
+_GOOGLE_ISSUERS = ("accounts.google.com", "https://accounts.google.com")
+_google_jwks = jwt.PyJWKClient("https://www.googleapis.com/oauth2/v3/certs")
+GOOGLE_PASSWORD_MARK = "google"  # password_hash 컬럼 자리값 — 비밀번호 로그인은 없음
 
-def hash_password(password: str) -> str:
-    salt = secrets.token_hex(16)
-    digest = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), _PBKDF2_ITER).hex()
-    return f"pbkdf2${_PBKDF2_ITER}${salt}${digest}"
 
-
-def verify_password(password: str, stored: str) -> bool:
+def verify_google_credential(credential: str) -> Optional[str]:
+    """Google ID 토큰을 검증해 확인된 이메일(소문자)을 돌려준다. 실패하면 None."""
     try:
-        _, iters, salt, digest = stored.split("$")
-        candidate = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), int(iters)).hex()
-        return secrets.compare_digest(candidate, digest)
-    except (ValueError, TypeError):
-        return False
-
-
-def validate_credentials(email: str, password: str) -> Optional[str]:
-    """가입 입력 검증 — 문제 없으면 None, 있으면 한국어 사유(서버 메시지는 한국어 원칙)."""
-    if not _EMAIL_RE.match(email):
-        return "올바른 이메일 형식이 아닙니다."
-    if len(password) < 8:
-        return "비밀번호는 8자 이상이어야 합니다."
-    return None
+        key = _google_jwks.get_signing_key_from_jwt(credential).key
+        data = jwt.decode(credential, key, algorithms=["RS256"], audience=GOOGLE_CLIENT_ID)
+    except jwt.PyJWTError:
+        return None
+    if data.get("iss") not in _GOOGLE_ISSUERS or not data.get("email_verified"):
+        return None
+    return str(data.get("email", "")).strip().lower() or None
 
 
 def create_token(user: User) -> str:
