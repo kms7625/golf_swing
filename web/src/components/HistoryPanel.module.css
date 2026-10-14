@@ -1,153 +1,25 @@
-.wrap {
-  max-width: 1160px;
-  margin: 40px auto 60px;
-  padding: 0 40px;
-}
-
-.head {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 14px;
-}
-
-.wrap h3 {
-  font-size: 14px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--copper);
-  margin-bottom: 14px;
-}
-
-.trend {
-  font-size: 14px;
-  color: var(--ok);
-}
-
-.hint {
-  color: var(--steel);
-  font-size: 14px;
-  margin-bottom: 14px;
-}
-
-.emptyImage {
-  display: block;
-  width: 120px;
-  height: 120px;
-  margin-bottom: 14px;
-  object-fit: contain;
-  pointer-events: none;
-}
-
-.cta {
-  background: var(--copper);
-  color: var(--graphite);
-  border: none;
-  padding: 12px 22px;
-  min-height: 48px;
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-
-.error {
-  font-size: 14px;
-  color: var(--alert);
-  margin-bottom: 10px;
-}
-
-.list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.row {
-  display: flex;
-  gap: 8px;
-  align-items: stretch;
-}
-
-.rowMain {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  background: var(--graphite-2);
-  border: 1px solid var(--graphite-3);
-  color: var(--text);
-  padding: 18px 20px;
-  border-radius: var(--radius-panel);
-  box-shadow: var(--shadow-panel);
-  min-height: 48px;
-  cursor: pointer;
-  text-align: left;
-}
-
-.rowMain:hover {
-  border-color: var(--copper);
-}
-
-.score {
-  font-size: 32px;
-  font-weight: 700;
-  color: var(--copper);
-  min-width: 44px;
-}
-
-.meta {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-  min-width: 0;
-}
-
-.date {
-  font-size: 14px;
-  color: var(--text);
-}
-
-.name {
-  font-size: 12px;
-  color: var(--steel);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.mini {
-  font-size: 12px;
-  color: var(--steel);
-  white-space: nowrap;
-}
-
-.del {
-  background: var(--graphite-2);
-  border: 1px solid var(--border-strong);
-  color: var(--steel);
-  min-width: 44px;
-  cursor: pointer;
-}
-
-.del:hover {
-  color: var(--alert);
-  border-color: var(--alert);
-}
-
-@media (max-width: 640px) {
-  .emptyImage { width: 104px; height: 104px; }
-  .wrap {
-    padding: 0 20px;
-  }
-  .mini {
-    display: none;
-  }
-}
-
+.wrap { max-width: 1320px; margin: 0 auto; padding: 40px 40px 64px; }
+.header, .head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+.header { margin-bottom: 28px; }
+.header h1 { font-size: clamp(30px, 4vw, 44px); letter-spacing: -0.04em; margin-bottom: 6px; }
+.wrap h2 { font-size: 22px; letter-spacing: -0.03em; margin-bottom: 16px; }
+.wrap h3 { font-size: 18px; margin-bottom: 8px; }
+.hint { color: var(--steel); font-size: 14px; }
+.layout { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 24px; }
+.card { min-width: 0; padding: 24px; border: 1px solid var(--border); border-radius: var(--radius-panel); background: var(--graphite-2); }
+.cta, .secondary, .confirmYes { min-height: 44px; padding: 10px 18px; font-size: 14px; font-weight: 700; cursor: pointer; }
+.cta { background: var(--feature-bg); color: var(--feature-text); border: 1px solid var(--feature-bg); }
+.secondary { background: var(--clear); color: var(--copper); border: 1px solid var(--copper); }
+.error, .loadError { color: var(--alert); font-size: 14px; margin-bottom: 16px; }
+.loadError button, .empty button { margin-top: 16px; }
+.row { display: flex; align-items: center; gap: 16px; padding: 22px 0; border-top: 1px solid var(--border); }
+.score { color: var(--text); font-size: 32px; font-weight: 800; flex-shrink: 0; }
+.meta { flex: 1; min-width: 0; }
+.date { display: block; color: var(--steel); font-size: 14px; }
+.name { display: block; overflow-wrap: anywhere; font-size: 16px; font-weight: 700; }
+.rowActions { display: flex; gap: 12px; flex-shrink: 0; }
+.del { border: 0; background: var(--clear); color: var(--steel); min-height: 44px; padding: 10px 8px; cursor: pointer; font-size: 14px; }
+.trend { color: var(--copper); font-size: 14px; font-weight: 700; margin-bottom: 16px; }
 .trendChart {
   height: 220px;
   border-radius: var(--radius-panel);
