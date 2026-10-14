@@ -14,30 +14,15 @@ def test_health(client):
 
 # ---------------------------------------------------------------- 인증
 
-def test_register_login_roundtrip(client):
-    r = client.post("/auth/register", json={"email": "A@Test.com", "password": "testpass123"})
-    assert r.status_code == 200
-    assert r.json()["email"] == "a@test.com"  # 소문자 정규화
-
-    r = client.post("/auth/login", json={"email": "a@test.com", "password": "testpass123"})
-    assert r.status_code == 200 and r.json()["token"]
-
-    r = client.post("/auth/login", json={"email": "a@test.com", "password": "wrong-password"})
-    assert r.status_code == 401
+def test_email_signup_and_password_login_removed(client):
+    # 계정 양산 방지 — 로그인은 Google로만
+    assert client.post("/auth/register", json={"email": "a@test.com", "password": "testpass123"}).status_code in (404, 405)
+    assert client.post("/auth/login", json={"email": "a@test.com", "password": "testpass123"}).status_code in (404, 405)
 
 
-def test_register_validation_and_duplicate(client):
-    assert client.post("/auth/register", json={"email": "bad-email", "password": "testpass123"}).status_code == 400
-    assert client.post("/auth/register", json={"email": "a@test.com", "password": "short"}).status_code == 400
-    assert client.post("/auth/register", json={"email": "a@test.com", "password": "testpass123"}).status_code == 200
-    assert client.post("/auth/register", json={"email": "a@test.com", "password": "testpass123"}).status_code == 409
-
-
-def test_auth_rate_limit(client):
+def test_auth_rate_limit(client, google_login):
     # auth 계열 10회/분 — 11번째 요청은 429
-    codes = []
-    for _ in range(11):
-        codes.append(client.post("/auth/login", json={"email": "x@test.com", "password": "testpass123"}).status_code)
+    codes = [google_login("bad").status_code for _ in range(11)]
     assert codes[:10] == [401] * 10
     assert codes[10] == 429
 
@@ -47,7 +32,6 @@ def test_account_deletion_cascades(client, auth_token):
     assert client.delete("/auth/account", headers=bearer(auth_token)).status_code == 200
     # 토큰의 사용자 소멸 → 세션 무효
     assert client.get("/swings", headers=bearer(auth_token)).status_code == 401
-    assert client.post("/auth/login", json={"email": "t@test.com", "password": "testpass123"}).status_code == 401
 
 
 # ---------------------------------------------------------------- 스윙 기록
@@ -71,9 +55,9 @@ def test_swing_crud_and_frame_data_dropped(client, auth_token):
     assert client.get("/swings", headers=bearer(auth_token)).json()["swings"] == []
 
 
-def test_swing_user_isolation(client, auth_token):
+def test_swing_user_isolation(client, auth_token, google_login):
     row = client.post("/swings", json={"video_name": "a", "payload": SAMPLE_PAYLOAD}, headers=bearer(auth_token)).json()
-    other = client.post("/auth/register", json={"email": "other@test.com", "password": "testpass123"}).json()["token"]
+    other = google_login("other@test.com").json()["token"]
     assert client.get(f"/swings/{row['id']}", headers=bearer(other)).status_code == 404
     assert client.delete(f"/swings/{row['id']}", headers=bearer(other)).status_code == 404
 
@@ -173,3 +157,20 @@ def test_score_live_input_guards(client):
     assert client.post("/score-live", json={"wrist_y": wy, "frames": [{}] * len(wy)}).status_code == 400
     big = [1.0] * 20_001
     assert client.post("/detect-phases", json={"wrist_y": big}).status_code == 400
+
+
+# ---------------------------------------------------------------- Google 로그인
+
+def test_google_login_disabled_without_client_id(client, monkeypatch):
+    import auth
+    monkeypatch.setattr(auth, "GOOGLE_CLIENT_ID", "")
+    assert client.post("/auth/google", json={"credential": "x"}).status_code == 503
+
+
+def test_google_login_creates_then_reuses_account(client, google_login):
+    assert google_login("bad").status_code == 401
+    first = google_login("g@test.com").json()
+    assert first["email"] == "g@test.com"
+    client.post("/swings", json={"video_name": "a.mp4", "payload": SAMPLE_PAYLOAD}, headers=bearer(first["token"]))
+    again = google_login("g@test.com").json()["token"]
+    assert len(client.get("/swings", headers=bearer(again)).json()["swings"]) == 1  # 같은 계정

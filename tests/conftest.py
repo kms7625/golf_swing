@@ -41,9 +41,21 @@ def client():
 
 
 @pytest.fixture()
-def auth_token(client):
-    """가입 완료된 사용자 토큰."""
-    res = client.post("/auth/register", json={"email": "t@test.com", "password": "testpass123"})
+def google_login(client, monkeypatch):
+    """Google 로그인 대역 — credential 문자열을 검증된 이메일로 취급한다("bad"는 검증 실패)."""
+    import auth
+    monkeypatch.setattr(auth, "GOOGLE_CLIENT_ID", "test-client.apps.googleusercontent.com")
+    monkeypatch.setattr(main, "verify_google_credential", lambda c: None if c == "bad" else c)
+
+    def _login(email: str):
+        return client.post("/auth/google", json={"credential": email})
+    return _login
+
+
+@pytest.fixture()
+def auth_token(google_login):
+    """로그인 완료된 사용자 토큰."""
+    res = google_login("t@test.com")
     assert res.status_code == 200, res.text
     return res.json()["token"]
 
