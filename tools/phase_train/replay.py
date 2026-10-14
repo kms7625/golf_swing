@@ -40,6 +40,7 @@ def make_detector(signal, params=None, cls=SwingPhaseDetector):
     det.local_to_hist = {v: i for i, v in enumerate(signal['local_idx']) if v >= 0}
     det.hip_x_history = [0.0]*len(det.source_frames)
     det.shoulder_rot_hist = [0.0]*len(det.source_frames)
+    det.metric_available_history = signal.get('metric_available', [])
     return det
 
 

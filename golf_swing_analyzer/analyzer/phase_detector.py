@@ -32,6 +32,7 @@ class SwingPhaseDetector:
         self.hip_x_history = []
         self.shoulder_rot_hist = []
         self.wrist_x_history = []
+        self.metric_available_history = []
 
     def update(self, frame_idx, left_wrist_y, right_wrist_y,
                hip_center_x=None, shoulder_rot=None, wrist_x=None,
@@ -159,7 +160,16 @@ class SwingPhaseDetector:
         if p.top_offset_sec:
             top = min(impact-3, max(onset+1, int(np.searchsorted(ts, ts[top]+p.top_offset_sec))))
         if p.address_offset_sec:
-            onset = min(top-1, max(start+1, int(np.searchsorted(ts, ts[onset]+p.address_offset_sec))))
+            shifted = min(top-1, max(start+1, int(np.searchsorted(ts, ts[onset]+p.address_offset_sec))))
+            # Advancing Address must not leave an undersupported scoring hold.
+            # Count the unchanged visibility/fallback rows, never their angles.
+            available = self.metric_available_history
+            dt = float(np.median(np.diff(ts[chosen['segment'][0]:chosen['segment'][1]])))
+            supported = (sum(available[start:shifted])*dt if available else float('inf'))
+            restored = sum(available[start:onset])*dt
+            recoverable = supported + 1e-9 < p.address_min_valid_sec <= restored + 1e-9
+            if p.address_offset_sec > 0 or not recoverable:
+                onset = shifted
         if p.finish_mode != 'minimum':
             wy, _ = self._segments()
             lo, hi = chosen['segment']

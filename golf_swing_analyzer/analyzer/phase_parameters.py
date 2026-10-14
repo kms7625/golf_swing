@@ -10,6 +10,7 @@ class PhaseParameters:
     onset_fraction: float = .10
     address_window_sec: float = 3.0
     address_offset_sec: float = 0.0
+    address_min_valid_sec: float = 0.0
     impact_window_sec: float = 1.25
     finish_window_sec: float = 2.0
     finish_mode: str = 'minimum'
@@ -29,17 +30,20 @@ class PhaseParameters:
             raise ValueError('Time windows and speed threshold must be positive')
         if self.finish_mode not in ('minimum', 'settled_start', 'settled_end'):
             raise ValueError('Unknown finish rule')
+        if self.address_min_valid_sec < 0:
+            raise ValueError('Minimum address support must be nonnegative')
 
 
 BASELINE_PARAMETERS = PhaseParameters()
-# Selected by the preregistered split 1–3 search (407 clips); split 4 unused.
-# The actual seven-video acceptance check must pass before holdout freeze.
+# A regression fix selected on split 1–3 and seven application videos.
+# The prior A experiment exposed split 4 once; the fix's second exposure is final.
 CALIBRATED_PARAMETERS = PhaseParameters(
-    plateau_ratio=.025,
+    plateau_ratio=.05,
     onset_fraction=.02,
     address_window_sec=2.0,
     address_offset_sec=-.20,
-    impact_window_sec=.75,
+    address_min_valid_sec=.30,
+    impact_window_sec=1.25,
     finish_mode='settled_start',
     finish_speed_ratio=.40,
     finish_hold_sec=.10,

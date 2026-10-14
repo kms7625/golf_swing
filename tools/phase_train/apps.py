@@ -4,6 +4,7 @@ import json
 import os
 import sys
 import time
+from pathlib import Path
 
 from common import DATA, ROOT, audit, dump
 
@@ -13,6 +14,8 @@ def main():
     parser.add_argument('version', choices=('before', 'after'))
     parser.add_argument('--params')
     parser.add_argument('--export', action='store_true')
+    parser.add_argument('--only', nargs='+', help='Evaluate only these application names')
+    parser.add_argument('--output', help='Separate result filename for independent workers')
     args = parser.parse_args()
     code = DATA/'baseline' if args.version == 'before' else ROOT
     sys.path[:0] = [str(code/'golf_swing_analyzer'), str(code/'server')]
@@ -29,7 +32,7 @@ def main():
 
     class Capture(base):
         def __init__(self, *a, **kw):
-            if params is not None:
+            if params is not None and 'params' not in kw:
                 kw['params'] = params
             super().__init__(*a, **kw)
 
@@ -45,10 +48,13 @@ def main():
     pipeline.SwingPhaseDetector = Capture
     paths = {n: ROOT/'golf_swing_analyzer/video'/f'{k}.mp4'
              for n, k in [('il-ban', '일반'), ('pro', '프로'), ('pro2', '프로2')]}
-    paths.update({f'pexels_{n}': DATA.parent/'test_videos'/f'pexels_{n}.mp4'
+    source = Path(os.environ.get('PHASE_SOURCE_DATA', str(DATA)))
+    paths.update({f'pexels_{n}': source.parent/'test_videos'/f'pexels_{n}.mp4'
                   for n in (8065880, 6541855, 35546329, 34883764)})
     records = {}
     for name, path in paths.items():
+        if args.only and name not in args.only:
+            continue
         signals.clear()
         started = time.perf_counter()
         try:
@@ -85,7 +91,7 @@ def main():
         except Exception as exc:
             records[name] = dict(error=repr(exc))
         records[name]['elapsed_sec'] = time.perf_counter()-started
-        dump(DATA/f'apps_{args.version}.json', to_jsonable(records))
+        dump(DATA/(args.output or f'apps_{args.version}.json'), to_jsonable(records))
         print(name, {k:v for k,v in records[name].items() if k not in ('signals','summary')}, flush=True)
     audit('apps_complete', version=args.version, rejected=sum('error' in r for r in records.values()))
     if any('error' in r for r in records.values()):

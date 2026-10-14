@@ -9,6 +9,7 @@ from .geometry import (
 )
 from .smoothing import MovingAverageFilter
 from .phase_detector import SwingPhaseDetector, SwingNotFoundError
+from .phase_parameters import BASELINE_PARAMETERS
 from .video_signal import SceneCuts, wrist_signal
 from .drawing import draw_swing_trajectory, draw_skeleton_annotations
 
@@ -67,7 +68,9 @@ def auto_detect_swing_window(video_path, padding_sec=1.0):
     # Keep at least ~15 observations/s even in long videos. A fixed total-frame
     # cap made brief real swings disappear from the long pro2 recording.
     step = max(1, int(fps / 15))
-    det = SwingPhaseDetector(fps=fps/step)
+    # Keep pose-tracker context stable; calibration changes event boundaries,
+    # while the established conservative scan determines the inference crop.
+    det = SwingPhaseDetector(fps=fps/step, params=BASELINE_PARAMETERS)
     cuts = SceneCuts(fps)
     try:
         with mp_pose.Pose(min_detection_confidence=.3, min_tracking_confidence=.3,
@@ -272,6 +275,10 @@ def process_video(video_path, sample_rate=3, analyze_path=None, source_start_sec
     cap.release()
 
     # ── 슬라이드 6: 전체 시계열로 7단계 페이즈 후처리 ──────────────────────
+    available = {f['local_idx'] for f in frame_data}
+    inverse = {v: k for k, v in phase_detector.local_to_hist.items()}
+    phase_detector.metric_available_history = [
+        inverse.get(i) in available for i in range(len(phase_detector.wrist_y_history))]
     if not phase_detector.detect_all_phases():
         raise SwingNotFoundError()
     phase_detector.quality = {"sampled": sampled, "wrist_valid": signal_valid,
