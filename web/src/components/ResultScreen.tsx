@@ -142,10 +142,11 @@ export function ResultScreen({
             <div className={`${styles.v} ${styles[xfactorStatus]} tabular mono`}>
               {summary.x_factor}° {statusIcon(xfactorStatus)}
             </div>
-            {summary.x_factor_method && <p className={styles.description}>
+            {summary.x_factor_method && summary.x_factor_fallback_reason !== "requested_legacy" && <p className={styles.description}>
               {t(summary.x_factor_method === "world_3d_top" ? "result_rotation_3d" : "result_rotation_fallback")}
             </p>}
-            {(summary.rotation_world_valid_ratio ?? 0) > 0 && (summary.rotation_fallback_frames ?? 0) > 0 &&
+            {summary.x_factor_fallback_reason !== "requested_legacy" &&
+              (summary.rotation_world_valid_ratio ?? 0) > 0 && (summary.rotation_fallback_frames ?? 0) > 0 &&
               <p className={styles.description}>{t("result_rotation_partial")}</p>}
           </div>
           <div className={styles.statTile}>

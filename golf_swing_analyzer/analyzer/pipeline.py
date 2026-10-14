@@ -128,7 +128,9 @@ def get_thumbnail_frames(video_path, n=10):
 
 
 def process_video(video_path, sample_rate=3, analyze_path=None, source_start_sec=0.0,
-                  rotation_method="world_3d"):
+                  rotation_method="legacy_2d"):
+    # 기본은 2D(화면·점수). 3D 값은 x_factor_3d 등으로 계속 기록 — 정면 영상에서 3D가
+    # 비현실적으로 작게 나오는 사례(시연 영상 5.1° vs 2D 36.9°)를 검증하기 전까지 점수에 쓰지 않는다.
     if rotation_method not in ("world_3d", "legacy_2d"):
         raise ValueError("rotation_method must be world_3d or legacy_2d")
     cap          = cv2.VideoCapture(video_path)

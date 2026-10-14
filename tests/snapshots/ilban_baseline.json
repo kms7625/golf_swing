@@ -1,7 +1,7 @@
 {
   "video": "일반.mp4",
   "sample_rate": 3,
-  "score": 60,
+  "score": 45,
   "phases": [
     "다운스윙",
     "백스윙",
@@ -13,8 +13,8 @@
   ],
   "summary": {
     "spine_angle_delta": 9.1,
-    "x_factor": 25.7,
-    "shoulder_rotation_max": 41.0,
+    "x_factor": -23.8,
+    "shoulder_rotation_max": 33.9,
     "total_frames": 95
   }
 }
