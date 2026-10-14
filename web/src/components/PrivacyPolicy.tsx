@@ -23,7 +23,7 @@ export function PrivacyPolicy({ onBack }: Props) {
         ← {t("privacy_back")}
       </button>
       <h1 ref={titleRef} tabIndex={-1}>{t("privacy_link")}</h1>
-      <p className={styles.version}>버전 2026-07-10 (시행일: 서비스 정식 오픈일)</p>
+      <p className={styles.version}>버전 2026-10-14 (시행일: 서비스 정식 오픈일)</p>
 
       <p className={styles.purpose}>{t("privacy_read_hint")}</p>
       <div className={styles.layout}>
@@ -54,7 +54,7 @@ export function PrivacyPolicy({ onBack }: Props) {
       </section><section><h2 id="policy-2" tabIndex={-1}>2. 이용 목적</h2>
       <ul>
         <li>스윙 분석 결과 제공 및 회원의 분석 기록·변화 추이 표시</li>
-        <li>AI 코칭 리포트 생성 — 이때 외부 AI 제공사(Google Gemini 등)에 전송되는 것은 영상이 아니라
+        <li>AI 코칭 리포트 생성 — 이때 외부 AI 제공사(Anthropic Claude 등)에 전송되는 것은 영상이 아니라
           관절각 통계 수치(JSON)입니다</li>
       </ul>
 
