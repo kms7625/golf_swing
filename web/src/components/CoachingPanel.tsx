@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { coaching } from "../lib/api";
+import { useEffect, useState } from "react";
+import { coaching, coachingProviders } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { useI18n } from "../lib/i18n";
 import { MODEL_OPTIONS, type Issue, type Provider, type Summary } from "../lib/types";
@@ -20,8 +20,26 @@ interface Props {
 export function CoachingPanel({ summary, issues, swingId, initialFeedback, onLoginClick }: Props) {
   const { t } = useI18n();
   const { isLoggedIn } = useAuth();
-  const [provider, setProvider] = useState<Provider>("Gemini");
-  const [modelName, setModelName] = useState(MODEL_OPTIONS.Gemini[0]);
+  const [provider, setProvider] = useState<Provider>("Claude");
+  const [modelName, setModelName] = useState(MODEL_OPTIONS.Claude[0]);
+  // 서버 키가 있는 공급자만 보여준다 (조회 실패 시 전체 목록 유지)
+  const [available, setAvailable] = useState<Provider[]>(Object.keys(MODEL_OPTIONS) as Provider[]);
+
+  useEffect(() => {
+    let cancelled = false;
+    coachingProviders()
+      .then(({ providers }) => {
+        if (cancelled || providers.length === 0) return;
+        const ordered = (Object.keys(MODEL_OPTIONS) as Provider[]).filter((p) => providers.includes(p));
+        setAvailable(ordered);
+        setProvider((cur) => (ordered.includes(cur) ? cur : ordered[0]));
+        setModelName((cur) => (ordered.some((p) => MODEL_OPTIONS[p].includes(cur)) ? cur : MODEL_OPTIONS[ordered[0]][0]));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(initialFeedback || null);
   const [remaining, setRemaining] = useState<number | null>(null);
@@ -63,7 +81,7 @@ export function CoachingPanel({ summary, issues, swingId, initialFeedback, onLog
           <div className={styles.field}>
             <label>{t("coaching_provider")}</label>
             <select value={provider} onChange={(e) => handleProviderChange(e.target.value as Provider)}>
-              {(Object.keys(MODEL_OPTIONS) as Provider[]).map((p) => (
+              {available.map((p) => (
                 <option key={p} value={p}>
                   {p}
                 </option>

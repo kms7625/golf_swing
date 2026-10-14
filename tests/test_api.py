@@ -174,3 +174,9 @@ def test_google_login_creates_then_reuses_account(client, google_login):
     client.post("/swings", json={"video_name": "a.mp4", "payload": SAMPLE_PAYLOAD}, headers=bearer(first["token"]))
     again = google_login("g@test.com").json()["token"]
     assert len(client.get("/swings", headers=bearer(again)).json()["swings"]) == 1  # 같은 계정
+
+
+def test_coaching_providers_lists_only_configured(client, monkeypatch):
+    assert client.get("/coaching/providers").json() == {"providers": []}
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
+    assert client.get("/coaching/providers").json() == {"providers": ["Claude"]}

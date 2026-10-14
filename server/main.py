@@ -412,6 +412,12 @@ def _month_key() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m")
 
 
+@app.get("/coaching/providers")
+async def coaching_providers():
+    """서버 키가 설정된 공급자만 — 웹은 이 목록만 보여준다."""
+    return {"providers": [p for p, env in _SERVER_LLM_KEYS.items() if os.environ.get(env)]}
+
+
 @app.post("/coaching")
 async def coaching(
     body: CoachingRequest,

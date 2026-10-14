@@ -98,6 +98,11 @@ export async function detectPhases(wristY: number[]): Promise<Record<string, [nu
   return handle<Record<string, [number, number]>>(res);
 }
 
+export async function coachingProviders(): Promise<{ providers: Provider[] }> {
+  const res = await fetch(`${API_BASE}/coaching/providers`);
+  return handle<{ providers: Provider[] }>(res);
+}
+
 export async function coaching(params: {
   summary: AnalyzeResponse["summary"];
   issues: AnalyzeResponse["issues"];

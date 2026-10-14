@@ -122,8 +122,8 @@ export interface SwingDetail extends SwingRow {
 export type Provider = "Gemini" | "Claude" | "GPT";
 
 export const MODEL_OPTIONS: Record<Provider, string[]> = {
+  Claude: ["claude-haiku-4-5-20251001", "claude-sonnet-5"], // 2026-10 서버 키로 생성 확인
   Gemini: ["gemini-2.0-flash", "gemini-1.5-pro"],
-  Claude: ["claude-sonnet-5", "claude-haiku-4-5-20251001"], // 2026-07 현행 모델 ID
   GPT: ["gpt-4o", "gpt-4o-mini"],
 };
 

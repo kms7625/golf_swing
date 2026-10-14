@@ -121,11 +121,12 @@ def get_llm_feedback(summary, issues, provider, api_key, model_name=None, ref_db
         import anthropic
         client = anthropic.Anthropic(api_key=api_key)
         msg = client.messages.create(
-            model=model_name or "claude-3-5-sonnet-20241022",
-            max_tokens=1500,
+            model=model_name or "claude-haiku-4-5-20251001",
+            max_tokens=8000,  # 실측 2.8~3.2천 토큰(사고 과정 포함) — 1500이면 리포트가 잘렸다
             messages=[{"role": "user", "content": prompt}]
         )
-        return msg.content[0].text
+        # 사고 과정(thinking) 블록이 앞에 올 수 있어 text 블록만 모은다
+        return "".join(b.text for b in msg.content if getattr(b, "type", "") == "text")
 
     elif provider == "GPT":
         from openai import OpenAI
