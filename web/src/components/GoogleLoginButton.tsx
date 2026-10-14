@@ -33,26 +33,35 @@ function loadGsi(): Promise<void> {
 interface Props {
   onCredential: (credential: string) => void;
   onError: (message: string) => void;
+  lang: "ko" | "en";
 }
 
-export function GoogleLoginButton({ onCredential, onError }: Props) {
+export function GoogleLoginButton({ onCredential, onError, lang }: Props) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!CLIENT_ID) return;
     let cancelled = false;
+    let observer: ResizeObserver | undefined;
     loadGsi()
       .then(() => {
         const gid = window.google?.accounts.id;
         if (cancelled || !gid || !ref.current) return;
         gid.initialize({ client_id: CLIENT_ID, callback: (r) => onCredential(r.credential) });
-        gid.renderButton(ref.current, { theme: "outline", size: "large", width: 280, text: "continue_with", locale: "ko" });
+        const render = () => {
+          if (!ref.current?.clientWidth) return;
+          gid.renderButton(ref.current, { theme: "outline", size: "large", width: Math.min(400, ref.current.clientWidth), text: "continue_with", locale: lang });
+        };
+        observer = new ResizeObserver(render);
+        observer.observe(ref.current);
+        render();
       })
       .catch((e: Error) => onError(e.message));
     return () => {
       cancelled = true;
+      observer?.disconnect();
     };
-  }, [onCredential, onError]);
+  }, [onCredential, onError, lang]);
 
   if (!CLIENT_ID) return null;
   return <div ref={ref} />;

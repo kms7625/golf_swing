@@ -59,8 +59,12 @@ export function LiveCapture({
   onBack,
   onLoginClick,
   onAnalyzeVideo,
+  onUpload,
+  onRetry,
 }: {
   onBack: () => void;
+  onUpload: () => void;
+  onRetry: () => void;
   onLoginClick: () => void;
   /** 녹화본을 업로드 분석 파이프라인(정식 결과·저장·비교)으로 넘긴다 */
   onAnalyzeVideo: (file: File) => void;
@@ -80,6 +84,11 @@ export function LiveCapture({
 
   const [phase, setPhase] = useState<Phase>("loading");
   const [angles, setAngles] = useState<LiveAngles | null>(null);
+  const [setupStage, setSetupStage] = useState<"model" | "camera">("model");
+  const [failureKind, setFailureKind] = useState<"denied" | "camera" | "model" | null>(null);
+  const [poseVisible, setPoseVisible] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [stopping, setStopping] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [liveResult, setLiveResult] = useState<LiveScoreResponse | null>(null);
 
@@ -87,6 +96,7 @@ export function LiveCapture({
     let cancelled = false;
 
     async function setup() {
+      let cameraRequested = false;
       try {
         const vision = await FilesetResolver.forVisionTasks(
           "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm"
@@ -106,6 +116,8 @@ export function LiveCapture({
         }
         landmarkerRef.current = landmarker;
 
+        cameraRequested = true;
+        setSetupStage("camera");
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         if (cancelled) {
           stream.getTracks().forEach((tr) => tr.stop());
@@ -118,7 +130,9 @@ export function LiveCapture({
         }
         setPhase("ready");
       } catch (e) {
-        setErrorMsg(e instanceof Error ? e.message : t("error_generic"));
+        if (cancelled) return;
+        const name = e instanceof Error ? e.name : "";
+        setFailureKind(cameraRequested ? (["NotAllowedError", "SecurityError"].includes(name) ? "denied" : "camera") : "model");
         setPhase("error");
       }
     }
@@ -141,6 +155,8 @@ export function LiveCapture({
   }
 
   function startCapture() {
+    setErrorMsg(null);
+    setPoseVisible(false);
     wristYRef.current = [];
     framesRef.current = [];
     setRecordedBlob(null);
@@ -158,6 +174,7 @@ export function LiveCapture({
         recorderRef.current = null; // 녹화 불가 환경 — 라이브 점수만 제공
       }
     }
+    setRecording(recorderRef.current?.state === "recording");
     setPhase("capturing");
     const loop = () => {
       const video = videoRef.current;
@@ -176,7 +193,9 @@ export function LiveCapture({
           if (raw) {
             drawSkeleton(ctx, raw, w, h);
             const { norm } = normalizeLandmarks(raw, w, h);
-            if (KEY_JOINTS.every((idx) => visibilityOk(norm, idx))) {
+            const visible = KEY_JOINTS.every((idx) => visibilityOk(norm, idx));
+            setPoseVisible(visible);
+            if (visible) {
               const frame = {
                 spine_angle: calcSpineAngle(norm),
                 shoulder_rotation: calcShoulderRotation(norm),
@@ -200,6 +219,8 @@ export function LiveCapture({
               wristYRef.current.push((lwY + rwY) / 2);
               framesRef.current.push(frame);
             }
+          } else {
+            setPoseVisible(false);
           }
         }
       }
@@ -209,6 +230,7 @@ export function LiveCapture({
   }
 
   async function stopCapture() {
+    setStopping(true);
     if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
     rafRef.current = null;
     // 트랙 정지 전에 레코더부터 마감해야 마지막 청크가 유실되지 않는다
@@ -223,9 +245,11 @@ export function LiveCapture({
         setRecordedBlob(new Blob(chunksRef.current, { type: RECORD_MIME }));
       }
     }
+    setRecording(false);
     if (wristYRef.current.length < MIN_FRAMES) {
       setErrorMsg(t("live_too_short"));
       setPhase("ready");
+      setStopping(false);
       return;
     }
     setPhase("processing");
@@ -233,54 +257,65 @@ export function LiveCapture({
       const res = await scoreLive(wristYRef.current, framesRef.current);
       setLiveResult(res);
       setPhase("done");
-    } catch (e) {
-      setErrorMsg(e instanceof Error ? e.message : t("error_generic"));
+    } catch {
+      setErrorMsg(t("live_score_failed"));
       setPhase("error");
     }
     streamRef.current?.getTracks().forEach((tr) => tr.stop());
+    setStopping(false);
   }
 
   return (
-    <div className={styles.wrap}>
-      <h2 className="tracked">{t("live_title")}</h2>
-      <p className={styles.hint}>{t("live_hint")}</p>
+    <main className={styles.wrap}>
+      <h1>{t("live_title")}</h1>
+      <p className={styles.hint}>{t("live_intro")}</p>
+      <div className={`${styles.captureGrid} ${phase === "done" ? styles.completed : ""}`}>
+        <section className={styles.statePanel} aria-live="polite">
+          <h2>{phase === "loading" ? t(setupStage === "model" ? "live_model_loading" : "live_camera_wait") :
+            phase === "ready" ? `✓ ${t("live_ready")}` : phase === "capturing" ? `● ${t("live_capturing")}` :
+            phase === "processing" ? `◷ ${t("live_processing")}` : phase === "done" ? `✓ ${t("live_done")}` : `⚠ ${t("error_generic")}`}</h2>
+          {phase === "capturing" && <><p>{recording ? `● ${t("live_recording")}` : `⚠ ${t("live_recording_unavailable")}`}</p><p>{t("live_finish_hint")}</p></>}
+          {phase === "ready" && !RECORD_MIME && <p>⚠ {t("live_recording_unavailable")}</p>}
+          {phase === "error" && <p role="alert">{t(failureKind === "denied" ? "live_camera_denied" : failureKind === "camera" ? "live_camera_unavailable" : failureKind === "model" ? "live_model_failed" : "live_score_failed")}</p>}
+        </section>
 
-      {phase !== "done" && (
-        <div className={styles.panel}>
-          <div className={`${styles.bracket} ${styles.tl}`} />
-          <div className={`${styles.bracket} ${styles.tr}`} />
-          <div className={`${styles.bracket} ${styles.bl}`} />
-          <div className={`${styles.bracket} ${styles.br}`} />
-          <video ref={videoRef} className={styles.video} muted playsInline />
-          <canvas ref={canvasRef} className={styles.canvas} />
-          {angles && (
-            <div className={`${styles.readout} mono`}>
-              <span>SPINE {angles.spine.toFixed(1)}°</span>
-              <span>SHOULDER {angles.shoulderRotation.toFixed(1)}°</span>
-              <span>HIP {angles.hipRotation.toFixed(1)}°</span>
+        {phase !== "done" && <>
+          <div className={styles.panel}>
+            <video ref={videoRef} className={styles.video} muted playsInline aria-label={t("live_preview")} />
+            <canvas ref={canvasRef} className={styles.canvas} aria-hidden="true" />
+            {phase === "loading" && <div className={styles.overlayMsg}>{t(setupStage === "model" ? "live_model_loading" : "live_camera_wait")}</div>}
+          </div>
+          <div className={styles.recognition} role="status">
+            {phase === "capturing" ? (poseVisible ? `✓ ${t("live_pose_visible")}` : `⚠ ${t("live_pose_missing")}`) : t("live_pose_wait")}
+          </div>
+          <div className={styles.readout}>
+            <h2>{t("live_angles")}</h2>
+            <div className={styles.angleGrid}>
+              {[[t("live_angle_spine"), angles?.spine], [t("live_angle_shoulder"), angles?.shoulderRotation], [t("live_angle_hip"), angles?.hipRotation]].map(([label, value]) => (
+                <div key={label}><span>{label}</span><strong className="tabular">{phase === "capturing" && poseVisible && typeof value === "number" ? `${value.toFixed(1)}°` : "—"}</strong></div>
+              ))}
             </div>
-          )}
-          {phase === "loading" && <div className={styles.overlayMsg}>{t("live_loading")}</div>}
+          </div>
+          <fieldset className={styles.prepare}>
+            <legend>{t("live_prepare")}</legend>
+            <p>{t("live_prepare_manual")}</p>
+            {["live_check_body", "live_check_space", "live_check_swing"].map((key) => (
+              <label key={key}><input type="checkbox" />{t(key as "live_check_body" | "live_check_space" | "live_check_swing")}</label>
+            ))}
+          </fieldset>
+        </>}
+
+        <div className={styles.controls}>
+          {phase === "ready" && <button className={styles.cta} onClick={startCapture}>{t("live_start")}</button>}
+          {phase === "capturing" && <button className={styles.cta} onClick={stopCapture} disabled={stopping}>■ {t(stopping ? "live_stopping" : "live_stop")}</button>}
+          {(phase === "error" || phase === "done") && <button className={styles.cta} onClick={onRetry}>{t(phase === "done" ? "live_recapture" : "retry")}</button>}
+          <button className={styles.ghost} onClick={onUpload}>{t("live_upload_alternative")}</button>
+          <button className={styles.ghost} onClick={onBack}>← {t("home")}</button>
         </div>
-      )}
-
-      {errorMsg && <div className={styles.error}>{errorMsg}</div>}
-
-      <div className={styles.controls}>
-        {phase === "ready" && (
-          <button className={styles.cta} onClick={startCapture}>
-            {t("live_start")}
-          </button>
-        )}
-        {phase === "capturing" && (
-          <button className={styles.cta} onClick={stopCapture}>
-            {t("live_stop")}
-          </button>
-        )}
-        {phase === "processing" && <div className={styles.overlayMsg}>{t("live_processing")}</div>}
-        <button className={styles.ghost} onClick={onBack}>
-          {t("result_back")}
-        </button>
+        <div className={styles.transfer}>
+          {errorMsg && phase !== "error" && <p className={styles.error} role="alert">⚠ {errorMsg}</p>}
+          <p>{t("live_transfer_stats")}</p><p>{t("live_transfer_video")}</p><p>{t("live_leave_hint")}</p>
+        </div>
       </div>
 
       {phase === "done" && liveResult && (
@@ -318,7 +353,7 @@ export function LiveCapture({
           <div className={styles.issueList}>
             {liveResult.issues.map((issue, i) => (
               <div key={i} className={`${styles.issueRow} ${styles[issue.level]}`}>
-                <span className={`${styles.issueTag} tracked`}>{issue.level}</span>
+                <span className={styles.issueTag}>{statusIcon(issue.level === "good" ? "ok" : issue.level === "warning" ? "warn" : "crit")} {t(`issue_${issue.level}`)}</span>
                 <span>{translateIssueMessage(lang, issue.message)}</span>
               </div>
             ))}
@@ -336,6 +371,7 @@ export function LiveCapture({
               {t("live_full_analysis")}
             </button>
           )}
+          {!recordedBlob && <p className={styles.hint}>⚠ {t("live_no_recording")}</p>}
 
           <h3 className="tracked">{t("result_chart_title")}</h3>
           <Waveform wristY={wristYRef.current} phaseBoundaries={liveResult.phase_boundaries} />
@@ -347,7 +383,7 @@ export function LiveCapture({
           />
         </div>
       )}
-    </div>
+    </main>
   );
 }
 
@@ -368,7 +404,7 @@ function drawSkeleton(ctx: CanvasRenderingContext2D, landmarks: RawLandmark[], w
   // displayed CSS pixels) so lines stay visible regardless of webcam resolution.
   const lineWidth = Math.max(3, w * 0.006);
   const pointRadius = Math.max(4, w * 0.009);
-  ctx.strokeStyle = "#dd8b57";
+  ctx.strokeStyle = getComputedStyle(ctx.canvas).getPropertyValue("--copper").trim();
   ctx.lineWidth = lineWidth;
   ctx.lineCap = "round";
   for (const [a, b] of SKELETON_CONNECTIONS) {
@@ -380,7 +416,7 @@ function drawSkeleton(ctx: CanvasRenderingContext2D, landmarks: RawLandmark[], w
     ctx.lineTo(pb.x * w, pb.y * h);
     ctx.stroke();
   }
-  ctx.fillStyle = "#5fb8b0";
+  ctx.fillStyle = getComputedStyle(ctx.canvas).getPropertyValue("--feature-text").trim();
   for (const idx of [11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28]) {
     const p = landmarks[idx];
     if (!p) continue;

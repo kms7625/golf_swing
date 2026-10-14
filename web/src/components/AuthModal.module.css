@@ -1,63 +1,25 @@
-.backdrop {
-  position: fixed;
-  inset: 0;
-  background: var(--overlay);
-  overflow-y: auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 40;
-  padding: 20px;
-}
-
 .modal {
-  position: relative;
-  width: 100%;
-  max-width: 380px;
-  background: var(--graphite-2);
-  border: 1px solid var(--graphite-3);
-  padding: 32px;
-  border-radius: var(--radius-panel);
-  box-shadow: var(--shadow-panel);
-  max-height: calc(100dvh - 40px);
+  position: fixed;
+  width: min(560px, calc(100% - 32px));
+  max-width: none;
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 64px 40px 40px;
   overflow-y: auto;
+  background: var(--graphite-2);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-panel);
 }
-
-.modal h3 {
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--copper);
-  margin-bottom: 20px;
-}
-
-.close {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: none;
-  border: none;
-  color: var(--steel);
-  font-size: 14px;
-  cursor: pointer;
-  padding: 8px;
-  min-width: 40px;
-  min-height: 40px;
-}
-
-.error {
-  font-size: 14px;
-  color: var(--alert);
-}
-
-.google {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 12px;
-}
-
-.note {
-  text-align: center;
-  font-size: 14px;
-  color: var(--text-muted, #888);
-  margin: 0 0 16px;
-}
+.modal::backdrop { background: var(--overlay); }
+.modal h1 { font-size: clamp(32px, 5vw, 48px); font-weight: 800; letter-spacing: -0.04em; margin-bottom: 16px; }
+.close { position: absolute; top: 16px; right: 20px; min-height: 44px; padding: 8px; border: 0; background: var(--clear); color: var(--text); cursor: pointer; font-size: 15px; font-weight: 700; }
+.purpose { color: var(--steel); font-size: 18px; margin-bottom: 24px; }
+.note { color: var(--steel); font-size: 14px; margin-bottom: 16px; }
+.google { display: flex; justify-content: center; min-height: 44px; margin-bottom: 16px; }
+.google > div { width: 100%; }
+.error { color: var(--alert); font-size: 14px; margin: 16px 0; }
+.processing { color: var(--copper); margin: 16px 0; }
+.privacy { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border); color: var(--steel); font-size: 14px; }
+.privacy button { background: var(--clear); color: var(--copper); border: 0; padding: 10px 0; min-height: 44px; font-size: 14px; font-weight: 700; cursor: pointer; text-decoration: underline; }
+@media (max-width: 640px) { .modal { padding: 64px 24px 24px; } .purpose { font-size: 16px; } }

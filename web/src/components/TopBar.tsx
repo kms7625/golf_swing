@@ -10,9 +10,10 @@ interface Props {
   onLiveClick: () => void;
   onHistoryClick: () => void;
   onLoginClick: () => void;
+  activeScreen?: "live" | "history";
 }
 
-export function TopBar({ onBrandClick, onLiveClick, onHistoryClick, onLoginClick }: Props) {
+export function TopBar({ onBrandClick, onLiveClick, onHistoryClick, onLoginClick, activeScreen }: Props) {
   const { t, lang, setLang } = useI18n();
   const { isLoggedIn, email, logout } = useAuth();
   const [theme, setTheme] = useState<Theme>(getTheme());
@@ -24,8 +25,8 @@ export function TopBar({ onBrandClick, onLiveClick, onHistoryClick, onLoginClick
       </button>
       <div className={styles.right}>
         <nav className={styles.nav}>
-          <button onClick={onLiveClick}>{t("nav_live")}</button>
-          <button onClick={onHistoryClick}>{t("nav_history")}</button>
+          <button aria-current={activeScreen === "live" ? "page" : undefined} onClick={onLiveClick}>{t("nav_live")}</button>
+          <button aria-current={activeScreen === "history" ? "page" : undefined} onClick={onHistoryClick}>{t("nav_history")}</button>
         </nav>
         <button
           className={styles.iconBtn}
