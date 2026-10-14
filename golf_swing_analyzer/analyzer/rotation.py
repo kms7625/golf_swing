@@ -1,5 +1,6 @@
 """Address-relative horizontal rotations; phase detection is a read-only input."""
 import numpy as np
+from .video_clock import ANGLE_SMOOTH_SEC
 
 
 def apply_world_rotations(frames, top_frame, method="world_3d"):
@@ -59,9 +60,9 @@ def apply_world_rotations(frames, top_frame, method="world_3d"):
             if gap > .2:
                 buffer = []
             f["rotation_gap_sec"] = round(gap, 4)
-            buffer.append(angles[i] * sign)
-            buffer = buffer[-5:]
-            smoothed = np.mean(buffer, axis=0)
+            buffer.append((f["time"], angles[i] * sign))
+            buffer = [(t, v) for t, v in buffer if f["time"]-t <= ANGLE_SMOOTH_SEC+1e-9]
+            smoothed = np.mean([v for _, v in buffer], axis=0)
             for j, key in enumerate(("shoulder_rotation", "hip_rotation")):
                 f[key + "_3d_signed"] = round(float(angles[i][j]), 1)
                 f[key + "_3d"] = round(float(smoothed[j]), 1)
