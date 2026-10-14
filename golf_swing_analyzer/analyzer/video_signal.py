@@ -9,10 +9,17 @@ class SceneCuts:
     def __init__(self, fps):
         self.fps = fps
         self.history = deque()
-        self.differences = deque(maxlen=15)
+        self.differences = deque()
         self.last_cut = -float('inf')
+        self.last_observation = -float('inf')
+        self.observation_sec = max(1, round(fps/30))/fps
 
     def update(self, frame, source_frame):
+        # Evaluate at ~30 Hz; duplicate 60fps frames cannot halve the motion
+        # baseline or change the cut detector's recent-history clock.
+        if (source_frame-self.last_observation)/self.fps < self.observation_sec-1e-9:
+            return False
+        self.last_observation = source_frame
         small = cv2.resize(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), (64,36)).astype(float)
         cut = False
         if self.history:
@@ -24,8 +31,10 @@ class SceneCuts:
             # of pixels affected, to distinguish it from continuous club motion.
             mad = float(delta.mean())
             if self.differences:
-                cut |= mad > max(8.0, 5*np.median(self.differences)) and float(np.mean(delta > 25)) > .08
-            self.differences.append(mad)
+                cut |= mad > max(8.0, 5*np.median([v for _, v in self.differences])) and float(np.mean(delta > 25)) > .08
+            self.differences.append((source_frame, mad))
+            while self.differences and (source_frame-self.differences[0][0])/self.fps >= .5-1e-9:
+                self.differences.popleft()
             # Fades/dissolves can distribute a cut over several adjacent frames.
             lag = np.abs(small-self.history[0][1])
             cut |= float(lag.mean()) > 25 and float(np.mean(lag > 30)) > .4

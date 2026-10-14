@@ -13,6 +13,7 @@ from .smoothing import MovingAverageFilter
 from .phase_detector import SwingPhaseDetector, SwingNotFoundError
 from .phase_parameters import BASELINE_PARAMETERS
 from .video_signal import SceneCuts, wrist_signal
+from .video_clock import ANGLE_SMOOTH_SEC, analysis_step
 from .drawing import draw_swing_trajectory, draw_skeleton_annotations
 
 
@@ -139,9 +140,9 @@ def process_video(video_path, sample_rate=3, analyze_path=None, source_start_sec
 
     source_offset = int(source_start_sec * fps)
 
-    # Native fps up to 600 frames (20 s at 30fps); ceil enforces the cap.
-    # L4 reports ~0.3 s downswing: the former 200-frame cap undersampled it.
-    effective_sample = max(1, int(np.ceil(total_frames / 600)))
+    # Source fps and analysis cadence are separate; retain source-frame IDs.
+    # sample_rate remains a compatibility hint, as in the established pipeline.
+    effective_sample = analysis_step(total_frames, fps)
 
     frame_data       = []
     annotated_frames = []   # source frame ID + RGB image
@@ -151,7 +152,7 @@ def process_video(video_path, sample_rate=3, analyze_path=None, source_start_sec
     signal_valid = 0
     sampled = 0
     angle_valid = 0
-    ma_filter        = MovingAverageFilter(window=5)
+    ma_filter        = MovingAverageFilter(window_sec=ANGLE_SMOOTH_SEC)
     prev_metrics     = {}
     frame_idx        = 0
     local_idx        = 0
@@ -173,7 +174,7 @@ def process_video(video_path, sample_rate=3, analyze_path=None, source_start_sec
 
             if cuts.update(frame, frame_idx):
                 phase_detector.cut_frames.append(source_offset + frame_idx)
-                ma_filter = MovingAverageFilter(window=5)
+                ma_filter = MovingAverageFilter(window_sec=ANGLE_SMOOTH_SEC)
                 prev_metrics = {}
 
             if frame_idx % effective_sample != 0:
@@ -239,7 +240,7 @@ def process_video(video_path, sample_rate=3, analyze_path=None, source_start_sec
                     ]
                     metrics = raw.copy()
                     for key in smoothed_keys:
-                        metrics[key] = ma_filter.smooth(key, raw[key])
+                        metrics[key] = ma_filter.smooth(key, raw[key], time_sec=frame_idx/fps)
 
                     # 페이즈는 나중에 후처리로 채움 (일단 임시)
                     metrics["phase"] = "분석중"
