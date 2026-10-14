@@ -1,5 +1,26 @@
 # GolfDB 규칙 보정 재실행
 
+## 2026-10-14 회귀 보정
+
+기존 A 결과/잠금은 보존한다. 보정 결과는 `~/datasets/golfdb_pose/fix_20261014/`다.
+그 안의 `cache`, `baseline`, `apps_before.json`은 이전 결과의 읽기 전용 재사용 링크다.
+호스트는 `PHASE_DATA="$HOME/datasets/golfdb_pose/fix_20261014"`와 `-B`를 사용한다.
+Docker는 같은 경로를 `/datasets/golfdb_pose/fix_20261014`로 바꾼다.
+
+- `fix_apps.py --infer`: 기존 scan 신호로 단독 되돌림 창을 구하고 고유 트림을 재추론한다.
+  `--shard N --shards 2`로 독립 작업 분할 가능. 완료 후 인자 없이 요약한다.
+- `fix_search.py`: 기준선 scan + 16개 제한 후보를 앱/개발 split 1–3으로 선택한다.
+  실패 시도와 재설계는 `PROTOCOL_fix.md`, `search_attempt0.log`에 기록했다.
+- 최종 실제 실행: `apps.py after --export`와
+  `PHASE_SOURCE_DATA=/datasets/golfdb_pose`를 사용한다. `--only`와 `--output`은 작업 분할용이다.
+- 샘플 복사 후 `checks.py --regen-snapshot`, `node tests/phase_web_compat.mjs`를 실행한다.
+- `fix_holdout.py freeze`, `fix_holdout.py evaluate`, `fix_report.py` 순서로 완료했다.
+  **split 4 두 번째 노출**이며 새 잠금도 삭제/재평가하지 않는다. 동결 후 탐색은 차단된다.
+
+자동 scan과 학습 경계를 분리한 현재 코드에서 과거 A 단독 되돌림은 `fix_apps.py`로
+재생한다. 이전 `apps.py --params`는 이제 분석 경계만 바꾸며 scan의 명시적 기준값은 보존한다.
+상세 결과와 ≤200줄 커밋 묶음은 `docs/research/phase_train/REPORT_fix.md`에 있다.
+
 원본 `~/PycharmProjects/golf_swing` 및 8010 서버는 사용하지 않는다. 커밋·브랜치 변경·설치 없음.
 실행 위치는 이 worktree 루트. 캐시/영상/프레임/클립 결과는 모두 `~/datasets/golfdb_pose`.
 GolfDB는 CC BY-NC 4.0의 비상업 연구·평가 용도로만 사용한다.
