@@ -42,8 +42,10 @@ lsof -ti tcp:8011; lsof -ti tcp:5173
 터미널 1 — 서버
 
 ```bash
-cd ~/PycharmProjects/golf_swing_final/server && ../../golf_swing/.venv/bin/uvicorn main:app --port 8011
+cd ~/PycharmProjects/golf_swing_final/server && env -u GEMINI_API_KEY ../../golf_swing/.venv/bin/uvicorn main:app --port 8011
 ```
+
+`env -u GEMINI_API_KEY`: 셸에 설정된 Gemini 키가 무효(2026-10-14 확인)라 AI 코칭 공급자 목록에서 빼기 위함. 유효한 키로 바꾸면 이 부분을 지운다.
 
 터미널 2 — 웹 (빌드 후 미리보기)
 
