@@ -1,0 +1,42 @@
+{
+  "before": {
+    "video": "일반.mp4",
+    "sample_rate": 3,
+    "score": 45,
+    "phases": [
+      "다운스윙",
+      "백스윙",
+      "백스윙 톱",
+      "어드레스",
+      "임팩트",
+      "팔로우스루",
+      "피니시"
+    ],
+    "summary": {
+      "spine_angle_delta": 9.0,
+      "x_factor": -23.8,
+      "shoulder_rotation_max": 33.9,
+      "total_frames": 93
+    }
+  },
+  "after": {
+    "video": "일반.mp4",
+    "sample_rate": 3,
+    "score": 45,
+    "phases": [
+      "다운스윙",
+      "백스윙",
+      "백스윙 톱",
+      "어드레스",
+      "임팩트",
+      "팔로우스루",
+      "피니시"
+    ],
+    "summary": {
+      "spine_angle_delta": 9.1,
+      "x_factor": -23.8,
+      "shoulder_rotation_max": 33.9,
+      "total_frames": 95
+    }
+  }
+}

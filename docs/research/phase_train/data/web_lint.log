@@ -1,0 +1,22 @@
+
+> web@0.0.0 lint
+> oxlint
+
+src/lib/issueMessages.ts:17:33: warning eslint(no-useless-escape): Unnecessary escape character '-' help: Replace `\-` with `-`.
+src/lib/issueMessages.ts:21:33: warning eslint(no-useless-escape): Unnecessary escape character '-' help: Replace `\-` with `-`.
+src/lib/issueMessages.ts:25:32: warning eslint(no-useless-escape): Unnecessary escape character '-' help: Replace `\-` with `-`.
+src/lib/issueMessages.ts:29:22: warning eslint(no-useless-escape): Unnecessary escape character '-' help: Replace `\-` with `-`.
+src/lib/issueMessages.ts:33:22: warning eslint(no-useless-escape): Unnecessary escape character '-' help: Replace `\-` with `-`.
+src/lib/issueMessages.ts:37:22: warning eslint(no-useless-escape): Unnecessary escape character '-' help: Replace `\-` with `-`.
+src/lib/issueMessages.ts:41:53: warning eslint(no-useless-escape): Unnecessary escape character '-' help: Replace `\-` with `-`.
+src/lib/issueMessages.ts:41:73: warning eslint(no-useless-escape): Unnecessary escape character '-' help: Replace `\-` with `-`.
+src/lib/issueMessages.ts:45:53: warning eslint(no-useless-escape): Unnecessary escape character '-' help: Replace `\-` with `-`.
+src/lib/issueMessages.ts:45:73: warning eslint(no-useless-escape): Unnecessary escape character '-' help: Replace `\-` with `-`.
+src/lib/issueMessages.ts:49:43: warning eslint(no-useless-escape): Unnecessary escape character '-' help: Replace `\-` with `-`.
+src/lib/issueMessages.ts:53:53: warning eslint(no-useless-escape): Unnecessary escape character '-' help: Replace `\-` with `-`.
+src/lib/issueMessages.ts:57:34: warning eslint(no-useless-escape): Unnecessary escape character '-' help: Replace `\-` with `-`.
+src/lib/issueMessages.ts:61:36: warning eslint(no-useless-escape): Unnecessary escape character '-' help: Replace `\-` with `-`.
+src/lib/auth.tsx:9:17: warning react(only-export-components): Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+src/lib/auth.tsx:55:17: warning react(only-export-components): Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+src/lib/i18n.tsx:376:17: warning react(only-export-components): Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+src/components/ResultScreen.tsx:32:17: warning react(only-export-components): Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.

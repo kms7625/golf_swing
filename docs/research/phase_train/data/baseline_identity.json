@@ -1,0 +1,11 @@
+{
+  "utc": "2026-10-13T05:05:00.549844+00:00",
+  "baseline": "3bdf45dfb4aa3118484bad33cb967e3810dcf46f",
+  "files": {
+    "golf_swing_analyzer/analyzer/phase_detector.py": "6ee3f6b1bd61a3a008181c58c13d8c6faeebad2c786c0b5ce312e3bda221688e",
+    "golf_swing_analyzer/analyzer/pipeline.py": "2039c9ea3ea72e46b05395c6817c885e8930da29c5abcd541a2e3ca4c0367a2c",
+    "golf_swing_analyzer/analyzer/scoring.py": "e85f917b9ae72dfc7c221be8619e9f8d43c6d13432d176c78ededc7720440bac",
+    "golf_swing_analyzer/analyzer/geometry.py": "3b838109b5bd9f439d6edb7588cef05537309f8d4973a72e1925d651249b2418",
+    "golf_swing_analyzer/analyzer/video_signal.py": "08673ce7e2baa70fb96664e5e13ddee43bdbdac9ae541e3133c6b5ffbe9b693a"
+  }
+}
