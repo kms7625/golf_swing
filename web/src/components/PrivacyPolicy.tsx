@@ -43,7 +43,7 @@ export function PrivacyPolicy({ onBack }: Props) {
         <article className={styles.body} lang="ko">
       <section><h2 id="policy-1" tabIndex={-1}>1. 수집하는 정보</h2>
       <ul>
-        <li>계정: 이메일 주소, 암호화(단방향 해시)된 비밀번호</li>
+        <li>계정: Google 계정 이메일 주소만 수집하며, 비밀번호는 받지 않습니다</li>
         <li>
           스윙 영상: <strong>분석 목적으로만 일시 처리되며, 분석 완료 즉시 서버에서 삭제됩니다. 원본
           영상은 저장하지 않습니다.</strong>
