@@ -8,9 +8,10 @@ MediaPipe 포즈 추정과 LLM 코칭을 결합해, 골프 스윙 영상 한 편
 > **최신 코드는 [`dev` 브랜치](https://github.com/kms7625/golf_swing/tree/dev)에 있습니다.** 아래 설명(API 서버·검증 결과)은 `dev` 기준이며, `main`은 2026-09-01 시점 코드입니다.
 
 <p align="center">
-  <img src="./docs/screenshots/hero.jpg" width="49%" alt="Swing.Lab 랜딩 화면" />
-  <img src="./docs/screenshots/result.jpg" width="49%" alt="7단계 스윙 분석 결과 화면" />
+  <img src="./docs/screenshots/landing.png" width="49%" alt="Swing.Lab 랜딩 화면" />
+  <img src="./docs/screenshots/result.png" width="49%" alt="7단계 스윙 분석 결과 화면" />
 </p>
+<p align="center"><sub>현재 웹 UI(dev) — 로컬 실행 화면, 2026-10-14 캡처</sub></p>
 
 ## 구성
 
