@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ChangeEvent, type DragEvent } from "r
 import { autoWindow } from "../lib/api";
 import { useI18n } from "../lib/i18n";
 import { ShieldIcon } from "./icons";
+import { RecordingGuide } from "./RecordingGuide";
 import { TrimTimeline } from "./TrimTimeline";
 import styles from "./UploadTrim.module.css";
 
@@ -103,6 +104,7 @@ export function UploadTrim({ onAnalyze, onPrivacyClick }: Props) {
       <h1>{t("trim_title")}</h1>
       {!file || !videoUrl ? (
         <>
+          <RecordingGuide />
           <div className={`${styles.dropzone} ${dragOver ? styles.dragOver : ""}`}
             role="button" tabIndex={0} aria-label={t("upload_dropzone")}
             onClick={() => inputRef.current?.click()}
