@@ -31,11 +31,11 @@ FastAPI 7개 모듈(`main`·`auth`·`db`·`jobs`·`models`·`ratelimit`·`serial
 | 그룹 | 엔드포인트 |
 |---|---|
 | 분석 | `POST /analyze` · `POST /analyze-async` · `GET /jobs/{job_id}` · `POST /auto-window` · `POST /detect-phases` · `POST /score-live` |
-| 인증 | `POST /auth/google` · `DELETE /auth/account` 🔒 |
-| 스윙 기록 | `GET`·`POST /swings` 🔒 · `GET`·`DELETE /swings/{swing_id}` 🔒 |
-| 코칭·운영 | `GET /coaching/providers` · `POST /coaching` 🔒 · `GET /health` |
+| 인증 | `POST /auth/google` · `DELETE /auth/account` (인증) |
+| 스윙 기록 | `GET`·`POST /swings` (인증) · `GET`·`DELETE /swings/{swing_id}` (인증) |
+| 코칭·운영 | `GET /coaching/providers` · `POST /coaching` (인증) · `GET /health` |
 
-🔒 = JWT 필요
+(인증) = JWT 필요
 
 **설계 결정과 한계**
 
