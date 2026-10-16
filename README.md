@@ -6,9 +6,10 @@ MediaPipe 포즈 추정과 LLM 코칭을 결합해, 골프 스윙 영상 한 편
 > 개인 프로젝트 · 미배포(로컬·Docker 실행) · 최신 개발 브랜치는 `dev`
 
 <p align="center">
-  <img src="./docs/screenshots/hero.jpg" width="49%" alt="Swing.Lab 랜딩 화면" />
-  <img src="./docs/screenshots/result.jpg" width="49%" alt="7단계 스윙 분석 결과 화면" />
+  <img src="./docs/screenshots/landing.png" width="49%" alt="Swing.Lab 랜딩 화면" />
+  <img src="./docs/screenshots/result.png" width="49%" alt="7단계 스윙 분석 결과 화면" />
 </p>
+<p align="center"><sub>현재 웹 UI(dev) — 로컬 실행 화면, 2026-10-14 캡처</sub></p>
 
 ## 구성
 
