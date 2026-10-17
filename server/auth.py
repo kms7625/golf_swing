@@ -29,13 +29,14 @@ GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
 _GOOGLE_ISSUERS = ("accounts.google.com", "https://accounts.google.com")
 _google_jwks = jwt.PyJWKClient("https://www.googleapis.com/oauth2/v3/certs")
 GOOGLE_PASSWORD_MARK = "google"  # password_hash 컬럼 자리값 — 비밀번호 로그인은 없음
+GOOGLE_CLOCK_SKEW_SEC = 60  # 서버 시계가 Google보다 늦으면 iat가 미래가 되어 PyJWT가 거부 — 오차 허용
 
 
 def verify_google_credential(credential: str) -> Optional[str]:
     """Google ID 토큰을 검증해 확인된 이메일(소문자)을 돌려준다. 실패하면 None."""
     try:
         key = _google_jwks.get_signing_key_from_jwt(credential).key
-        data = jwt.decode(credential, key, algorithms=["RS256"], audience=GOOGLE_CLIENT_ID)
+        data = jwt.decode(credential, key, algorithms=["RS256"], audience=GOOGLE_CLIENT_ID, leeway=GOOGLE_CLOCK_SKEW_SEC)
     except jwt.PyJWTError:
         return None
     if data.get("iss") not in _GOOGLE_ISSUERS or not data.get("email_verified"):

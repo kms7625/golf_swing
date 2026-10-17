@@ -180,3 +180,27 @@ def test_coaching_providers_lists_only_configured(client, monkeypatch):
     assert client.get("/coaching/providers").json() == {"providers": []}
     monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
     assert client.get("/coaching/providers").json() == {"providers": ["Claude"]}
+
+
+def test_google_credential_tolerates_small_clock_skew(monkeypatch):
+    """서버 시계가 Google보다 몇 초 늦어도(발급 시각이 미래) 로그인이 거부되지 않는다."""
+    import time
+    from types import SimpleNamespace
+
+    import auth
+    import jwt
+    from cryptography.hazmat.primitives.asymmetric import rsa
+
+    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    monkeypatch.setattr(auth, "GOOGLE_CLIENT_ID", "cid")
+    monkeypatch.setattr(auth, "_google_jwks", SimpleNamespace(
+        get_signing_key_from_jwt=lambda _t: SimpleNamespace(key=key.public_key())))
+    now = int(time.time())
+
+    def token(iat: int) -> str:
+        claims = {"iss": "https://accounts.google.com", "aud": "cid", "email": "G@test.com",
+                  "email_verified": True, "iat": iat, "exp": iat + 3600}
+        return jwt.encode(claims, key, algorithm="RS256")
+
+    assert auth.verify_google_credential(token(now + 5)) == "g@test.com"
+    assert auth.verify_google_credential(token(now + 600)) is None
